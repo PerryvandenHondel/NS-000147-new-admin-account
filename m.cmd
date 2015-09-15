@@ -1,0 +1,1 @@
+fpc.exe naa_main.pas -o..\bin\naa.exe
