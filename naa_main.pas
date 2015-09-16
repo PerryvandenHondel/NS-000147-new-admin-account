@@ -183,17 +183,54 @@ procedure ProgRun();
 var
 	qs: Ansistring;
 begin
+	{
+		VIE_CAA = 				'view_create_admin_account';
+	FLD_CAA_DETAIL_ID = 	'account_detail_id';
+	FLD_CAA_ACCOUNT_ID = 	'account_id';
+	FLD_CAA_FULLNAME = 		'full_name';
+	FLD_CAA_FNAME = 		'first_name';
+	FLD_CAA_MNAME = 		'middle_name';
+	FLD_CAA_LNAME = 		'last_name';
+	FLD_CAA_UPN = 			'upn';
+	FLD_CAA_NT = 			'domain_nt';
+	FLD_CAA_OU = 			'org_unit';
+	FLD_CAA_USE_SUPP_OU = 	'use_supplier_ou';
+	FLD_CAA_SUPP_ID = 		'ref_supplier_id';
+	FLD_CAA_SUPP_NAME = 	'name';
+	FLD_CAA_IS_CREATED = 	'is_created';
+	}
 	
 	qs := 'SELECT ';
-	qs := qs + FLD_ACC_ID + ',';
-	qs := qs + FLD_ACC_FULLNAME + ',';
-	qs := qs + FLD_ACC_FNAME + ',';
-	qs := qs + FLD_ACC_MNAME + ',';
-	qs := qs + FLD_ACC_LNAME + ',';
-	qs := qs + FLD_ACC_FNAME + ',';
-	qs := qs + FLD_ACC_FNAME + ',';
-	
-	
+	qs := qs + FLD_CAA_DETAIL_ID;
+	qs := qs + ',';
+	qs := qs + FLD_CAA_ACCOUNT_ID;
+	qs := qs + ',';
+	qs := qs + FLD_CAA_FULLNAME;
+	qs := qs + ',';
+	qs := qs + FLD_CAA_FNAME;
+	qs := qs + ',';
+	qs := qs + FLD_CAA_MNAME;
+	qs := qs + ',';
+	qs := qs + FLD_CAA_LNAME;
+	qs := qs + ',';
+	qs := qs + FLD_CAA_LNAME;
+	qs := qs + ',';
+	qs := qs + FLD_CAA_UPN;
+	qs := qs + ',';
+	qs := qs + FLD_CAA_NT;
+	qs := qs + ',';
+	qs := qs + FLD_CAA_OU;
+	qs := qs + ',';
+	qs := qs + FLD_CAA_USE_SUPP_OU;
+	qs := qs + ',';
+	qs := qs + FLD_CAA_SUPP_ID;
+	qs := qs + ',';
+	qs := qs + FLD_CAA_SUPP_NAME;
+	qs := qs + ',';
+	qs := qs + FLD_CAA_IS_CREATED;
+	qs := qs + ' ';
+	qs := qs + 'FROM '+ VIE_CAA;
+	qs := qs + ';';
 	WriteLn(qs);
 
 {	

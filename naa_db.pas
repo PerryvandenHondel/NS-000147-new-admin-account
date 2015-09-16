@@ -122,7 +122,34 @@ const
 	FLD_ADT_RCD =			'rcd';
 	FLD_ADT_RLU = 			'rlu';
 
+	
+	TBL_DOM = 				'account_domain';
+	FLD_DOM_ID = 			'domain_id';
+	FLD_DOM_UPN = 			'upn';
+	FLD_DOM_NT = 			'domain_nt';
+	FLD_DOM_OU = 			'org_unit';
+	FLD_DOM_USE_OU = 		'use_supplier_ou';
+	FLD_DOM_IS_ACTIVE = 	'is_active';
+	FLD_DOM_RCD = 			'rcd';
+	FLD_DOM_RLU = 			'rlu';
+	
+	
+	VIE_CAA = 				'view_create_admin_account';
+	FLD_CAA_DETAIL_ID = 	'account_detail_id';
+	FLD_CAA_ACCOUNT_ID = 	'account_id';
+	FLD_CAA_FULLNAME = 		'full_name';
+	FLD_CAA_FNAME = 		'first_name';
+	FLD_CAA_MNAME = 		'middle_name';
+	FLD_CAA_LNAME = 		'last_name';
+	FLD_CAA_UPN = 			'upn';
+	FLD_CAA_NT = 			'domain_nt';
+	FLD_CAA_OU = 			'org_unit';
+	FLD_CAA_USE_SUPP_OU = 	'use_supplier_ou';
+	FLD_CAA_SUPP_ID = 		'ref_supplier_id';
+	FLD_CAA_SUPP_NAME = 	'name';
+	FLD_CAA_IS_CREATED = 	'is_created';
 
+	
 	
 var
 	gConnection: TODBCConnection;               // uses ODBCConn
