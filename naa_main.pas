@@ -61,13 +61,13 @@ const
 	STEP_MOD = 				27;
 
 
-var
+//var
 	//gConnection: TODBCConnection;               // uses ODBCConn
 	//gTransaction: TSQLTransaction;  			// Uses SqlDB
-	gstrNow: string;
+	//gstrNow: string;
 	
 	
-
+{
 
 procedure ProcessDomain(strRootDn: string; strDomainNetbios: string);
 var
@@ -123,8 +123,9 @@ begin
 		
 		intLine := 0;
 		
-		AssignFile(f, fn);
+		AssignFile(f, fn);}
 		{I+}
+		{
 		try 
 			Reset(f);
 			repeat
@@ -168,7 +169,7 @@ begin
 	//WriteLn('Set inactive all records of ' + strDomainNetbios + ' where RLU = ' + gstrNow);
 	MarkInactiveRecords(strDomainNetbios, gstrNow);
 end; // of procedure ProcessDomain
-
+}
 
 
 procedure ProgInit();
@@ -180,37 +181,46 @@ end;
 
 procedure ProgRun();
 var
-	f: TextFile;
-	strLine: Ansistring;
-	arrLine: TStringArray;
+	qs: Ansistring;
 begin
-	WriteLn;
-	// WriteLn(LeftStr('ProgRun():' + StringOfChar('-', 80), 80));
 	
-	AssignFile(f, FNAME_DOMAIN);
-	{I+}
-	try 
-		Reset(f);
-		repeat
-			// Process  every line in the .conf file.
-			ReadLn(f, strLine);
-			if Length(strLine) > 0 then
-			begin
-				// Only process valid lines with content.
-				if Pos('SKIP', strLine) = 0 then
-				begin
-					// Only process lines that do not contain the word 'SKIP'.
-					arrLine := SplitString(strLine, '|');
-					//ProcessDomain(FNAME_ACCOUNT, arrLine[0], arrLine[1] + ',' + arrLine[0], arrLine[2]);
-					ProcessDomain(arrLine[0], arrLine[1]);
-				end;
-			end;
-		until Eof(f);
-		CloseFile(f);
-	except
-		on E: EInOutError do
-			WriteLn('File ', FNAME_DOMAIN, ' handeling error occurred, Details: ', E.ClassName, '/', E.Message);
-	end;
+	qs := 'SELECT ';
+	qs := qs + FLD_ACC_ID + ',';
+	qs := qs + FLD_ACC_FULLNAME + ',';
+	qs := qs + FLD_ACC_FNAME + ',';
+	qs := qs + FLD_ACC_MNAME + ',';
+	qs := qs + FLD_ACC_LNAME + ',';
+	qs := qs + FLD_ACC_FNAME + ',';
+	qs := qs + FLD_ACC_FNAME + ',';
+	
+	
+	WriteLn(qs);
+
+{	
+	SELECT
+account.account_id,
+account.full_name,
+account.first_name,
+account.middle_name,
+account.last_name,
+account.ref_supplier_id,
+account_supplier.`name`,
+account.ref_title_id,
+account_detail.ref_account_id,
+account_detail.ref_domain_id,
+account_domain.upn,
+account_domain.domain_nt,
+account_domain.org_unit,
+account_domain.use_supplier_ou,
+account_detail.status_is_created
+FROM
+account
+INNER JOIN account_detail ON account_detail.account_detail_id = account.account_id
+INNER JOIN account_supplier ON account.ref_supplier_id = account_supplier.supplier_id
+INNER JOIN account_domain ON account_domain.domain_id = account_detail.ref_domain_id
+WHERE
+account_detail.status_is_created = 0
+}	
 end;
 
 

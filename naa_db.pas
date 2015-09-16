@@ -1,22 +1,55 @@
 {
 	UPDATE LOOKUP ACCOUNT TABLE (ULAT)
 	
-	mysql> describe lookup_account;
-	+-------------------+------------------+------+-----+-------------------+-----------------------------+
-	| Field             | Type             | Null | Key | Default           | Extra                       |
-	+-------------------+------------------+------+-----+-------------------+-----------------------------+
-	| rec_id            | int(10) unsigned | NO   | PRI | NULL              | auto_increment              |
-	| account_dn        | varchar(255)     | YES  |     | NULL              |                             |
-	| account_domain    | varchar(16)      | YES  |     | NULL              |                             |
-	| account_upn       | varchar(64)      | YES  |     | NULL              |                             |
-	| account_netbios   | varchar(48)      | YES  |     | NULL              |                             |
-	| account_object_id | varchar(64)      | YES  | UNI | NULL              |                             |
-	| account_username  | varchar(32)      | YES  |     | NULL              |                             |
-	| is_active         | bit(1)           | YES  |     | NULL              |                             |
-	| rcd               | datetime         | NO   |     | CURRENT_TIMESTAMP |                             |
-	| rlu               | datetime         | NO   |     | CURRENT_TIMESTAMP | on update CURRENT_TIMESTAMP |
-	+-------------------+------------------+------+-----+-------------------+-----------------------------+
-	10 rows in set (0.00 sec)
+	mysql> describe account;
++-----------------+------------------+------+-----+-------------------+-----------------------------+
+| Field           | Type             | Null | Key | Default           | Extra                       |
++-----------------+------------------+------+-----+-------------------+-----------------------------+
+| account_id      | int(10) unsigned | NO   | PRI | NULL              | auto_increment              |
+| full_name       | varchar(75)      | YES  |     | NULL              |                             |
+| first_name      | char(50)         | YES  |     | NULL              |                             |
+| middle_name     | char(15)         | YES  |     | NULL              |                             |
+| last_name       | char(50)         | YES  |     | NULL              |                             |
+| ref_supplier_id | char(3)          | YES  |     | NULL              |                             |
+| ref_title_id    | char(32)         | YES  |     | NULL              |                             |
+| mobile          | char(13)         | YES  |     | NULL              |                             |
+| email           | char(64)         | YES  |     | NULL              |                             |
+| rcd             | datetime         | YES  |     | CURRENT_TIMESTAMP |                             |
+| rlu             | datetime         | YES  |     | CURRENT_TIMESTAMP | on update CURRENT_TIMESTAMP |
++-----------------+------------------+------+-----+-------------------+-----------------------------+
+
+mysql> describe account_detail;
++-------------------+---------------------+------+-----+-------------------+-----------------------------+
+| Field             | Type                | Null | Key | Default           | Extra                       |
++-------------------+---------------------+------+-----+-------------------+-----------------------------+
+| account_detail_id | int(10) unsigned    | NO   | PRI | NULL              | auto_increment              |
+| ref_account_id    | int(10) unsigned    | YES  |     | NULL              |                             |
+| ref_domain_id     | char(48)            | YES  |     | NULL              |                             |
+| ref_requestor_id  | char(48)            | YES  |     | NULL              |                             |
+| user_name         | char(32)            | YES  |     | NULL              |                             |
+| dn                | char(255)           | YES  |     | NULL              |                             |
+| upn               | char(64)            | YES  |     | NULL              |                             |
+| new_password      | char(32)            | YES  |     | NULL              |                             |
+| do_unlock         | tinyint(3) unsigned | YES  |     | 0                 |                             |
+| do_reset          | tinyint(3) unsigned | YES  |     | 0                 |                             |
+| is_created        | tinyint(3) unsigned | YES  |     | 0                 |                             |
+| rcd               | datetime            | YES  |     | CURRENT_TIMESTAMP |                             |
+| rlu               | datetime            | YES  |     | CURRENT_TIMESTAMP | on update CURRENT_TIMESTAMP |
++-------------------+---------------------+------+-----+-------------------+-----------------------------+
+
+mysql> describe account_domain;
++-----------------+------------------+------+-----+-------------------+-----------------------------+
+| Field           | Type             | Null | Key | Default           | Extra                       |
++-----------------+------------------+------+-----+-------------------+-----------------------------+
+| domain_id       | char(48)         | NO   | PRI | NULL              |                             |
+| upn             | char(32)         | YES  |     | NULL              |                             |
+| domain_nt       | char(32)         | YES  |     | NULL              |                             |
+| org_unit        | char(32)         | YES  |     | NULL              |                             |
+| use_supplier_ou | char(1)          | YES  |     | NULL              |                             |
+| is_active       | int(10) unsigned | YES  |     | 0                 |                             |
+| rcd             | datetime         | YES  |     | CURRENT_TIMESTAMP |                             |
+| rlu             | datetime         | YES  |     | CURRENT_TIMESTAMP | on update CURRENT_TIMESTAMP |
++-----------------+------------------+------+-----+-------------------+-----------------------------+
 
 
 	PROCEDURES AND FUNCTIONS
@@ -59,39 +92,53 @@ uses
 	
 	
 const
-	FNAME_DOMAIN = 			'domain.conf';
 	DSN = 					'DSN_ADBEHEER_32';
 	
-	TBL_LA = 				'lookup_account';
-	FLD_LA_ID = 			'rec_id';
-	FLD_LA_DN = 			'account_dn';
-	FLD_LA_DOM = 			'account_domain';
-	FLD_LA_UPN = 			'account_upn';
-	FLD_LA_NB = 			'account_netbios';
-	FLD_LA_OID = 			'account_object_id';
-	FLD_LA_UN = 			'account_username';
-	FLD_LA_ISOBSO = 		'is_obsolete';
-	FLD_LA_RCD = 			'rcd';
-	FLD_LA_RLU = 			'rlu';
+	TBL_ACC	=				'account';
+	FLD_ACC_ID = 			'account_id';
+	FLD_ACC_FULLNAME = 		'full_name';
+	FLD_ACC_FNAME = 		'first_name';
+	FLD_ACC_MNAME = 		'first_name';
+	FLD_ACC_LNAME = 		'last_name';
+	FLD_ACC_SUPP_ID = 		'ref_supplier_id';
+	FLD_ACC_TIT_ID = 		'ref_title_id';
+	FLD_ACC_MOBILE = 		'mobile';
+	FLD_ACC_EMAIL = 		'email';
+	FLD_ACC_RCD = 			'rcd';
+	FLD_ACC_RLU = 			'rlu';
+	
+	TBL_ADT = 				'account_detail';
+	FLD_ADT_ID = 			'account_detail_id';
+	FLD_ADT_ACC_ID =		'ref_account_id';
+	FLD_ADT_DOM_ID = 		'ref_domain_id';
+	FLD_ADT_REQ_ID = 		'ref_requestor_id';
+	FLD_ADT_UN = 			'user_name';
+	FLD_ADT_DN = 			'dn';
+	FLD_ADT_UPN = 			'upn';
+	FLD_ADT_PW =			'new_password';
+	FLD_ADT_DO_UNLOCK =		'do_unlock';
+	FLD_ADT_DO_RESET =		'do_reset';
+	FLD_ADT_IS_CREATED =	'is_created';
+	FLD_ADT_RCD =			'rcd';
+	FLD_ADT_RLU = 			'rlu';
 
 
 	
 var
 	gConnection: TODBCConnection;               // uses ODBCConn
 	gTransaction: TSQLTransaction;  			// Uses SqlDB
-	gstrNow: string;
-
+	
 	
 
-function DoesObjectIdExist(strObjectId: string): boolean;
+//function DoesObjectIdExist(strObjectId: string): boolean;
 function EncloseSingleQuote(const s: string): string;
 function FixNum(const s: string): string;
 function FixStr(const s: string): string;
 procedure DatabaseClose();
 procedure DatabaseOpen();
-procedure InsertRecord(strDomainNetbios: string; strDn: string; strSam: string; strObjectId: string; strUpn: string; strRcd: string; strRlu: string);
-procedure MarkInactiveRecords(strDomainNetbios: string; strLastRecordUpdated: string);
-procedure UpdateRecord(strDomainNetbios: string; strDn: string; strSam: string; strObjectId: string; strUpn: string; strRlu: string);
+//procedure InsertRecord(strDomainNetbios: string; strDn: string; strSam: string; strObjectId: string; strUpn: string; strRcd: string; strRlu: string);
+//procedure MarkInactiveRecords(strDomainNetbios: string; strLastRecordUpdated: string);
+//procedure UpdateRecord(strDomainNetbios: string; strDn: string; strSam: string; strObjectId: string; strUpn: string; strRlu: string);
 
 
 
@@ -181,14 +228,14 @@ begin
 end;
 
 
-
-function DoesObjectIdExist(strObjectId: string): boolean;
 {
-	Search for a record in the table with value strObjectId
-	
-	if found then return true
-	if not found return false
-}
+function DoesObjectIdExist(strObjectId: string): boolean;
+	//
+	//	Search for a record in the table with value strObjectId
+	//
+	//	if found then return true
+	//if not found return false
+
 var
 	rs: TSQLQuery;							// Uses SqlDB
 	q: Ansistring;
@@ -206,16 +253,16 @@ begin
 	//WriteLn('Run query: ' + q);
 	
 	DoesObjectIdExist := rs.Eof;
-	{if rs.Eof = false then
-		DoesObjectIdExist := false
-	else
-		DoesObjectIdExist := true;
-	}	
+	//if rs.Eof = false then
+	//	DoesObjectIdExist := false
+	//else
+	//	DoesObjectIdExist := true;
+		
 	rs.Free;
 end; // of function DoesObjectIdExist
+}
 
-
-
+{
 procedure InsertRecord(strDomainNetbios: string; strDn: string; strSam: string; strObjectId: string; strUpn: string; strRcd: string; strRlu: string);
 //InsertRecord(DOMAIN, DN, SAM, OBJECTID,UPN);
 var
@@ -255,9 +302,9 @@ begin
 	q.ExecSQL;
 	t.Commit;
 end; // procedure InsertRecord
+}
 
-
-
+{
 procedure UpdateRecord(strDomainNetbios: string; strDn: string; strSam: string; strObjectId: string; strUpn: string; strRlu: string);
 //InsertRecord(DOMAIN, DN, SAM, OBJECTID,UPN);
 var
@@ -296,16 +343,16 @@ begin
 	q.ExecSQL;
 	t.Commit;
 end; // procedure UpdateRecord
-
-
-procedure MarkInactiveRecords(strDomainNetbios: string; strLastRecordUpdated: string);
-{
-	Change the is_active field to 0 when the last record update 
-	for this domain strDomainNetbios was before strLastRecordUpdated.
-	
-	strDomainNetbios:		DOMAIN
-	gstrLastRecordUpdated:	YYYY-MM-DD HH:MM:SS
 }
+
+{
+procedure MarkInactiveRecords(strDomainNetbios: string; strLastRecordUpdated: string);
+	//
+	//	Change the is_active field to 0 when the last record update 
+	//	for this domain strDomainNetbios was before strLastRecordUpdated.
+	//
+	//	strDomainNetbios:		DOMAIN
+	//	gstrLastRecordUpdated:	YYYY-MM-DD HH:MM:SS
 var	
 	qu: Ansistring;
 	q: TSQLQuery;
@@ -333,7 +380,7 @@ begin
 	q.ExecSQL;
 	t.Commit;
 end; // of procedure MarkInactiveRecords
-
+}
 
 
 end.
