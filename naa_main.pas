@@ -37,6 +37,7 @@ uses
 	Process, 
 	SysUtils,
 	USupportLibrary,
+	SqlDB,
 	naa_db;
 	//UTextFile;
 	
@@ -182,6 +183,7 @@ end;
 procedure ProgRun();
 var
 	qs: Ansistring;
+	rs: TSQLQuery;							// Uses SqlDB
 begin
 	{
 		VIE_CAA = 				'view_create_admin_account';
@@ -233,31 +235,25 @@ begin
 	qs := qs + ';';
 	WriteLn(qs);
 
-{	
-	SELECT
-account.account_id,
-account.full_name,
-account.first_name,
-account.middle_name,
-account.last_name,
-account.ref_supplier_id,
-account_supplier.`name`,
-account.ref_title_id,
-account_detail.ref_account_id,
-account_detail.ref_domain_id,
-account_domain.upn,
-account_domain.domain_nt,
-account_domain.org_unit,
-account_domain.use_supplier_ou,
-account_detail.status_is_created
-FROM
-account
-INNER JOIN account_detail ON account_detail.account_detail_id = account.account_id
-INNER JOIN account_supplier ON account.ref_supplier_id = account_supplier.supplier_id
-INNER JOIN account_domain ON account_domain.domain_id = account_detail.ref_domain_id
-WHERE
-account_detail.status_is_created = 0
-}	
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+
+	if rs.EOF = true then
+		WriteLn('No records found!')
+	else
+	begin
+		while not rs.EOF do
+		begin
+			WriteLn(rs.FieldByName(FLD_CAA_DETAIL_ID).AsString);
+			rs.Next;
+		end;
+	end;
+
+	rs.Free;
+	
 end;
 
 
