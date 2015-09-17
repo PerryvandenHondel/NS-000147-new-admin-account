@@ -179,19 +179,6 @@ end; // of procedure ProcessDomain
 }
 
 
-function GenerateUserName3(strSupplier: string; strFname: string; strMname: string; strLname: string): string;
-begin
-	WriteLn('GenerateUserName3(): ' + strSupplier + '/' + strFname + ' ' + strMname + ' ' + strLname);
-	GenerateUserName3 := '';
-end; // of function GenerateUserName
-
-
-
-function GetMiddleName(strLastName: string): string;
-begin
-end;
-
-
 
 function GenerateUserName2(strSupplier: string; strFname: string; strLname: string): string;
 var
@@ -255,10 +242,92 @@ end; // of function GenerateUserName
 
 
 
+function GenerateDn(a: string; ou: string; sup: string; useSup: boolean; d: string): string;
+//
+//	Generate the Distinguished Name (DN) of a account.
+//
+//	a			Account
+//	ou 			Organizational Unit
+//	sup			Supplier code
+//	useSup		Boolean to use the supplier code
+//	d 			Domain
+var 
+	r: string;
+begin
+	if useSup = true then
+		r := 'CN=' + a + ',OU=' + sup + ',' + ou + ',' + d
+	else
+		r := 'CN=' + a + ',' + ou + ',' + d;
+	
+	GenerateDn := r;
+end; // of function GenerateDn
+
+
+
+function GenerateUpn(strAccountName: string; strDomainName: string): string;
+begin
+	GenerateUpn := strAccountName + '@'+ strDomainName;
+end; // of function GenerateUpn
+
+
+
+function GeneratePassword(): string;
+begin
+	GeneratePassword := 'Welkom18!';
+end;
+
+
+
+procedure UpdateTableAccountDetail(recId: integer; userName: string; upn: string; dn: string; pw: string);
+//
+//	Update the table account_detail with the generated values
+//		user name
+//		upn
+//		dn
+//		pw
+var
+	qu: Ansistring;
+	q: TSQLQuery;
+	t: TSQLTransaction;
+begin
+	qu := 'UPDATE ' + TBL_ADT + ' ';
+	qu := qu + 'SET ';
+	qu := qu + FLD_ADT_UN + '=' + FixStr(userName) + ',';
+	qu := qu + FLD_ADT_DN + '=' + FixStr(dn) + ',';
+	qu := qu + FLD_ADT_UPN + '=' + FixStr(upn) + ',';
+	qu := qu + FLD_ADT_PW + '=' + FixStr(pw) + ' ';
+	qu := qu + 'WHERE ' + FLD_ADT_ID + '=' + IntToStr(recId) + ';';
+	
+	WriteLn('UpdateTableAccountDetail():'  + qu);
+	
+	t := TSQLTransaction.Create(gConnection);
+	t.Database := gConnection;
+	q := TSQLQuery.Create(gConnection);
+	q.Database := gConnection;
+	q.Transaction := t;
+	q.SQL.Text := qu;
+	q.ExecSQL;
+	t.Commit;
+end;
+
+
+
 procedure FindRecordToCompleteMissingField();
 var
 	qs: Ansistring;
 	rs: TSQLQuery;							// Uses SqlDB
+	recId: integer;			// Unique record Id
+	fname: string;			// First name
+	lname: string;			// Last name
+	domId: string;			// DC=domain,DC=ext
+	upnSuf: string;			// domain.ext
+	ou: string;				// OU=ouname
+	supName: string;		// SUP
+	useSupOu: boolean;		// Boolean
+	userName: string;		// Generated user name
+	dn: string;				// Distinguished Name of the account
+	upn: string;			// full UPN for the account
+	pw: string;				// Initial password
 begin
 	qs := 'SELECT ';
 	qs := qs + FLD_CAA_DETAIL_ID;
@@ -274,6 +343,8 @@ begin
 	qs := qs + FLD_CAA_LNAME;
 	qs := qs + ',';
 	qs := qs + FLD_CAA_LNAME;
+	qs := qs + ',';
+	qs := qs + FLD_CAA_DOM_ID;
 	qs := qs + ',';
 	qs := qs + FLD_CAA_UPN;
 	qs := qs + ',';
@@ -305,9 +376,35 @@ begin
 	begin
 		while not rs.EOF do
 		begin
-			WriteLn(rs.FieldByName(FLD_CAA_DETAIL_ID).AsInteger);
-			WriteLn(rs.FieldByName(FLD_CAA_FULLNAME).AsString);
+			//WriteLn(rs.FieldByName(FLD_CAA_DETAIL_ID).AsInteger);
+			//WriteLn(rs.FieldByName(FLD_CAA_FULLNAME).AsString);
+			
+			recId := rs.FieldByName(FLD_CAA_DETAIL_ID).AsInteger;
+			fname := rs.FieldByName(FLD_CAA_FNAME).AsString;
+			lname := rs.FieldByName(FLD_CAA_LNAME).AsString;
+			domId := rs.FieldByName(FLD_CAA_DOM_ID).AsString;
+			upnSuf := rs.FieldByName(FLD_CAA_UPN).AsString;
+			ou := rs.FieldByName(FLD_CAA_OU).AsString;
+			supName := rs.FieldByName(FLD_CAA_SUPP_ID).AsString;
+			useSupOu := rs.FieldByName(FLD_CAA_USE_SUPP_OU).AsBoolean;
+					
+			WriteLn(recId,'    ',fname,'   ',lname, '   ', domId, '    ', upn, '    ', ou, '   ', supName, '    ', useSupOu);
+			
+			userName := GenerateUserName2(supName, fname, lname);
+			upn := GenerateUpn(userName, upnSuf);
+			dn := GenerateDn(userName, ou, supName, useSupOu, domId);
+			pw := GeneratePassword();
+//			GenerateDn(a: string; ou: string; sup: string; useSup: boolean; d: string): string;
+			
+			WriteLn('User name:    ', userName);
+			WriteLn('UPN:          ', upn);
+			WriteLn('DN:           ', dn);
+			WriteLn('Initial password: ', pw);
 			WriteLn;
+			
+			UpdateTableAccountDetail(recId, userName, upn, dn, pw);
+			
+			
 			rs.Next;
 		end;
 	end;
@@ -324,17 +421,24 @@ end;
 
 
 procedure ProgRun();
+var
+	a: string;
 begin
 	//WriteLn(GenerateUserName2('NSA', 'Teresa', 'Lisbon'));
 	//WriteLn(GenerateUserName2('KPN', 'Arnold', 'Van den Schwarzennegger'));
 	//WriteLn(GenerateUserName2('KPN', 'Arnold', 'Schwarzennegger'));
-	WriteLn(GenerateUserName2('HP', 'Piet', 'van de Regger'));
+	a := GenerateUserName2('HP', 'Piet', 'van de Regger');
 	//WriteLn(GenerateUserName2('CSC', 'Rudolf', 'van Veen'));
 	//WriteLn(GenerateUserName2('NSA', 'Richard', 'van ''t Haar'));
 	//WriteLn(GenerateUserName2('NSA', '', 'Cher'));
 	//WriteLn(GenerateUserName2('NSA', 'Margret', 'Van den Boo-Van Assel')); // > Should become Margret.vdBoovAssel
 	
 	
+	Writeln(GenerateUpn(a, 'prod.ns.nl'));
+	WriteLn(GenerateDn(a, 'OU=Beheer', 'HP', true, 'DC=prod,DC=ns,DC=nl'));
+	WriteLn(GenerateDn(a, 'OU=Beheer', 'KPN', false, 'DC=rs,DC=root,DC=nedtrain,DC=nl'));
+
+	 
 	FindRecordToCompleteMissingField();
 	
 	

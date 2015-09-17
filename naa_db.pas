@@ -142,6 +142,7 @@ const
 	FLD_CAA_MNAME = 		'middle_name';
 	FLD_CAA_LNAME = 		'last_name';
 	FLD_CAA_UPN = 			'upn';
+	FLD_CAA_DOM_ID = 		'ref_domain_id';
 	FLD_CAA_NT = 			'domain_nt';
 	FLD_CAA_OU = 			'org_unit';
 	FLD_CAA_USE_SUPP_OU = 	'use_supplier_ou';
