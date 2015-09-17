@@ -18,6 +18,16 @@
 		procedure ProgRun
 		procedure ProgDone
 
+		
+	FLOW
+		ProgInit
+			DatabaseOpen
+		ProgRun
+			FindRecordToCompleteMissingField; 0 > 10
+			Check
+		ProgDone
+			DatabaseClose
+		
 }
 
 
@@ -285,6 +295,8 @@ procedure UpdateTableAccountDetail(recId: integer; userName: string; upn: string
 //		upn
 //		dn
 //		pw
+//
+//	Sets the status to 10;
 var
 	qu: Ansistring;
 	q: TSQLQuery;
@@ -295,7 +307,9 @@ begin
 	qu := qu + FLD_ADT_UN + '=' + FixStr(userName) + ',';
 	qu := qu + FLD_ADT_DN + '=' + FixStr(dn) + ',';
 	qu := qu + FLD_ADT_UPN + '=' + FixStr(upn) + ',';
-	qu := qu + FLD_ADT_PW + '=' + FixStr(pw) + ' ';
+	qu := qu + FLD_ADT_PW + '=' + FixStr(pw) + ',';
+	// Change status to 100 for next step!
+	qu := qu + FLD_ADT_STATUS + '=100 ';
 	qu := qu + 'WHERE ' + FLD_ADT_ID + '=' + IntToStr(recId) + ';';
 	
 	WriteLn('UpdateTableAccountDetail():'  + qu);
@@ -313,6 +327,11 @@ end;
 
 
 procedure FindRecordToCompleteMissingField();
+//
+//	Status
+//		0		Find all records that have status 0
+//		10		Records are updated with username, dn, upn and pw.
+//
 var
 	qs: Ansistring;
 	rs: TSQLQuery;							// Uses SqlDB
@@ -330,37 +349,20 @@ var
 	pw: string;				// Initial password
 begin
 	qs := 'SELECT ';
-	qs := qs + FLD_CAA_DETAIL_ID;
-	qs := qs + ',';
-	qs := qs + FLD_CAA_ACCOUNT_ID;
-	qs := qs + ',';
-	qs := qs + FLD_CAA_FULLNAME;
-	qs := qs + ',';
-	qs := qs + FLD_CAA_FNAME;
-	qs := qs + ',';
-	qs := qs + FLD_CAA_MNAME;
-	qs := qs + ',';
-	qs := qs + FLD_CAA_LNAME;
-	qs := qs + ',';
-	qs := qs + FLD_CAA_LNAME;
-	qs := qs + ',';
-	qs := qs + FLD_CAA_DOM_ID;
-	qs := qs + ',';
-	qs := qs + FLD_CAA_UPN;
-	qs := qs + ',';
-	qs := qs + FLD_CAA_NT;
-	qs := qs + ',';
-	qs := qs + FLD_CAA_OU;
-	qs := qs + ',';
-	qs := qs + FLD_CAA_USE_SUPP_OU;
-	qs := qs + ',';
-	qs := qs + FLD_CAA_SUPP_ID;
-	qs := qs + ',';
-	qs := qs + FLD_CAA_SUPP_NAME;
-	qs := qs + ',';
-	qs := qs + FLD_CAA_STATUS;
-	qs := qs + ' ';
-	qs := qs + 'FROM '+ VIE_CAA;
+	qs := qs + FLD_CAA_DETAIL_ID + ',';
+	qs := qs + FLD_CAA_ACCOUNT_ID + ',';
+	qs := qs + FLD_CAA_FNAME + ',';
+	qs := qs + FLD_CAA_LNAME + ',';
+	qs := qs + FLD_CAA_DOM_ID + ',';
+	qs := qs + FLD_CAA_UPN + ',';
+	qs := qs + FLD_CAA_NT + ',';
+	qs := qs + FLD_CAA_OU + ',';
+	qs := qs + FLD_CAA_USE_SUPP_OU + ',';
+	qs := qs + FLD_CAA_SUPP_ID + ',';
+	qs := qs + FLD_CAA_SUPP_NAME + ',';
+	qs := qs + FLD_CAA_STATUS + ' ';
+	qs := qs + 'FROM '+ VIE_CAA + ' ';
+	qs := qs + 'WHERE ' + FLD_CAA_STATUS + '=0';
 	qs := qs + ';';
 	WriteLn(qs);
 
@@ -388,7 +390,7 @@ begin
 			supName := rs.FieldByName(FLD_CAA_SUPP_ID).AsString;
 			useSupOu := rs.FieldByName(FLD_CAA_USE_SUPP_OU).AsBoolean;
 					
-			WriteLn(recId,'    ',fname,'   ',lname, '   ', domId, '    ', upn, '    ', ou, '   ', supName, '    ', useSupOu);
+			WriteLn(recId,'    ',fname,'   ',lname, '   ', domId, '    ', upnSuf, '    ', ou, '   ', supName, '    ', useSupOu);
 			
 			userName := GenerateUserName2(supName, fname, lname);
 			upn := GenerateUpn(userName, upnSuf);
@@ -440,8 +442,6 @@ begin
 
 	 
 	FindRecordToCompleteMissingField();
-	
-	
 end;
 
 
