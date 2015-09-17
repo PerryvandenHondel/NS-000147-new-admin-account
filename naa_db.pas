@@ -32,7 +32,7 @@ mysql> describe account_detail;
 | new_password      | char(32)            | YES  |     | NULL              |                             |
 | do_unlock         | tinyint(3) unsigned | YES  |     | 0                 |                             |
 | do_reset          | tinyint(3) unsigned | YES  |     | 0                 |                             |
-| is_created        | tinyint(3) unsigned | YES  |     | 0                 |                             |
+| status            | tiny unsigned       | YES  |     | 0                 |                             |
 | rcd               | datetime            | YES  |     | CURRENT_TIMESTAMP |                             |
 | rlu               | datetime            | YES  |     | CURRENT_TIMESTAMP | on update CURRENT_TIMESTAMP |
 +-------------------+---------------------+------+-----+-------------------+-----------------------------+
@@ -118,7 +118,7 @@ const
 	FLD_ADT_PW =			'new_password';
 	FLD_ADT_DO_UNLOCK =		'do_unlock';
 	FLD_ADT_DO_RESET =		'do_reset';
-	FLD_ADT_IS_CREATED =	'is_created';
+	FLD_ADT_STATUS =	'status';
 	FLD_ADT_RCD =			'rcd';
 	FLD_ADT_RLU = 			'rlu';
 
@@ -147,7 +147,7 @@ const
 	FLD_CAA_USE_SUPP_OU = 	'use_supplier_ou';
 	FLD_CAA_SUPP_ID = 		'ref_supplier_id';
 	FLD_CAA_SUPP_NAME = 	'name';
-	FLD_CAA_IS_CREATED = 	'is_created';
+	FLD_CAA_STATUS = 	 	'status';
 
 	
 	

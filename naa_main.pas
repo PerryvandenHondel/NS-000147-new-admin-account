@@ -44,7 +44,7 @@ uses
 	
 	
 const
-	FNAME_DOMAIN = 			'domain.conf';
+	//FNAME_DOMAIN = 			'domain.conf';
 	//DSN = 					'DSN_ADBEHEER_32';
 	
 	//TBL_LA = 				'lookup_account';
@@ -61,6 +61,12 @@ const
 	
 	STEP_MOD = 				27;
 
+	
+Type
+	TMiddleNameRec = Record
+		find: string;
+		repl: string;
+	end;
 
 //var
 	//gConnection: TODBCConnection;               // uses ODBCConn
@@ -173,35 +179,87 @@ end; // of procedure ProcessDomain
 }
 
 
-procedure ProgInit();
+function GenerateUserName3(strSupplier: string; strFname: string; strMname: string; strLname: string): string;
 begin
-	DatabaseOpen();
+	WriteLn('GenerateUserName3(): ' + strSupplier + '/' + strFname + ' ' + strMname + ' ' + strLname);
+	GenerateUserName3 := '';
+end; // of function GenerateUserName
+
+
+
+function GetMiddleName(strLastName: string): string;
+begin
 end;
 
 
 
-procedure ProgRun();
+function GenerateUserName2(strSupplier: string; strFname: string; strLname: string): string;
+var
+	MiddleNameArray: Array[1..6] of TMiddleNameRec;
+	i: integer;
+	strLnameBuffer: string;
+	strGenerated: string;
+begin
+	WriteLn('GenerateUserName2(): ' + strSupplier + '/' + strFname + ' ' + strLname);
+	
+	strLnameBuffer := strLname;
+	
+	GenerateUserName2 := '';
+	
+	MiddleNameArray[1].find := 'van '; 
+	MiddleNameArray[1].repl := 'v';
+	
+	MiddleNameArray[2].find := 'de '; 
+	MiddleNameArray[2].repl := 'd';
+	
+	MiddleNameArray[3].find := 'den '; 
+	MiddleNameArray[3].repl := 'd';
+	
+	MiddleNameArray[4].find := '''t '; 
+	MiddleNameArray[4].repl := 't';
+	
+	MiddleNameArray[5].find := 'der '; 
+	MiddleNameArray[5].repl := 'd';
+	
+	MiddleNameArray[6].find := 'la '; 
+	MiddleNameArray[6].repl := 'l';
+	
+	for i := 1 to Length(MiddleNameArray) do
+	begin
+		//WriteLn('Find [' + MiddleNameArray[i].find + '] and replace with [' + MiddleNameArray[i].repl + ']');
+		strLnameBuffer := StringReplace(strLnameBuffer, MiddleNameArray[i].find, MiddleNameArray[i].repl, [rfReplaceAll, rfIgnoreCase]);
+		//WriteLn(strLnameBuffer);
+	end;
+	
+	// Replace the minus character from the Last name.
+	strLnameBuffer := StringReplace(strLnameBuffer, '-', '', [rfReplaceAll, rfIgnoreCase]);
+	
+	//WriteLn('FINAL LASTNAME: '+ strLnameBuffer);
+	
+	// Generate a full user name <SUPPLIER>_<FNAME>.<LNAME>
+	if Length(strFname) = 0 then
+		// Check for persons with only 1 name, like Cher and Madonna
+		strGenerated := strSupplier + '_' + strLnameBuffer
+	else
+		// Persons with first and last names.
+		strGenerated := strSupplier + '_' + strFname + '.' + strLnameBuffer;
+		
+	if Length(strGenerated) > 20 then
+	begin
+		strGenerated := LeftStr(strSupplier + '_' + LeftStr(strFname, 1) + '.' + strLnameBuffer, 20);
+		//WriteLn('Finale generated name is to long, so only the first letter of the first name is used.');
+		//WriteLn(strGenerated);
+	end;
+	GenerateUserName2 := strGenerated;
+end; // of function GenerateUserName
+
+
+
+procedure FindRecordToCompleteMissingField();
 var
 	qs: Ansistring;
 	rs: TSQLQuery;							// Uses SqlDB
 begin
-	{
-		VIE_CAA = 				'view_create_admin_account';
-	FLD_CAA_DETAIL_ID = 	'account_detail_id';
-	FLD_CAA_ACCOUNT_ID = 	'account_id';
-	FLD_CAA_FULLNAME = 		'full_name';
-	FLD_CAA_FNAME = 		'first_name';
-	FLD_CAA_MNAME = 		'middle_name';
-	FLD_CAA_LNAME = 		'last_name';
-	FLD_CAA_UPN = 			'upn';
-	FLD_CAA_NT = 			'domain_nt';
-	FLD_CAA_OU = 			'org_unit';
-	FLD_CAA_USE_SUPP_OU = 	'use_supplier_ou';
-	FLD_CAA_SUPP_ID = 		'ref_supplier_id';
-	FLD_CAA_SUPP_NAME = 	'name';
-	FLD_CAA_IS_CREATED = 	'is_created';
-	}
-	
 	qs := 'SELECT ';
 	qs := qs + FLD_CAA_DETAIL_ID;
 	qs := qs + ',';
@@ -229,7 +287,7 @@ begin
 	qs := qs + ',';
 	qs := qs + FLD_CAA_SUPP_NAME;
 	qs := qs + ',';
-	qs := qs + FLD_CAA_IS_CREATED;
+	qs := qs + FLD_CAA_STATUS;
 	qs := qs + ' ';
 	qs := qs + 'FROM '+ VIE_CAA;
 	qs := qs + ';';
@@ -247,12 +305,38 @@ begin
 	begin
 		while not rs.EOF do
 		begin
-			WriteLn(rs.FieldByName(FLD_CAA_DETAIL_ID).AsString);
+			WriteLn(rs.FieldByName(FLD_CAA_DETAIL_ID).AsInteger);
+			WriteLn(rs.FieldByName(FLD_CAA_FULLNAME).AsString);
+			WriteLn;
 			rs.Next;
 		end;
 	end;
-
 	rs.Free;
+end; // of procedure FindRecordToCreateNewAccounts
+
+
+
+procedure ProgInit();
+begin
+	DatabaseOpen();
+end;
+
+
+
+procedure ProgRun();
+begin
+	//WriteLn(GenerateUserName2('NSA', 'Teresa', 'Lisbon'));
+	//WriteLn(GenerateUserName2('KPN', 'Arnold', 'Van den Schwarzennegger'));
+	//WriteLn(GenerateUserName2('KPN', 'Arnold', 'Schwarzennegger'));
+	WriteLn(GenerateUserName2('HP', 'Piet', 'van de Regger'));
+	//WriteLn(GenerateUserName2('CSC', 'Rudolf', 'van Veen'));
+	//WriteLn(GenerateUserName2('NSA', 'Richard', 'van ''t Haar'));
+	//WriteLn(GenerateUserName2('NSA', '', 'Cher'));
+	//WriteLn(GenerateUserName2('NSA', 'Margret', 'Van den Boo-Van Assel')); // > Should become Margret.vdBoovAssel
+	
+	
+	FindRecordToCompleteMissingField();
+	
 	
 end;
 
