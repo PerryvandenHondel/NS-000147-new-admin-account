@@ -281,13 +281,6 @@ end; // of function GenerateUpn
 
 
 
-function GeneratePassword(): string;
-begin
-	GeneratePassword := 'Welkom18!';
-end;
-
-
-
 procedure UpdateTableAccountDetail(recId: integer; userName: string; upn: string; dn: string; pw: string);
 //
 //	Update the table account_detail with the generated values
@@ -395,7 +388,7 @@ begin
 			userName := GenerateUserName2(supName, fname, lname);
 			upn := GenerateUpn(userName, upnSuf);
 			dn := GenerateDn(userName, ou, supName, useSupOu, domId);
-			pw := GeneratePassword();
+			pw := GeneratePassword(); // From USupportLibrary
 //			GenerateDn(a: string; ou: string; sup: string; useSup: boolean; d: string): string;
 			
 			WriteLn('User name:    ', userName);
