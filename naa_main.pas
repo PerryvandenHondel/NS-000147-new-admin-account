@@ -280,6 +280,95 @@ begin
 end; // of function GenerateUpn
 
 
+procedure TableAccountDetailUpdateStatus(intRecordId: integer; intNewStatus: integer);
+//
+//	Update the table account_detail.
+//	Set a new status in status using intNewStatus.
+//
+var
+	q: TSQLQuery;
+	t: TSQLTransaction;
+	qu: Ansistring;
+begin
+	t := TSQLTransaction.Create(gConnection);
+	t.Database := gConnection;
+	q := TSQLQuery.Create(gConnection);
+	q.Database := gConnection;
+	q.Transaction := t;
+
+	qu := 'UPDATE ' + TBL_ADT + ' ';
+	qu := qu + 'SET ';
+	qu := qu + FLD_ADT_STATUS + '=' + IntToStr(intNewStatus) + ' ';
+	qu := qu + 'WHERE ' + FLD_ADT_ID + '=' + IntToStr(intRecordId) + ';';
+	
+	q.SQL.Text := qu;
+	
+	WriteLn(qu);
+	
+	//gConnection.ExecuteDirect(q);
+	q.ExecSQL;
+	t.Commit;
+end;
+
+
+
+procedure StepCheckForExisting();
+//
+//	Step Check for Existing accounts.
+//
+var	
+	qs: Ansistring;
+	rs: TSQLQuery;							// Uses SqlDB
+	recId: integer;
+	dn: string;
+	c: string;
+	e: integer;
+	
+begin
+	WriteLn('StepCheckForExisting()----------------');
+	qs := 'SELECT '+ FLD_ADT_ID + ',' + FLD_ADT_DN + ' ';
+	qs := qs + 'FROM ' + TBL_ADT + ' ';
+	qs := qs + 'WHERE ' + FLD_ADT_STATUS + '=100';
+	
+	WriteLn(qs);
+
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+
+	if rs.EOF = true then
+		WriteLn('No records found!')
+	else
+	begin
+		while not rs.EOF do
+		begin
+			recId := rs.FieldByName(FLD_ADT_ID).AsInteger;
+			dn := rs.FieldByName(FLD_ADT_DN).AsString;
+			
+			WriteLn('Checking DN ' + dn + ' exists...');
+			c := 'dsquery.exe user "' + dn + '"';
+			WriteLn('COMMAND LINE: ' + c);
+			e := RunCommand(c);
+			WriteLn('ERRORLEVEL=', e);
+			
+			//e = 0 			Account already found.
+			//e = -2147016656	User does not exist, create it
+				
+			case e of
+				0: TableAccountDetailUpdateStatus(recId, 199); // Account exists already
+				-2147016656: TableAccountDetailUpdateStatus(recId, 200); // Account does not exists, next step 200
+			else
+				TableAccountDetailUpdateStatus(recId, 198); // Unknown response.
+			end; // of case.
+			rs.Next;
+		end;
+	end;
+	rs.Free;
+end;
+
+
 
 procedure UpdateTableAccountDetail(recId: integer; userName: string; upn: string; dn: string; pw: string);
 //
@@ -319,7 +408,7 @@ end;
 
 
 
-procedure FindRecordToCompleteMissingField();
+procedure StepCompleteMissingField();
 //
 //	Status
 //		0		Find all records that have status 0
@@ -341,6 +430,8 @@ var
 	upn: string;			// full UPN for the account
 	pw: string;				// Initial password
 begin
+	WriteLn('FindRecordToCompleteMissingField()--------------------');
+
 	qs := 'SELECT ';
 	qs := qs + FLD_CAA_DETAIL_ID + ',';
 	qs := qs + FLD_CAA_ACCOUNT_ID + ',';
@@ -399,7 +490,6 @@ begin
 			
 			UpdateTableAccountDetail(recId, userName, upn, dn, pw);
 			
-			
 			rs.Next;
 		end;
 	end;
@@ -416,25 +506,26 @@ end;
 
 
 procedure ProgRun();
-var
-	a: string;
+//var
+//	a: string;
 begin
 	//WriteLn(GenerateUserName2('NSA', 'Teresa', 'Lisbon'));
 	//WriteLn(GenerateUserName2('KPN', 'Arnold', 'Van den Schwarzennegger'));
 	//WriteLn(GenerateUserName2('KPN', 'Arnold', 'Schwarzennegger'));
-	a := GenerateUserName2('HP', 'Piet', 'van de Regger');
+	//a := GenerateUserName2('HP', 'Piet', 'van de Regger');
 	//WriteLn(GenerateUserName2('CSC', 'Rudolf', 'van Veen'));
 	//WriteLn(GenerateUserName2('NSA', 'Richard', 'van ''t Haar'));
 	//WriteLn(GenerateUserName2('NSA', '', 'Cher'));
 	//WriteLn(GenerateUserName2('NSA', 'Margret', 'Van den Boo-Van Assel')); // > Should become Margret.vdBoovAssel
 	
 	
-	Writeln(GenerateUpn(a, 'prod.ns.nl'));
-	WriteLn(GenerateDn(a, 'OU=Beheer', 'HP', true, 'DC=prod,DC=ns,DC=nl'));
-	WriteLn(GenerateDn(a, 'OU=Beheer', 'KPN', false, 'DC=rs,DC=root,DC=nedtrain,DC=nl'));
+	//Writeln(GenerateUpn(a, 'prod.ns.nl'));
+	//WriteLn(GenerateDn(a, 'OU=Beheer', 'HP', true, 'DC=prod,DC=ns,DC=nl'));
+	//WriteLn(GenerateDn(a, 'OU=Beheer', 'KPN', false, 'DC=rs,DC=root,DC=nedtrain,DC=nl'));
 
 	 
-	FindRecordToCompleteMissingField();
+	StepCompleteMissingField();		// 0 > 100
+	StepCheckForExisting(); 		// 100 > 200;
 end;
 
 
