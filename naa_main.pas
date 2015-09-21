@@ -54,22 +54,9 @@ uses
 	
 	
 const
-	//FNAME_DOMAIN = 			'domain.conf';
-	//DSN = 					'DSN_ADBEHEER_32';
-	
-	//TBL_LA = 				'lookup_account';
-	//FLD_LA_ID = 			'rec_id';
-//	FLD_LA_DN = 			'account_dn';
-	//FLD_LA_DOM = 			'account_domain';
-	//FLD_LA_UPN = 			'account_upn';
-	//FLD_LA_NB = 			'account_netbios';
-	//FLD_LA_OID = 			'account_object_id';
-	//FLD_LA_UN = 			'account_username';
-	//FLD_LA_ACTIVE = 		'is_active';
-	//FLD_LA_RCD = 			'rcd';
-	//FLD_LA_RLU = 			'rlu';
-	
-	STEP_MOD = 				27;
+	STEP_MOD = 					27;
+	MAX_USER_NAME_LENGTH = 		20;
+
 
 	
 Type
@@ -190,19 +177,39 @@ end; // of procedure ProcessDomain
 
 
 
-function GenerateUserName2(strSupplier: string; strFname: string; strLname: string): string;
+procedure RunQuery(qs: Ansistring);
+//
+//	Run a query
+//
+var
+	q: TSQLQuery;
+	t: TSQLTransaction;
+begin
+	t := TSQLTransaction.Create(gConnection);
+	t.Database := gConnection;
+	q := TSQLQuery.Create(gConnection);
+	q.Database := gConnection;
+	q.Transaction := t;
+	q.SQL.Text := qs;
+	q.ExecSQL;
+	t.Commit;
+end; // of procedure RunQuery
+
+
+
+function ReplaceMiddleNames(s: string): string;
+//
+// Replace all occurances of MiddleNameArray.Find for MiddleNameArray.Repl.
+//
 var
 	MiddleNameArray: Array[1..6] of TMiddleNameRec;
-	i: integer;
-	strLnameBuffer: string;
-	strGenerated: string;
+	i: integer;	
+	sBuff: string;
 begin
-	WriteLn('GenerateUserName2(): ' + strSupplier + '/' + strFname + ' ' + strLname);
+	// Assign the input string to sBuff.
+	sBuff := s + ' '; // Add a space to the end. Searching for middle name with a space.
 	
-	strLnameBuffer := strLname;
-	
-	GenerateUserName2 := '';
-	
+	// Assign all middle name variations with the replacement to the array.
 	MiddleNameArray[1].find := 'van '; 
 	MiddleNameArray[1].repl := 'v';
 	
@@ -223,32 +230,50 @@ begin
 	
 	for i := 1 to Length(MiddleNameArray) do
 	begin
-		//WriteLn('Find [' + MiddleNameArray[i].find + '] and replace with [' + MiddleNameArray[i].repl + ']');
-		strLnameBuffer := StringReplace(strLnameBuffer, MiddleNameArray[i].find, MiddleNameArray[i].repl, [rfReplaceAll, rfIgnoreCase]);
-		//WriteLn(strLnameBuffer);
-	end;
+		sBuff := StringReplace(sBuff, MiddleNameArray[i].find, MiddleNameArray[i].repl, [rfReplaceAll, rfIgnoreCase]);
+	end; // of for
+	ReplaceMiddleNames := sBuff;
+end; // of function ReplaceMiddleNames
+
+
+
+function GenerateUserName3(strSupplier: string; fn: string; mn: string; ln: string): string;
+var
+	r: string;		// Return value of this function.
+begin
+	WriteLn('GenerateUserName3(): ' + strSupplier + '/' + fn + ' ' + mn + ' ' + ln);
 	
-	// Replace the minus character from the Last name.
-	strLnameBuffer := StringReplace(strLnameBuffer, '-', '', [rfReplaceAll, rfIgnoreCase]);
+	//strLnameBuffer := strLname;
 	
-	//WriteLn('FINAL LASTNAME: '+ strLnameBuffer);
+	GenerateUserName3 := '';
 	
-	// Generate a full user name <SUPPLIER>_<FNAME>.<LNAME>
-	if Length(strFname) = 0 then
-		// Check for persons with only 1 name, like Cher and Madonna
-		strGenerated := strSupplier + '_' + strLnameBuffer
-	else
-		// Persons with first and last names.
-		strGenerated := strSupplier + '_' + strFname + '.' + strLnameBuffer;
-		
-	if Length(strGenerated) > 20 then
+	
+	if Length(mn) > 0 then
 	begin
-		strGenerated := LeftStr(strSupplier + '_' + LeftStr(strFname, 1) + '.' + strLnameBuffer, 20);
-		//WriteLn('Finale generated name is to long, so only the first letter of the first name is used.');
-		//WriteLn(strGenerated);
-	end;
-	GenerateUserName2 := strGenerated;
-end; // of function GenerateUserName
+		// Add a space to the middle name.
+		mn := ReplaceMiddleNames(mn);
+	end; // of if
+	
+	ln := ReplaceMiddleNames(ln);
+	
+	WriteLn(mn);
+	WriteLn(ln);
+	
+	
+	if Length(fn) = 0 then
+		// If there is no first name, like Cher or Madonna.
+		r := strSupplier + '_' + ln
+	else
+	begin
+		if Length(mn) > 0 then
+			r := strSupplier + '_' + fn + '.' + mn + ln
+		else
+			r:= strSupplier + '_' + fn + '.' + ln;
+	end; // of if
+	
+	// Return the value, trim all spaces around the string.
+	GenerateUserName3 := Trim(r);
+end; // of function GenerateUserName3
 
 
 
@@ -280,39 +305,137 @@ begin
 end; // of function GenerateUpn
 
 
+
+procedure StepFillActionTable(intStatus: integer);
+var	
+	qs: Ansistring;
+	rs: TSQLQuery;
+	c: Ansistring;
+	recId: integer;
+	uid: string;
+begin
+	WriteLn('StepFillActionTable(): ', intStatus);
+	qs := 'SELECT * ';
+	qs := qs + 'FROM ' + VIE_CAA + ' ';
+	qs := qs + 'WHERE ' + FLD_CAA_STATUS + '=' + IntToStr(intStatus);
+	qs := qs + ';';
+	
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+
+	if rs.EOF = true then
+		WriteLn('No records found!')
+	else
+	begin
+		while not rs.EOF do
+		begin
+			//WriteLn(rs.FieldByName(FLD_CAA_DN).AsString);
+			
+			WriteLn('Unique ID: ' + GetRandomString(32));
+			
+			c := 'dsadd.exe user ';
+			c := c + EncloseDoubleQuote(rs.FieldByName(FLD_CAA_DN).AsString) + ' ';
+			c := c + '-samid ' + EncloseDoubleQuote(rs.FieldByName(FLD_CAA_USER_NAME).AsString) + ' ';
+			c := c + '-upn ' + EncloseDoubleQuote(rs.FieldByName(FLD_CAA_UPN).AsString) + ' ';
+			c := c + '-pwd ' + EncloseDoubleQuote(rs.FieldByName(FLD_CAA_INIT_PW).AsString) + ' ';
+			WriteLn(c);
+			
+			
+			
+			
+			
+			{			
+				c = "dsadd user " & EncloseWithDQ(strUserDn) & " "
+				c = c & "-samid " & EncloseWithDQ(strUserName) & " "
+				c = c & "-pwd " & EncloseWithDQ(strPassword) & " "
+				c = c & "-fn " & EncloseWithDQ(Trim(strFirstName & " " & strMiddleName)) & " "
+				c = c & "-ln " & EncloseWithDQ(strLastName) & " "
+				c = c & "-title " & EncloseWithDQ(strTitle) & " "
+				c = c & "-desc " & EncloseWithDQ(strDescription) & " "
+				c = c & "-display " & EncloseWithDQ(strUserName) & " "
+				c = c & "-upn " & EncloseWithDQ(strUserUpn) & " "
+				
+				If Len(strMobile) > 0 Then
+					c = c & "-mobile " & EncloseWithDQ(strMobile) & " "
+				End If
+				c = c & "-company " & EncloseWithDQ(strSupplierId) & " "
+				c = c & "-mustchpwd yes"
+						
+			}
+			
+			{
+			recId := rs.FieldByName(FLD_CAA_DETAIL_ID).AsInteger;
+			fname := rs.FieldByName(FLD_CAA_FNAME).AsString;
+			mname := rs.FieldByName(FLD_CAA_MNAME).AsString;
+			lname := rs.FieldByName(FLD_CAA_LNAME).AsString;
+			domId := rs.FieldByName(FLD_CAA_DOM_ID).AsString;
+			upnSuf := rs.FieldByName(FLD_CAA_UPN).AsString;
+			ou := rs.FieldByName(FLD_CAA_OU).AsString;
+			supName := rs.FieldByName(FLD_CAA_SUPP_ID).AsString;
+			useSupOu := rs.FieldByName(FLD_CAA_USE_SUPP_OU).AsBoolean;
+					
+			WriteLn(recId,'    ',fname,'   ',lname, '   ', domId, '    ', upnSuf, '    ', ou, '   ', supName, '    ', useSupOu);
+			
+			userName := GenerateUserName3(supName, fname, mname, lname);
+			upn := GenerateUpn(userName, upnSuf);
+			dn := GenerateDn(userName, ou, supName, useSupOu, domId);
+			pw := GeneratePassword(); // From USupportLibrary
+//			GenerateDn(a: string; ou: string; sup: string; useSup: boolean; d: string): string;
+			
+			WriteLn('User name:    ', userName);
+			WriteLn('UPN:          ', upn);
+			WriteLn('DN:           ', dn);
+			WriteLn('Initial password: ', pw);
+			WriteLn;
+			
+			UpdateTableAccountDetail(recId, userName, upn, dn, pw);
+			} 
+			rs.Next;
+		end;
+	end;
+	rs.Free;
+end; // of procedure StepFillActionTable
+
+
+
 procedure TableAccountDetailUpdateStatus(intRecordId: integer; intNewStatus: integer);
 //
 //	Update the table account_detail.
 //	Set a new status in status using intNewStatus.
 //
 var
-	q: TSQLQuery;
-	t: TSQLTransaction;
+	//q: TSQLQuery;
+	//t: TSQLTransaction;
 	qu: Ansistring;
 begin
-	t := TSQLTransaction.Create(gConnection);
-	t.Database := gConnection;
-	q := TSQLQuery.Create(gConnection);
-	q.Database := gConnection;
-	q.Transaction := t;
+	//t := TSQLTransaction.Create(gConnection);
+	//t.Database := gConnection;
+	//q := TSQLQuery.Create(gConnection);
+	//q.Database := gConnection;
+	//q.Transaction := t;
 
 	qu := 'UPDATE ' + TBL_ADT + ' ';
 	qu := qu + 'SET ';
 	qu := qu + FLD_ADT_STATUS + '=' + IntToStr(intNewStatus) + ' ';
 	qu := qu + 'WHERE ' + FLD_ADT_ID + '=' + IntToStr(intRecordId) + ';';
 	
-	q.SQL.Text := qu;
+	RunQuery(qu);
 	
-	WriteLn(qu);
+	//q.SQL.Text := qu;
+	
+	//WriteLn(qu);
 	
 	//gConnection.ExecuteDirect(q);
-	q.ExecSQL;
-	t.Commit;
+	//q.ExecSQL;
+	//t.Commit;
 end;
 
 
 
-procedure StepCheckForExisting();
+procedure StepCheckForExisting(intStatus: integer);
 //
 //	Step Check for Existing accounts.
 //
@@ -328,7 +451,7 @@ begin
 	WriteLn('StepCheckForExisting()----------------');
 	qs := 'SELECT '+ FLD_ADT_ID + ',' + FLD_ADT_DN + ' ';
 	qs := qs + 'FROM ' + TBL_ADT + ' ';
-	qs := qs + 'WHERE ' + FLD_ADT_STATUS + '=100';
+	qs := qs + 'WHERE ' + FLD_ADT_STATUS + '=' + IntToStr(intStatus);
 	
 	WriteLn(qs);
 
@@ -353,12 +476,14 @@ begin
 			e := RunCommand(c);
 			WriteLn('ERRORLEVEL=', e);
 			
-			//e = 0 			Account already found.
-			//e = -2147016656	User does not exist, create it
+			//e = 0 			Account is found.
+			//e = -2147016656	Account not found, create it.
 				
 			case e of
-				0: TableAccountDetailUpdateStatus(recId, 199); // Account exists already
-				-2147016656: TableAccountDetailUpdateStatus(recId, 200); // Account does not exists, next step 200
+				0: 
+					TableAccountDetailUpdateStatus(recId, 199); // Account exists already
+				-2147016656: 
+					TableAccountDetailUpdateStatus(recId, 200); // Account does not exists, next step 200
 			else
 				TableAccountDetailUpdateStatus(recId, 198); // Unknown response.
 			end; // of case.
@@ -381,8 +506,8 @@ procedure UpdateTableAccountDetail(recId: integer; userName: string; upn: string
 //	Sets the status to 10;
 var
 	qu: Ansistring;
+	//t: TSQLTransaction;
 	q: TSQLQuery;
-	t: TSQLTransaction;
 begin
 	qu := 'UPDATE ' + TBL_ADT + ' ';
 	qu := qu + 'SET ';
@@ -395,20 +520,22 @@ begin
 	qu := qu + 'WHERE ' + FLD_ADT_ID + '=' + IntToStr(recId) + ';';
 	
 	WriteLn('UpdateTableAccountDetail():'  + qu);
+		
+	RunQuery(qu);
 	
-	t := TSQLTransaction.Create(gConnection);
-	t.Database := gConnection;
-	q := TSQLQuery.Create(gConnection);
-	q.Database := gConnection;
-	q.Transaction := t;
-	q.SQL.Text := qu;
-	q.ExecSQL;
-	t.Commit;
-end;
+	//t := TSQLTransaction.Create(gConnection);
+	//t.Database := gConnection;
+	//q := TSQLQuery.Create(gConnection);
+	//q.Database := gConnection;
+	//q.Transaction := t;
+	//q.SQL.Text := qu;
+	//q.ExecSQL;
+	//t.Commit;
+end; // of procedure UpdateTableAccountDetail
 
 
 
-procedure StepCompleteMissingField();
+procedure StepCompleteMissingField(intStatus: integer);
 //
 //	Status
 //		0		Find all records that have status 0
@@ -419,6 +546,7 @@ var
 	rs: TSQLQuery;							// Uses SqlDB
 	recId: integer;			// Unique record Id
 	fname: string;			// First name
+	mname: string;
 	lname: string;			// Last name
 	domId: string;			// DC=domain,DC=ext
 	upnSuf: string;			// domain.ext
@@ -436,9 +564,11 @@ begin
 	qs := qs + FLD_CAA_DETAIL_ID + ',';
 	qs := qs + FLD_CAA_ACCOUNT_ID + ',';
 	qs := qs + FLD_CAA_FNAME + ',';
+	qs := qs + FLD_CAA_MNAME + ',';
 	qs := qs + FLD_CAA_LNAME + ',';
 	qs := qs + FLD_CAA_DOM_ID + ',';
-	qs := qs + FLD_CAA_UPN + ',';
+	//qs := qs + FLD_CAA_UPN + ',';
+	qs := qs + FLD_CAA_UPN_SUFF + ',';
 	qs := qs + FLD_CAA_NT + ',';
 	qs := qs + FLD_CAA_OU + ',';
 	qs := qs + FLD_CAA_USE_SUPP_OU + ',';
@@ -446,7 +576,7 @@ begin
 	qs := qs + FLD_CAA_SUPP_NAME + ',';
 	qs := qs + FLD_CAA_STATUS + ' ';
 	qs := qs + 'FROM '+ VIE_CAA + ' ';
-	qs := qs + 'WHERE ' + FLD_CAA_STATUS + '=0';
+	qs := qs + 'WHERE ' + FLD_CAA_STATUS + '=' + IntToStr(intStatus);
 	qs := qs + ';';
 	WriteLn(qs);
 
@@ -467,16 +597,17 @@ begin
 			
 			recId := rs.FieldByName(FLD_CAA_DETAIL_ID).AsInteger;
 			fname := rs.FieldByName(FLD_CAA_FNAME).AsString;
+			mname := rs.FieldByName(FLD_CAA_MNAME).AsString;
 			lname := rs.FieldByName(FLD_CAA_LNAME).AsString;
 			domId := rs.FieldByName(FLD_CAA_DOM_ID).AsString;
-			upnSuf := rs.FieldByName(FLD_CAA_UPN).AsString;
+			upnSuf := rs.FieldByName(FLD_CAA_UPN_SUFF).AsString;
 			ou := rs.FieldByName(FLD_CAA_OU).AsString;
 			supName := rs.FieldByName(FLD_CAA_SUPP_ID).AsString;
 			useSupOu := rs.FieldByName(FLD_CAA_USE_SUPP_OU).AsBoolean;
 					
 			WriteLn(recId,'    ',fname,'   ',lname, '   ', domId, '    ', upnSuf, '    ', ou, '   ', supName, '    ', useSupOu);
 			
-			userName := GenerateUserName2(supName, fname, lname);
+			userName := GenerateUserName3(supName, fname, mname, lname);
 			upn := GenerateUpn(userName, upnSuf);
 			dn := GenerateDn(userName, ou, supName, useSupOu, domId);
 			pw := GeneratePassword(); // From USupportLibrary
@@ -523,9 +654,28 @@ begin
 	//WriteLn(GenerateDn(a, 'OU=Beheer', 'HP', true, 'DC=prod,DC=ns,DC=nl'));
 	//WriteLn(GenerateDn(a, 'OU=Beheer', 'KPN', false, 'DC=rs,DC=root,DC=nedtrain,DC=nl'));
 
-	 
-	StepCompleteMissingField();		// 0 > 100
-	StepCheckForExisting(); 		// 100 > 200;
+	//WriteLn(ReplaceMiddleNames('van den'));
+	//WriteLn(ReplaceMiddleNames('Wachtveld-Van Bergen'));
+	{
+	a := GenerateUserName3('CSC', 'Rudolf', 'van', 'Veen');
+	WriteLn(a);
+	
+	a := GenerateUserName3('CSC', '', '', 'Madonna');
+	WriteLn(a);
+		
+	a := GenerateUserName3('CSC', 'Ruud', '', 'Madonna');
+	WriteLn(a);
+	
+	a := GenerateUserName3('CSC', 'Martina', '', 'Berg-Van den Tol');
+	WriteLn(a);
+	
+	a := GenerateUserName3('CSC', 'Martina', 'van ''t', 'Berg-Van den Tol');
+	WriteLn(a);
+	}
+	
+	StepCompleteMissingField(0);		// 0 > 100
+	StepCheckForExisting(100);	 		// 100 > 199;
+	StepFillActionTable(200);			// 200 > 299
 end;
 
 

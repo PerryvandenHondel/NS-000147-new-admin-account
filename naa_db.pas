@@ -29,7 +29,7 @@ mysql> describe account_detail;
 | user_name         | char(32)            | YES  |     | NULL              |                             |
 | dn                | char(255)           | YES  |     | NULL              |                             |
 | upn               | char(64)            | YES  |     | NULL              |                             |
-| new_password      | char(32)            | YES  |     | NULL              |                             |
+| init_pw           | char(32)            | YES  |     | NULL              |                             |
 | do_unlock         | tinyint(3) unsigned | YES  |     | 0                 |                             |
 | do_reset          | tinyint(3) unsigned | YES  |     | 0                 |                             |
 | status            | tiny unsigned       | YES  |     | 0                 |                             |
@@ -98,7 +98,7 @@ const
 	FLD_ACC_ID = 			'account_id';
 	FLD_ACC_FULLNAME = 		'full_name';
 	FLD_ACC_FNAME = 		'first_name';
-	FLD_ACC_MNAME = 		'first_name';
+	FLD_ACC_MNAME = 		'middle_name';
 	FLD_ACC_LNAME = 		'last_name';
 	FLD_ACC_SUPP_ID = 		'ref_supplier_id';
 	FLD_ACC_TIT_ID = 		'ref_title_id';
@@ -115,10 +115,10 @@ const
 	FLD_ADT_UN = 			'user_name';
 	FLD_ADT_DN = 			'dn';
 	FLD_ADT_UPN = 			'upn';
-	FLD_ADT_PW =			'new_password';
+	FLD_ADT_PW =			'init_pw';
 	FLD_ADT_DO_UNLOCK =		'do_unlock';
 	FLD_ADT_DO_RESET =		'do_reset';
-	FLD_ADT_STATUS =	'status';
+	FLD_ADT_STATUS =		'status';
 	FLD_ADT_RCD =			'rcd';
 	FLD_ADT_RLU = 			'rlu';
 
@@ -138,10 +138,14 @@ const
 	FLD_CAA_DETAIL_ID = 	'account_detail_id';
 	FLD_CAA_ACCOUNT_ID = 	'account_id';
 	FLD_CAA_FULLNAME = 		'full_name';
+	FLD_CAA_DN = 			'dn';
+	FLD_CAA_USER_NAME = 	'user_name';
 	FLD_CAA_FNAME = 		'first_name';
 	FLD_CAA_MNAME = 		'middle_name';
 	FLD_CAA_LNAME = 		'last_name';
+	FLD_CAA_INIT_PW = 		'init_pw';
 	FLD_CAA_UPN = 			'upn';
+	FLD_CAA_UPN_SUFF = 		'upn_suffix';
 	FLD_CAA_DOM_ID = 		'ref_domain_id';
 	FLD_CAA_NT = 			'domain_nt';
 	FLD_CAA_OU = 			'org_unit';
@@ -159,7 +163,6 @@ var
 	
 
 //function DoesObjectIdExist(strObjectId: string): boolean;
-function EncloseSingleQuote(const s: string): string;
 function FixNum(const s: string): string;
 function FixStr(const s: string): string;
 procedure DatabaseClose();
@@ -171,26 +174,6 @@ procedure DatabaseOpen();
 
 
 implementation
-
-
-
-function EncloseSingleQuote(const s: string): string;
-{
-	Enclose the string s with single quotes: s > 's'.
-}
-var
-	r: string;
-begin
-	if s[1] <> '''' then
-		r := '''' + s
-	else
-		r := s;
-		
-	if r[Length(r)] <> '''' then
-		r := r + '''';
-
-	EncloseSingleQuote := r;
-end; // of function EncloseSingleQuote
 
 
 
