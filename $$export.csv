@@ -1,0 +1,272 @@
+dn;sAMAccountName;givenName;sn;userPrincipalName
+CN=GTN_Adri.Kusters,OU=_Opruimen,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;GTN_Adri.Kusters;Adri;Kusters;GTN_Adri.Kusters@acceptatie.ns.nl
+CN=CSC_Dennis.Thomassen,OU=CSC,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;CSC_Dennis.Thomassen;Dennis;Thomassen;CSC_Dennis.Thomassen@acceptatie.ns.nl
+CN=CSC_Filipe.Fernandes,OU=CSC,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;CSC_Filipe.Fernandes;;CSC_Filipe.Fernandes;CSC_Filipe.Fernandes@acceptatie.ns.nl
+CN=CSC_Peter.Schmidt,OU=CSC,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;CSC_Peter.Schmidt;;CSC_Peter.Schmidt;CSC_Peter.Schmidt@acceptatie.ns.nl
+CN=CSC_Gertjan.Wolters,OU=CSC,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;CSC_Gertjan.Wolters;;CSC_Gertjan.Wolters;CSC_Gertjan.Wolters@acceptatie.ns.nl
+CN=CSC_Joey.Vermeulen,OU=CSC,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;CSC_Joey.Vermeulen;Joey;Vermeulen;CSC_Joey.Vermeulen@acceptatie.ns.nl
+CN=NSA_ESBSuperAdmin,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSA_ESBSuperAdmin;ESB;SuperAdmin;NSA_ESBSuperAdmin@acceptatie.ns.nl
+CN=NSA_A.Kraaijeveld,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSA_A.Kraaijeveld;Arjen;Kraaijeveld;nsa_a.kraaijeveld@acceptatie.ns.nl
+CN=NSA_Bart.Hoeksma,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSA_Bart.Hoeksma;Bart;Hoeksma;NSA_Bart.Hoeksma@acceptatie.ns.nl
+CN=nsa_m.konstantinovsk,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;nsa_m.konstantinovsk;Mikhail;Konstantinovski;nsa_m.konstantinovsk@acceptatie.ns.nl
+CN=NSA_Ciebe.Muller,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSA_Ciebe.Muller;Ciebe;Muller;NSA_Ciebe.Muller@acceptatie.ns.nl
+CN=NSA_Christian.Rovers,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSA_Christian.Rovers;Christian;Rovers;nsa_christian.rovers@acceptatie.ns.nl
+CN=nsa_m.bukkapatnam,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;nsa_m.bukkapatnam;Madhu;Bukkapatnam;nsa_m.bukkapatnam@acceptatie.ns.nl
+CN=NSA_Corine.Bonte,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSA_Corine.Bonte;Corine;Bonte;NSA_Corine.Bonte@acceptatie.ns.nl
+CN=NSA_Ronald.Hermeling,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSA_Ronald.Hermeling;Ronald;Hermeling;NSA_Ronald.Hermeling@acceptatie.ns.nl
+CN=NSA_Barry.Schonhage,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSA_Barry.Schonhage;Barry;Schonhage;NSA_Barry.Schonhage@acceptatie.ns.nl
+CN=nsa_dennis.vzundert,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;nsa_dennis.vzundert;Dennis van;Zundert;nsa_dennis.vzundert@acceptatie.ns.nl
+CN=NSA_Nanno.Scheringa,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSA_Nanno.Scheringa;Nanno;Scheringa;NSA_Nanno.Scheringa@acceptatie.ns.nl
+CN=NSA_Pierre.Boone,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSA_Pierre.Boone;Pierre;Boone;nsa_pierre.boone@acceptatie.ns.nl
+CN=nsa_bart.vrakking,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;nsa_bart.vrakking;Bart;Vrakking;nsa_bart.vrakking@acceptatie.ns.nl
+CN=NSA_Thomas.Hakkert,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSA_Thomas.Hakkaart;Thomas;Hakkaart;nsa_thomas.Hakkaart@acceptatie.ns.nl
+CN=NSA_Hans.Gerritsen,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSA_Hans.Gerritsen;Hans;Gerritsen;nsa_hans.gerritsen@acceptatie.ns.nl
+CN=NSA_Shang.WenXia,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSA_Shang.WenXia;Shang;Wen Xia;NSA_Shang.WenXia@acceptatie.ns.nl
+CN=NSA_John.Vermeeren,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSA_John.Vermeeren;John;Vermeeren;NSA_John.Vermeeren@acceptatie.ns.nl
+CN=nsa_gerben.bouwman,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;nsa_gerben.bouwman;Gerben;Bouwman;nsa_gerben.bouwman@acceptatie.ns.nl
+CN=nsa_vincent.hijkoop,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;nsa_vincent.hijkoop;Vincent;Hijkoop;nsa_vincent.hijkoop@acceptatie.ns.nl
+CN=NSA_Robert.Vermeulen,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSA_Robert.Vermeulen;Robert;Vermeulen;NSA_Robert.Vermeulen@acceptatie.ns.nl
+CN=NSA_Wim.Clasquin,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSA_Wim.Clasquin;Wim;Clasquin;nsa_wim.clasquin@acceptatie.ns.nl
+CN=NSA_YongGang.Yang,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSA_YongGang.Yang;Yong Gang;Yang;NSA_YongGang.Yang@acceptatie.ns.nl
+CN=NSA_LiQin.Gu,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSA_LiQin.Gu;LiQin;Gu;NSA_LiQin.Gu@acceptatie.ns.nl
+CN=NSA_Ronald.vandeKuil,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSA_Ronald.vandeKuil;Ronald van de;Kuil;NSA_Ronald.vandeKuil@acceptatie.ns.nl
+CN=NSA_Min.Chen,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSA_Min.Chen;Min;Chen;NSA_Min.Chen@acceptatie.ns.nl
+CN=NSA_Ke.He,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSA_Ke.He;Ke;He;NSA_Ke.He@acceptatie.ns.nl
+CN=nsa_minhvu.dang,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;nsa_minhvu.dang;Minh Vu;Dang;nsa_minhvu.dang@acceptatie.ns.nl
+CN=NSA_Maarten.Dijkstra,OU=NSA,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSA_Maarten.Dijkstra;Maarten;Dijkstra;nsa_maarten.dijkstra@acceptatie.ns.nl
+CN=NSS_Rene.vdBurg,OU=NSS,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSS_Rene.vdBurg;Rene van den;Burg;NSS_Rene.vdBurg@acceptatie.ns.nl
+CN=NTR_Dick.vVelzen,OU=NTR,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NTR_Dick.vVelzen;Dick van;Velzen;NTR_Dick.vVelzen@acceptatie.ns.nl
+CN=KPN_Dennis.Balgobind,OU=NTR,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Dennis.Balgobind;Dennis;Balgobind;KPN_Dennis.Balgobind@acceptatie.ns.nl
+CN=NSC.NE_Support01,OU=NSC,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSC.NE_Support01;NSC.NE_Support01;;NSC.NE_Support01@acceptatie.ns.nl
+CN=NSC.NE_Support03,OU=NSC,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSC.NE_Support03;NSC.NE_Support03;;NSC.NE_Support03@acceptatie.ns.nl
+CN=NSC.NE_Support02,OU=NSC,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSC.NE_Support02;NSC.NE_Support02;;NSC.NE_Support02@acceptatie.ns.nl
+CN=NSC.FE_Support03,OU=NSC,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSC.FE_Support03;;;NSC.FE_Support03@acceptatie.ns.nl
+CN=NSC.FE_Support02,OU=NSC,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSC.FE_Support02;;;NSC.FE_Support02@acceptatie.ns.nl
+CN=NSC.FE_Support01,OU=NSC,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSC.FE_Support01;;;NSC.FE_Support01@acceptatie.ns.nl
+CN=fbaadm,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;fbaadm;;fbaadm;fbaadm@acceptatie.ns.nl
+CN=SAPServiceFBA,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SAPServiceFBA;;SAPServiceFBA;SAPServiceFBA@acceptatie.ns.nl
+CN=SVC_CALLBACK_A,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_CALLBACK_A;;;SVC_CALLBACK_A@acceptatie.ns.nl
+CN=SVC_Argusweb_A,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_Argusweb_A;;;SVC_Argusweb_A@acceptatie.ns.nl
+CN=SVC_CognosLdap,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_CognosLdap;;;SVC_CognosLdap@acceptatie.ns.nl
+CN=SVC_Baliewerkplek,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_Baliewerkplek;SVC_Baliewerkplek;;SVC_Baliewerkplek@acceptatie.ns.nl
+CN=SVC_NTRIntranet,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_NTRIntranet;SVC_NTRIntranet;;SVC_NTRIntranet@acceptatie.ns.nl
+CN=SVC_CL_NS00AS421,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_CL_NS00AS421;SVC_CL_NS00AS421;;SVC_CL_NS00AS421@acceptatie.ns.nl
+CN=SVC_CL_NS00AS420,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_CL_NS00AS420;SVC_CL_NS00AS420;;SVC_CL_NS00AS420@acceptatie.ns.nl
+CN=SVC_Refund_User,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_Refund_User;;SVC_Refund_User;SVC_Refund_User@acceptatie.ns.nl
+CN=SVC_ESB_LDAP,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_ESB_LDAP;;SVC_ESB_LDAP;SVC_ESB_LDAP@acceptatie.ns.nl
+CN=SVC_MQADMIN,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_MQADMIN;;SVC_MQADMIN;SVC_MQADMIN@acceptatie.ns.nl
+CN=SVC_ARNU-Apache-acc,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_ARNU-Apache-acc;;SVC_ARNU-Apache-acc;SVC_ARNU-Apache-acc@acceptatie.ns.nl
+CN=fjaadm,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;fjaadm;;fjaadm;fjaadm@acceptatie.ns.nl
+CN=SVC_ADFS1FACTOR,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_ADFS1FACTOR;;;SVC_ADFS1FACTOR@acceptatie.ns.nl
+CN=SVC_SAPBCM,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_SAPBCM;;;SVC_SAPBCM@acceptatie.ns.nl
+CN=SVC_ESBAppOperator,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_ESBAppOperator;;;SVC_ESBAppOperator@acceptatie.ns.nl
+CN=SVC_ESBjmsapiuser,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_ESBjmsapiuser;;SVC_ESBjmsapiuser;SVC_ESBjmsapiuser@acceptatie.ns.nl
+CN=SVC_FIMSync,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_FIMSync;;SVC_FIMSync;SVC_FIMSync@acceptatie.ns.nl
+CN=SVC_IMSequencer,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_IMSequencer;;SVC_IMSequencer;SVC_IMSequencer@acceptatie.ns.nl
+CN=SVC_SAP_VEA,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_SAP_VEA;SVC_SAP_VEA;;SVC_SAP_VEA@acceptatie.ns.nl
+CN=SVC_Decos,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_Decos;;SVC_Decos;SVC_Decos@acceptatie.ns.nl
+CN=SVC_SAP_VCA,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_SAP_VCA;SVC_SAP_VCA;;SVC_SAP_VCA@acceptatie.ns.nl
+CN=SVC_AltirisScw_A,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_AltirisScw_A;;;SVC_AltirisScw_A@acceptatie.ns.nl
+CN=SVC_Cecure_A,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_Cecure_A;;;SVC_Cecure_A@acceptatie.ns.nl
+CN=SGBrowser,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SGBrowser;;SGBrowser;SGBrowser@acceptatie.ns.nl
+CN=SVC_KMM_A,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_KMM_A;;;SVC_KMM_A@acceptatie.ns.nl
+CN=SVC_SP10_Search,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_SP10_Search;SVC_SP10_Search;;SVC_SP10_Search@acceptatie.ns.nl
+CN=SVC_MOSS_SSP1,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_MOSS_SSP1;;;SVC_MOSS_SSP1@acceptatie.ns.nl
+CN=SVC_CPM_A,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_CPM_A;;;SVC_CPM_A@acceptatie.ns.nl
+CN=SVC_SQLAGENT,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_SQLAGENT;;SVC_SQLAGENT;SVC_SQLAGENT@acceptatie.ns.nl
+CN=SVC_srvcSqlAgent,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_srvcSqlAgent;;SVC_srvcSqlAgent;SVC_srvcSqlAgent@acceptatie.ns.nl
+CN=SVC_FIMService,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_FIMService;;SVC_FIMService;SVC_FIMService@acceptatie.ns.nl
+CN=SVC_ESBjmscei,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_ESBjmscei;;SVC_ESBjmscei;SVC_ESBjmscei@acceptatie.ns.nl
+CN=SVC_MOSS,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_MOSS;;;SVC_MOSS@acceptatie.ns.nl
+CN=SVC_MOSS_Content,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_MOSS_Content;;;SVC_MOSS_Content@acceptatie.ns.nl
+CN=SVC_Portaal,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_Portaal;;SVC_Portaal;SVC_Portaal@acceptatie.ns.nl
+CN=SAPServiceCPA,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SAPServiceCPA;;SAPServiceCPA;SAPServiceCPA@acceptatie.ns.nl
+CN=SVC_SLICER_A,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_SLICER_A;;;SVC_SLICER_A@acceptatie.ns.nl
+CN=SVC_EW.Admin,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_EW.Admin;;SVC_EW.Admin;SVC_EW.Admin@acceptatie.ns.nl
+CN=SVC_SCC_A,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_SCC_A;;;SVC_SCC_A@acceptatie.ns.nl
+CN=SVC_SP2013_Profile_A,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_SP2013_Profile_A;;;SVC_SP2013_Profile_A@acceptatie.ns.nl
+CN=SVC_SP10_CacheC,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_SP10_CacheC;SVC_SP10_CacheC;;SVC_SP10_CacheC@acceptatie.ns.nl
+CN=SVC_NS80CL010,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_NS80CL010;;SVC_NS80CL010;SVC_NS80CL010@acceptatie.ns.nl
+CN=SVC_EW.RTS,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_EW.RTS;;;SVC_EW.RTS@acceptatie.ns.nl
+CN=SVC_SP10_Content,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_SP10_Content;SVC_SP10_Content;;SVC_SP10_Content@acceptatie.ns.nl
+CN=SVC_FileCopyToVM80AS1100,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_FileCopyToVM80AS;;;SVC_FileCopyToVM80AS1100@acceptatie.ns.nl
+CN=SVC_SP10_Setup,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_SP10_Setup;SVC_SP10_Setup;;SVC_SP10_Setup@acceptatie.ns.nl
+CN=fsaadm,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;fsaadm;;;fsaadm@acceptatie.ns.nl
+CN=SVC_AbnAmro_Ad,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_AbnAmro_Ad;;SVC_AbnAmro_Ad;SVC_AbnAmro_Ad@acceptatie.ns.nl
+CN=SRV_DB_LogShipping,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SRV_DB_LogShipping;SRV_DB_LogShipping;;SRV_DB_LogShipping@acceptatie.ns.nl
+CN=SVC_EW.Schedule,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_EW.Schedule;;;SVC_EW.Schedule@acceptatie.ns.nl
+CN=SRV_SAP_migr,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SRV_SAP_migr;SRV_SAP_migr;;SRV_SAP_migr@acceptatie.ns.nl
+CN=SVC_Deployment,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_Deployment;;SVC_Deployment;SVC_Deployment@acceptatie.ns.nl
+CN=SVC_NS80CL009,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_NS80CL009;;SVC_NS80CL009;SVC_NS80CL009@acceptatie.ns.nl
+CN=SVC_Automation,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_Automation;;;SVC_Automation@acceptatie.ns.nl
+CN=csaadm,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;csaadm;;csaadm;csaadm@acceptatie.ns.nl
+CN=SAPServiceCSA,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SAPServiceCSA;;SAPServiceCSA;SAPServiceCSA@acceptatie.ns.nl
+CN=SVC_SQLSERVER,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_SQLSERVER;;SVC_SQLSERVER;SVC_SQLSERVER@acceptatie.ns.nl
+CN=SVC_NS80CL008,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_NS80CL008;;SVC_NS80CL008;SVC_NS80CL008@acceptatie.ns.nl
+CN=SVC_T00094969_Move,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_T00094969_Move;;;SVC_T00094969_Move@acceptatie.ns.nl
+CN=SVC_T00094969_Sync,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_T00094969_Sync;;;SVC_T00094969_Sync@acceptatie.ns.nl
+CN=SVC_CRP,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_CRP;;;SVC_CRP@acceptatie.ns.nl
+CN=SVC_ArgusPWR,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_ArgusPWR;;;SVC_ArgusPWR@acceptatie.ns.nl
+CN=SVC_SP10_APool1,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_SP10_APool1;SVC_SP10_APool1;;SVC_SP10_APool1@acceptatie.ns.nl
+CN=SVC_CiCAdmin,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_CiCAdmin;SVC_CiCAdmin;;SVC_CiCAdmin@acceptatie.ns.nl
+CN=ucaadm,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;ucaadm;ucaadm;;ucaadm@acceptatie.ns.nl
+CN=SVC_SQLServer_vm80as1298,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_SQLServer_vm80as;SVC_SQLServer_vm80as1298;;SVC_SQLServer_vm80as1298@acceptatie.ns.nl
+CN=SAPServiceCBA,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SAPServiceCBA;;SAPServiceCBA;SAPServiceCBA@acceptatie.ns.nl
+CN=SVC_Portaal_VD_Acc,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_Portaal_VD_Acc;;SVC_Portaal_VD_Acc;SVC_Portaal_VD_Acc@acceptatie.ns.nl
+CN=SVC_SQLAgent_vm80as1298,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_SQLAgent_vm80as1;SVC_SQLAgent_vm80as1298;;SVC_SQLAgent_vm80as1298@acceptatie.ns.nl
+CN=SVC_Equitrac_A,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_Equitrac_A;;;SVC_Equitrac_A@acceptatie.ns.nl
+CN=SVC_NscSapSqlAgent,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_NscSapSqlAgent;;SVC_NscSapSqlAgent;SVC_NscSapSqlAgent@acceptatie.ns.nl
+CN=SVC_ADFSFarm,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_ADFSFarm;;;SVC_ADFSFarm@acceptatie.ns.nl
+CN=SAPServiceFEA,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SAPServiceFEA;;SAPServiceFEA;SAPServiceFEA@acceptatie.ns.nl
+CN=feaadm,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;feaadm;;feaadm;feaadm@acceptatie.ns.nl
+CN=SVC_FIMAgent,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_FIMAgent;;SVC_FIMAgent;SVC_FIMAgent@acceptatie.ns.nl
+CN=SVC_icadmin,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_icadmin;;SVC_icadmin;SVC_icadmin@acceptatie.ns.nl
+CN=SVC_RitsService,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_RitsService;SVC_RitsService;;SVC_RitsService@acceptatie.ns.nl
+CN=fpaadm,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;fpaadm;;;fpaadm@acceptatie.ns.nl
+CN=SVC_QlikViewLdap,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_QlikViewLdap;;;SVC_QlikViewLdap@acceptatie.ns.nl
+CN=SVC_NS80CL015,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_NS80CL015;;SVC_NS80CL015;SVC_NS80CL015@acceptatie.ns.nl
+CN=SVC_IAM_DirSync,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_IAM_DirSync;SVC_IAM_DirSync;;SVC_IAM_DirSync@acceptatie.ns.nl
+CN=SVC_IAM_FIM,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_IAM_FIM;;;SVC_IAM_FIM@acceptatie.ns.nl
+CN=SVC_SP10_Profile,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_SP10_Profile;SVC_SP10_Profile;;SVC_SP10_Profile@acceptatie.ns.nl
+CN=SVC_FIMSharepoint,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_FIMSharepoint;;SVC_FIMSharepoint;SVC_FIMSharepoint@acceptatie.ns.nl
+CN=SVC_ESBhtmescal,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_ESBhtmescal;;SVC_ESBhtmescal;SVC_ESBhtmescal@acceptatie.ns.nl
+CN=SVC_paraplu-Hlq,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_paraplu-Hlq;;SVC_paraplu-Hlq;SVC_paraplu-Hlq@acceptatie.ns.nl
+CN=SVC_NscSapSqlServer,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_NscSapSqlServer;;SVC_NscSapSqlServer;SVC_NscSapSqlServer@acceptatie.ns.nl
+CN=SVC_ESBjmsbpc,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_ESBjmsbpc;;SVC_ESBjmsbpc;SVC_ESBjmsbpc@acceptatie.ns.nl
+CN=SVC_SP10_CacheR,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_SP10_CacheR;SVC_SP10_CacheR;;SVC_SP10_CacheR@acceptatie.ns.nl
+CN=SVC_FTP_CCTAB_ACC_A,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_FTP_CCTAB_ACC_A;;;SVC_FTP_CCTAB_ACC_A@acceptatie.ns.nl
+CN=SVC_SP10_Service,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_SP10_Service;SVC_SP10_Service;;SVC_SP10_Service@acceptatie.ns.nl
+CN=SVC_SQLAgent_SAPBCM,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_SQLAgent_SAPBCM;SVC_SQLAgent_SAPBCM;;SVC_SQLAgent_SAPBCM@acceptatie.ns.nl
+CN=SVC_SQLServer_SAPBCM,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_SQLServer_SAPBCM;SVC_SQLServer_SAPBCM;;SVC_SQLServer_SAPBCM@acceptatie.ns.nl
+CN=SVC_NS80CL016,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_NS80CL016;;SVC_NS80CL016;SVC_NS80CL016@acceptatie.ns.nl
+CN=SVC_Basware,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_Basware;;SVC_Basware;SVC_Basware@acceptatie.ns.nl
+CN=SVC_IAM_Proxy,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_IAM_Proxy;;;SVC_IAM_Proxy@acceptatie.ns.nl
+CN=SVC_UAG,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_UAG;;SVC_UAG;SVC_UAG@acceptatie.ns.nl
+CN=SVC_srvcSQL,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_srvcSQL;;SVC_srvcSQL;SVC_srvcSQL@acceptatie.ns.nl
+CN=SVC_MIK,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_MIK;;SVC_MIK;SVC_MIK@acceptatie.ns.nl
+CN=SVC_SP10_Farm,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_SP10_Farm;SVC_SP10_Farm;;SVC_SP10_Farm@acceptatie.ns.nl
+CN=SVC_RostarCas,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_RostarCas;SVC_RostarCas;;SVC_RostarCas@acceptatie.ns.nl
+CN=SVC_Orchestrator,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_Orchestrator;;;SVC_Orchestrator@acceptatie.ns.nl
+CN=SVC_QlikViewLdap_A,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_QlikViewLdap_A;;;SVC_QlikViewLdap_A@acceptatie.ns.nl
+CN=SVC_Ferranti_LDAP,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_Ferranti_LDAP;SVC_Ferranti_LDAP;;SVC_Ferranti_LDAP@acceptatie.ns.nl
+CN=SVC_EW.Deploy,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_EW.Deploy;SVC_EW.Deploy;SVC_EW.Deploy;SVC_EW.Deploy@acceptatie.ns.nl
+CN=SAPServiceCCA,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SAPServiceCCA;;SAPServiceCCA;SAPServiceCCA@acceptatie.ns.nl
+CN=ccaadm,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;ccaadm;;ccaadm;ccaadm@acceptatie.ns.nl
+CN=SVC_Parasol_hiq,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_Parasol_hiq;;SVC_Parasol_hiq;SVC_Parasol_hiq@acceptatie.ns.nl
+CN=SVC_hpservicemanager,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_hpservicemanager;;;SVC_adhpsm@acceptatie.ns.nl
+CN=SVC_Paraplu,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_Paraplu;;SVC_Paraplu;SVC_Paraplu@acceptatie.ns.nl
+CN=fxaadm,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;fxaadm;;fxaadm;fxaadm@acceptatie.ns.nl
+CN=SAPServiceFXA,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SAPServiceFXA;;SAPServiceFXA;SAPServiceFXA@acceptatie.ns.nl
+CN=SVC_MOSS_Search,OU=Users,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;SVC_MOSS_Search;;;SVC_MOSS_Search@acceptatie.ns.nl
+CN=KPN_S.Nijenbanning,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_S.Nijenbanning;Sebastian;Nijenbanning;kpn_s.nijenbanning@acceptatie.ns.nl
+CN=KPN_Ronald.Jongbloed,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Ronald.Jongbloed;Ronald;Jongbloed;KPN_Ronald.Jongbloed@acceptatie.ns.nl
+CN=GTN_Riaz.Ozir,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;GTN_Riaz.Ozir;GTN_Riaz.Ozir;;GTN_Riaz.Ozir@acceptatie.ns.nl
+CN=kpn_harro.tates,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;kpn_harro.tates;Harro;Tates;kpn_harro.tates@acceptatie.ns.nl
+CN=KPN_Richard.Snoeren,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Richard.Snoeren;Richard;Snoeren;KPN_Richard.Snoeren@acceptatie.ns.nl
+CN=GTN_Gradus.Onstenk,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;GTN_Gradus.Onstenk;Gradus;Onstenk;GTN_Gradus.Onstenk@acceptatie.ns.nl
+CN=KPN_Rudi.Olthof,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Rudi.Olthof;Rudi;Olthof;KPN_Rudi.Olthof@acceptatie.ns.nl
+CN=KPN_Theo.Booy,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Theo.Booy;Theo;Booy;KPN_Theo.Booy@acceptatie.ns.nl
+CN=KPN_Erik.Verheuvel,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Erik.Verheuvel;Erik;Verheuvel;KPN_Erik.Verheuvel@acceptatie.ns.nl
+CN=KPN_M.Rajasekaran,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_M.Rajasekaran;Muthu;Rajasekaran;KPN_M.Rajasekaran@acceptatie.ns.nl
+CN=KPN_S.Javeed,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_S.Javeed;Syed Shakir Ahmed;Javeed;KPN_S.Javeed@acceptatie.ns.nl
+CN=KPN_Frans.Alders,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Frans.Alders;Frans;Alders;KPN_Frans.Alders@acceptatie.ns.nl
+CN=KPN_P.Subramanian,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_P.Subramanian;Prabhu;Subramanian;KPN_P.Subramanian@acceptatie.ns.nl
+CN=KPN_S.Balavanthadka,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_S.Balavanthadka;Sinchana;Balavanthadka;KPN_S.Balavanthadka@acceptatie.ns.nl
+CN=KPN_S.GopalapuraRaja,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_S.GopalapuraRaja;Shivaprasad;Gopalapura Rajanna;KPN_S.GopalapuraRaja@acceptatie.ns.nl
+CN=kpn_s.nagarajan,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;kpn_s.nagarajan;Seenivasan;Nagarajan;kpn_s.nagarajan@acceptatie.ns.nl
+CN=kpn_srinivas.meka,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;kpn_srinivas.meka;Srinivas;Meka;kpn_srinivas.meka@acceptatie.ns.nl
+CN=KPN_H.Bathia,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_H.Bathia;Harshmeet Singh;Bathia;KPN_H.Bathia@acceptatie.ns.nl
+CN=kpn_aswin.sivakumar,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;kpn_aswin.sivakumar;Aswin;Sivakumar;kpn_aswin.sivakumar@acceptatie.ns.nl
+CN=KPN_Alexander.vUden,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Alexander.vUden;Alexander van;Uden;KPN_Alexander.vUden@acceptatie.ns.nl
+CN=KPN_Wim.Heebels,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Wim.Heebels;Wim;Heebels;KPN_Wim.Heebels@acceptatie.ns.nl
+CN=kpn_s.umaganesh,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;kpn_s.umaganesh;Sivassubramaniam;Umaganesh;kpn_s.umaganesh@acceptatie.ns.nl
+CN=kpn_rory.hendricks,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;kpn_rory.hendricks;Rory;Hendricks;kpn_rory.hendricks@acceptatie.ns.nl
+CN=KPN_Anne.vZeeland,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Anne.vZeeland;Anne van;Zeeland;KPN_Anne.vZeeland@acceptatie.ns.nl
+CN=kpn_s.selvaraj,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;kpn_s.selvaraj;Sathiyamoorthi;Selvaraj;kpn_s.selvaraj@acceptatie.ns.nl
+CN=KPN_Mark.Bosch,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Mark.Bosch;Mark;Bosch;kpn_mark.bosch@acceptatie.ns.nl
+CN=KPN_Mark.dKooter,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Mark.dKooter;Mark de;Kooter;kpn_mark.dkooter@acceptatie.ns.nl
+CN=kpn_geert.janssen,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;kpn_geert.janssen;Geert;Janssen;kpn_geert.janssen@acceptatie.ns.nl
+CN=kpn_ton.vlaar,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;kpn_ton.vlaar;Ton van;Laar;kpn_ton.vlaar@acceptatie.ns.nl
+CN=kpn_paulus.imri,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;kpn_paulus.imri;Paulus;Imri;kpn_paulus.imri@acceptatie.ns.nl
+CN=kpn_eric.aarts,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;kpn_eric.aarts;Eric;Aarts;kpn_eric.aarts@acceptatie.ns.nl
+CN=kpn_k.kanthaswamy,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;kpn_k.kanthaswamy;Karthik;Kanthaswamy;kpn_k.kanthaswamy@acceptatie.ns.nl
+CN=kpn_j.rajavinoth,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;kpn_j.rajavinoth;Jeyakumar;Rajavinoth;kpn_j.rajavinoth@acceptatie.ns.nl
+CN=kpn_j.james,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;kpn_j.james;Johnson Robert;James;kpn_j.james@acceptatie.ns.nl
+CN=KPN_M.Elfreddy,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_M.Elfreddy;Mohammed;Elfreddy;kpn_m.elfreddy@acceptatie.ns.nl
+CN=KPN_Peter.Timmermans,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Peter.Timmermans;Peter;Timmermans;kpn_peter.timmermans@acceptatie.ns.nl
+CN=KPN_Tom.dLange,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Tom.dLange;Tom de;Lange;KPN_Tom.dLange@acceptatie.ns.nl
+CN=KPN_Daniel.vBrienen,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Daniel.vBrienen;Daniel van;Brienen;KPN_Daniel.vBrienen@acceptatie.ns.nl
+CN=KPN_Arjan.vdHaar,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Arjan.vdHaar;Arjan van de;Haar;KPN_Arjan.vdHaar@acceptatie.ns.nl
+CN=KPN_Daniel.Heinsius,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Daniel.Heinsius;Daniel;Heinsius;KPN_Daniel.Heinsius@acceptatie.ns.nl
+CN=GTN_Peter.Vlaanderen,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;GTN_Peter.Vlaanderen;Peter;Vlaanderen;GTN_Peter.Vlaanderen@acceptatie.ns.nl
+CN=kpn_robert.huijser,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;kpn_robert.huijser;Robert;Huijser;kpn_robert.huijser@acceptatie.ns.nl
+CN=KPN_B.KiggaluRaju,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_B.KiggaluRaju;Bindhu;Kiggalu Raju;KPN_B.KiggaluRaju@acceptatie.ns.nl
+CN=kpn_m.vijayakumar,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;kpn_m.vijayakumar;Mallarapu;Vijayakumar;kpn_m.vijayakumar@acceptatie.ns.nl
+CN=KPN_R.Leijendeckers,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_R.Leijendeckers;Roel;Leijendeckers;kpn_r.leijendeckers@acceptatie.ns.nl
+CN=KPN_Richard.Roubos,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Richard.Roubos;;KPN_Richard.Roubos;KPN_Richard.Roubos@acceptatie.ns.nl
+CN=KPN_Max.Wittenburg,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Max.Wittenburg;Max;Wittenburg;kpn_max.wittenburg@acceptatie.ns.nl
+CN=KPN_Juan.Meeske,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Juan.Meeske;Juan;Meeske;kpn_juan.meeske@acceptatie.ns.nl
+CN=kpn_eric.vdspoel,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;kpn_eric.vdspoel;Eric van der;Spoel;kpn_eric.vdspoel@acceptatie.ns.nl
+CN=KPN_R.Chitikela,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_R.Chitikela;Ravendranadh;Chitikela;KPN_R.Chitikela@acceptatie.ns.nl
+CN=GTN_Willem.Kooiman,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;GTN_Willem.Kooiman;Willem;Kooiman;GTN_Willem.Kooiman@acceptatie.ns.nl
+CN=KPN_Jasenko.Mesic,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Jasenko.Mesic;Jasenko;Mesic;KPN_Jasenko.Mesic@acceptatie.ns.nl
+CN=GTN_Martin.deGier,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;GTN_Martin.deGier;;GTN_Martin.deGier;GTN_Martin.deGier@acceptatie.ns.nl
+CN=KPN_Ranjith.Iyappan,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Ranjith.Iyappan;Ranjith;Iyappan;KPN_Ranjith.Iyappan@acceptatie.ns.nl
+CN=KPN_SanngYoon.Kuiper,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_SanngYoon.Kuiper;Sanng Yoon;Kuiper;KPN_SanngYoon.Kuiper@acceptatie.ns.nl
+CN=KPN_Martijn.Vos,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Martijn.Vos;Martijn;Vos;kpn_martijn.vos@acceptatie.ns.nl
+CN=KPN_M.Vredenburg,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_M.Vredenburg;Maikel;Vredenburg;KPN_M.Vredenburg@acceptatie.ns.nl
+CN=KPN_Rutger.vdHaar,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Rutger.vdHaar;Rutger van der;Haar;KPN_Rutger.vdHaar@acceptatie.ns.nl
+CN=KPN_Akash.Hegde,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Akash.Hegde;Akash;Hegde;KPN_Akash.Hegde@acceptatie.ns.nl
+CN=KPN_J.NariyanKoodath,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_J.NariyanKoodath;Jayadeep;Nariyan Koodathambeth;KPN_J.NariyanKoodath@acceptatie.ns.nl
+CN=KPN_Shinu.Kovakkuni,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Shinu.Kovakkuni;Shinu;Kovakkuni;KPN_Shinu.Kovakkuni@acceptatie.ns.nl
+CN=KPN_K.Thulasidharan,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_K.Thulasidharan;Koodathil;Thulasidharan;KPN_K.Thulasidharan@acceptatie.ns.nl
+CN=KPN_K.Dasappanavar,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_K.Dasappanavar;Krishna;Dasappanavar;KPN_K.Dasappanavar@acceptatie.ns.nl
+CN=KPN_S.PattaliAravind,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_S.PattaliAravind;Saritha;Pattali Aravindakshan;KPN_S.PattaliAravind@acceptatie.ns.nl
+CN=KPN_Kuchi.Yogananda,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_Kuchi.Yogananda;Kuchi;Yogananda;KPN_Kuchi.Yogananda@acceptatie.ns.nl
+CN=KPN_A.Johnson,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_A.Johnson;Antony Paul;Johnson;KPN_A.Johnson@acceptatie.ns.nl
+CN=KPN_S.Duraipandidiya,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;KPN_S.Duraipandidiya;Srinivasan;Duraipandidiyan;KPN_S.Duraipandidiya@acceptatie.ns.nl
+CN=kpn_n.abushali,OU=KPN,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;kpn_n.abushali;Nizamudin;Abushali;kpn_n.abushali@acceptatie.ns.nl
+CN=HP_Frank.Peters,OU=HP,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;HP_Frank.Peters;Frank;Peters;HP_Frank.Peters@acceptatie.ns.nl
+CN=HP_Jelmer.Hiemstra,OU=HP,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;HP_Jelmer.Hiemstra;Jelmer;Hiemstra;HP_Jelmer.Hiemstra@acceptatie.ns.nl
+CN=HP_Steffen.Meier,OU=HP,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;HP_Steffen.Meier;Steffen;Meier;HP_Steffen.Meier@acceptatie.ns.nl
+CN=HP_Richard.Pijl,OU=HP,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;HP_Richard.Pijl;Richard;Pijl;HP_Richard.Pijl@acceptatie.ns.nl
+CN=HP_Erwin.Vink,OU=HP,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;HP_Erwin.Vink;Erwin;Vink;HP_Erwin.Vink@acceptatie.ns.nl
+CN=HP_Monica.Coolegem,OU=HP,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;HP_Monica.Coolegem;Monica;Coolegem;HP_Monica.Coolegem@acceptatie.ns.nl
+CN=HP_Gijs.Caspers,OU=HP,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;HP_Gijs.Caspers;Gijs;Caspers;HP_Gijs.Caspers@acceptatie.ns.nl
+CN=HP_Mario.Scheen,OU=HP,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;HP_Mario.Scheen;Mario;Scheen;HP_Mario.Scheen@acceptatie.ns.nl
+CN=EDS_Huub.Leemans,OU=HP,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;EDS_Huub.Leemans;Huub;Leemans;EDS_Huub.Leemans@acceptatie.ns.nl
+CN=BEH_Paul.Geertman,OU=Admin,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Paul.Geertman;;BEH_Paul.Geertman;BEH_Paul.Geertman@acceptatie.ns.nl
+CN=BEH_Perry.vdHondel,OU=Admin,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Perry.vdHondel;BEH_Perry.vdHondel;;BEH_Perry.vdHondel@acceptatie.ns.nl
+CN=BEH_WMIScanProject,OU=Admin,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_WMIScanProject;BEH_WMIScanProject;;BEH_WMIScanProject@acceptatie.ns.nl
+CN=BEH_Angelo.Casimiri,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Angelo.Casimiri;Angelo;Casimiri;BEH_Angelo.Casimiri@acceptatie.ns.nl
+CN=BEH_Hans.Risakotta,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Hans.Risakotta;Hans;Risakotta;BEH_Hans.Risakotta@acceptatie.ns.nl
+CN=BEH_Arjan.Diepeveen,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Arjan.Diepeveen;Arjan;Diepeveen;BEH_Arjan.Diepeveen@acceptatie.ns.nl
+CN=BEH_Rene.dVries1,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Rene.dVries1;Rene de;Vries1;BEH_Rene.dVries1@acceptatie.ns.nl
+CN=BEH_Hans.Brouwer,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Hans.Brouwer;Hans;Brouwer;BEH_Hans.Brouwer@acceptatie.ns.nl
+CN=BEH_Remco.Blewanus,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Remco.Blewanus;Remco;Blewanus;BEH_Remco.Blewanus@acceptatie.ns.nl
+CN=BEH_Eric.Verkaik,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Eric.Verkaik;Eric;Verkaik;BEH_Eric.Verkaik@acceptatie.ns.nl
+CN=BEH_Alex.vGiesen,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Alex.vGiesen;Alex van;Giesen;BEH_Alex.vGiesen@acceptatie.ns.nl
+CN=BEH_Arnold.Kok,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Arnold.Kok;Arnold;Kok;BEH_Arnold.Kok@acceptatie.ns.nl
+CN=BEH_Kee.Man,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Kee.Man;Kee;Man;BEH_Kee.Man@acceptatie.ns.nl
+CN=BEH_Petra.vElteren,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Petra.vElteren;Petra van;Elteren;BEH_Petra.vElteren@acceptatie.ns.nl
+CN=NSA_Ronald.Zetzema,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;NSA_Ronald.Zetzema;Ronald;Zetzema;NSA_Ronald.Zetzema@acceptatie.ns.nl
+CN=BEH_Jeroen.Klemans,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Jeroen.Klemans;;Jeroen.Klemans;BEH_Jeroen.Klemans@acceptatie.ns.nl
+CN=BEH_Sakesun.Srasom,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Sakesun.Srasom;;BEH_Sakesun.Srasom;BEH_Sakesun.Srasom@acceptatie.ns.nl
+CN=BEH_Marnix.Tange,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Marnix.Tange;Marnix;Tange;BEH_Marnix.Tange@acceptatie.ns.nl
+CN=BEH_Hieke.Hoeksma,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Hieke.Hoeksma;;BEH_Hieke.Hoeksma;BEH_Hieke.Hoeksma@acceptatie.ns.nl
+CN=BEH_Gilroy.Weiland,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Gilroy.Weiland;;Gilroy.Weiland;BEH_Gilroy.Weiland@acceptatie.ns.nl
+CN=BEH_M.vanWesteneng,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_M.vanWesteneng;;BEH_M.vanWesteneng;BEH_M.vanWesteneng@acceptatie.ns.nl
+CN=BEH_A.Linschoten,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_A.Linschoten;;BEH_A.Linschoten;BEH_A.Linschoten@acceptatie.ns.nl
+CN=BEH_Rob.Veenman,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Rob.Veenman;;BEH_Rob.Veenman;BEH_Rob.Veenman@acceptatie.ns.nl
+CN=BEH_Bastiaan.Vrolijk,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Bastiaan.Vrolijk;;BEH_Bastiaan.Vrolijk;BEH_Bastiaan.Vrolijk@acceptatie.ns.nl
+CN=BEH_JanWillem.Dons,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_JanWillem.Dons;;BEH_JanWillem.Dons;BEH_JanWillem.Dons@acceptatie.ns.nl
+CN=BEH_Dick.Wechgelaar,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Dick.Wechgelaar;Dick;Wechgelaar;BEH_Dick.Wechgelaar@acceptatie.ns.nl
+CN=BEH_Jeroen.Peereboom,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Jeroen.Peereboom;;BEH_Jeroen.Peereboom;BEH_Jeroen.Peereboom@acceptatie.ns.nl
+CN=BEH_Gijs.vdLaken,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Gijs.vdLaken;Gijs van de;Laken;BEH_Gijs.vdLaken@acceptatie.ns.nl
+CN=BEH_Andre.Noorloos,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Andre.Noorloos;Andre;Noorloos;BEH_Andre.Noorloos@acceptatie.ns.nl
+CN=BEH_Ben.Paauwe,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Ben.Paauwe;Ben;Paauwe;BEH_Ben.Paauwe@acceptatie.ns.nl
+CN=BEH_Albert.Janssen,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Albert.Janssen;Albert;Janssen;BEH_Albert.Janssen@acceptatie.ns.nl
+CN=BEH_Frans.Hoeks,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Frans.Hoeks;Frans;Hoeks;BEH_Frans.Hoeks@acceptatie.ns.nl
+CN=BEH_Marcel.Martens,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Marcel.Martens;Marcel;Martens;BEH_Marcel.Martens@acceptatie.ns.nl
+CN=BEH_Onno.Wierbos,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Onno.Wierbos;Onno;Wierbos;BEH_Onno.Wierbos@acceptatie.ns.nl
+CN=BEH_Zhou.Guang,OU=BEH,OU=Beheer,DC=acceptatie,DC=ns,DC=nl;BEH_Zhou.Guang;Zhou;Guang;BEH_Zhou.Guang@acceptatie.ns.nl

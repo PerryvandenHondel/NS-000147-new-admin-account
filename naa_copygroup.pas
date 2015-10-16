@@ -1,82 +1,14 @@
-{
-	UPDATE LOOKUP ACCOUNT TABLE (ULAT)
-	
-	mysql> describe account;
-+-----------------+------------------+------+-----+-------------------+-----------------------------+
-| Field           | Type             | Null | Key | Default           | Extra                       |
-+-----------------+------------------+------+-----+-------------------+-----------------------------+
-| account_id      | int(10) unsigned | NO   | PRI | NULL              | auto_increment              |
-| full_name       | varchar(75)      | YES  |     | NULL              |                             |
-| first_name      | char(50)         | YES  |     | NULL              |                             |
-| middle_name     | char(15)         | YES  |     | NULL              |                             |
-| last_name       | char(50)         | YES  |     | NULL              |                             |
-| ref_supplier_id | char(3)          | YES  |     | NULL              |                             |
-| ref_title_id    | char(32)         | YES  |     | NULL              |                             |
-| mobile          | char(13)         | YES  |     | NULL              |                             |
-| email           | char(64)         | YES  |     | NULL              |                             |
-| rcd             | datetime         | YES  |     | CURRENT_TIMESTAMP |                             |
-| rlu             | datetime         | YES  |     | CURRENT_TIMESTAMP | on update CURRENT_TIMESTAMP |
-+-----------------+------------------+------+-----+-------------------+-----------------------------+
-
-mysql> describe account_detail;
-+-------------------+---------------------+------+-----+-------------------+-----------------------------+
-| Field             | Type                | Null | Key | Default           | Extra                       |
-+-------------------+---------------------+------+-----+-------------------+-----------------------------+
-| account_detail_id | int(10) unsigned    | NO   | PRI | NULL              | auto_increment              |
-| ref_account_id    | int(10) unsigned    | YES  |     | NULL              |                             |
-| ref_domain_id     | char(48)            | YES  |     | NULL              |                             |
-| ref_requestor_id  | char(48)            | YES  |     | NULL              |                             |
-| user_name         | char(32)            | YES  |     | NULL              |                             |
-| dn                | char(255)           | YES  |     | NULL              |                             |
-| upn               | char(64)            | YES  |     | NULL              |                             |
-| init_pw           | char(32)            | YES  |     | NULL              |                             |
-| do_unlock         | tinyint(3) unsigned | YES  |     | 0                 |                             |
-| do_reset          | tinyint(3) unsigned | YES  |     | 0                 |                             |
-| status            | tiny unsigned       | YES  |     | 0                 |                             |
-| rcd               | datetime            | YES  |     | CURRENT_TIMESTAMP |                             |
-| rlu               | datetime            | YES  |     | CURRENT_TIMESTAMP | on update CURRENT_TIMESTAMP |
-+-------------------+---------------------+------+-----+-------------------+-----------------------------+
-
-mysql> describe account_domain;
-+-----------------+------------------+------+-----+-------------------+-----------------------------+
-| Field           | Type             | Null | Key | Default           | Extra                       |
-+-----------------+------------------+------+-----+-------------------+-----------------------------+
-| domain_id       | char(48)         | NO   | PRI | NULL              |                             |
-| upn             | char(32)         | YES  |     | NULL              |                             |
-| domain_nt       | char(32)         | YES  |     | NULL              |                             |
-| org_unit        | char(32)         | YES  |     | NULL              |                             |
-| use_supplier_ou | char(1)          | YES  |     | NULL              |                             |
-| is_active       | int(10) unsigned | YES  |     | 0                 |                             |
-| rcd             | datetime         | YES  |     | CURRENT_TIMESTAMP |                             |
-| rlu             | datetime         | YES  |     | CURRENT_TIMESTAMP | on update CURRENT_TIMESTAMP |
-+-----------------+------------------+------+-----+-------------------+-----------------------------+
-
-
-	PROCEDURES AND FUNCTIONS
-	
-		procedure ProcessDomain
-		procedure MarkInactiveRecords
-		procedure UpdateRecord
-		procedure InsertRecord
-		function DoesObjectIdExist
-		procedure DatabaseOpen
-		procedure DatabaseClose
-		function FixNum
-		function FixStr
-		function EncloseSingleQuote
-		procedure ProgInit
-		procedure ProgRun
-		procedure ProgDone
-}
-
 
 unit naa_db;
+
 
 
 {$MODE OBJFPC}
 
 
+
 interface
+
 
 
 uses
@@ -84,6 +16,7 @@ uses
 	USupportLibrary,
 	ODBCConn,
 	SqlDb;
+	
 	
 	
 const
@@ -166,10 +99,11 @@ const
 	FLD_AAD_RCD = 			'aad_rcd';
 	FLD_AAD_RLU = 			'aad_rlu';
 	
-
+	
 var
 	gConnection: TODBCConnection;               // uses ODBCConn
 	gTransaction: TSQLTransaction;  			// Uses SqlDB
+	
 	
 
 //function DoesObjectIdExist(strObjectId: string): boolean;
@@ -182,7 +116,9 @@ procedure DatabaseOpen();
 //procedure UpdateRecord(strDomainNetbios: string; strDn: string; strSam: string; strObjectId: string; strUpn: string; strRlu: string);
 
 
+
 implementation
+
 
 
 function FixStr(const s: string): string;
@@ -203,6 +139,7 @@ begin
 end; // of function FixStr
 
 
+	
 function FixNum(const s: string): string;
 var
 	r: string;
@@ -218,6 +155,7 @@ begin
 		
 	FixNum := r;
 end; // of function FixNum
+
 
 
 procedure DatabaseOpen();
@@ -236,12 +174,14 @@ begin
 end;
 
 
+
 procedure DatabaseClose();
 begin
 	//WriteLn('DatabaseClose(): Closing database DSN: ', DSN);
 	gTransaction.Free;
 	gConnection.Free;
 end;
+
 
 {
 function DoesObjectIdExist(strObjectId: string): boolean;
@@ -397,4 +337,7 @@ begin
 end; // of procedure MarkInactiveRecords
 }
 
-end. // of unit naa_db
+
+end.
+
+// end of program

@@ -31,13 +31,11 @@
 }
 
 
-
 program NewAdminAccount;
 
 
-
-{$MODE OBJFPC}
-
+{$MODE OBJFPC}			
+{$LONGSTRINGS ON}		// Compile all strings as Ansistrings
 
 
 uses
@@ -48,15 +46,14 @@ uses
 	SysUtils,
 	USupportLibrary,
 	SqlDB,
-	naa_db;
+	naa_db,
+	naa_read_ad;
 	//UTextFile;
-	
 	
 	
 const
 	STEP_MOD = 					27;
 	MAX_USER_NAME_LENGTH = 		20;
-
 
 	
 Type
@@ -69,8 +66,6 @@ Type
 	//gConnection: TODBCConnection;               // uses ODBCConn
 	//gTransaction: TSQLTransaction;  			// Uses SqlDB
 	//gstrNow: string;
-	
-	
 {
 
 procedure ProcessDomain(strRootDn: string; strDomainNetbios: string);
@@ -176,7 +171,6 @@ end; // of procedure ProcessDomain
 }
 
 
-
 procedure RunQuery(qs: Ansistring);
 //
 //	Run a query
@@ -194,7 +188,6 @@ begin
 	q.ExecSQL;
 	t.Commit;
 end; // of procedure RunQuery
-
 
 
 function ReplaceMiddleNames(s: string): string;
@@ -236,7 +229,6 @@ begin
 end; // of function ReplaceMiddleNames
 
 
-
 function GenerateUserName3(strSupplier: string; fn: string; mn: string; ln: string): string;
 var
 	r: string;		// Return value of this function.
@@ -276,7 +268,6 @@ begin
 end; // of function GenerateUserName3
 
 
-
 function GenerateDn(a: string; ou: string; sup: string; useSup: boolean; d: string): string;
 //
 //	Generate the Distinguished Name (DN) of a account.
@@ -298,21 +289,83 @@ begin
 end; // of function GenerateDn
 
 
-
 function GenerateUpn(strAccountName: string; strDomainName: string): string;
 begin
 	GenerateUpn := strAccountName + '@'+ strDomainName;
 end; // of function GenerateUpn
 
 
+procedure TableAccountDetailUpdateStatus(intRecordId: integer; intNewStatus: integer);
+//
+//	Update the table account_detail.
+//	Set a new status in status using intNewStatus.
+//
+var
+	qu: Ansistring;
+begin
+	qu := 'UPDATE ' + TBL_ADT + ' ';
+	qu := qu + 'SET ';
+	qu := qu + FLD_ADT_STATUS + '=' + IntToStr(intNewStatus) + ' ';
+	qu := qu + 'WHERE ' + FLD_ADT_ID + '=' + IntToStr(intRecordId) + ';';
+	RunQuery(qu);
+end; // of TableAccountDetailUpdateStatus
+
+
+function TableAccountActionInsert(desc: string): string;
+//
+//	Insert a record in the table ACT
+//
+//	Returns the Unique Action ID of this insert. For linking to the AAD table.
+//
+var
+	r: string;
+	qi: Ansistring;
+begin
+	r := GetRandomString(16);
+	WriteLn('TableAccountActionInsert: ' + desc);
+	WriteLn(' -- Unique ID: ' + r);
+	qi := 'INSERT INTO ' + TBL_ACT + ' ';
+	qi := qi + 'SET ';
+	qi := qi + FLD_ACT_ID + '=' + FixStr(r) + ',';
+	qi := qi + FLD_ACT_DESC + '=' + FixStr(desc) + ';';
+	RunQuery(qi);
+	TableAccountActionInsert := r;
+end; // of function TableAccountActionInsert
+	
+
+procedure TableAccountActionDetailInsert(actionId: string; c: string);
+//
+//	Insert a record in the table AAD
+//
+var
+	qi: Ansistring;
+begin
+	qi := 'INSERT INTO ' + TBL_AAD + ' ';
+	qi := qi + 'SET ';
+	qi := qi + FLD_AAD_ACT_ID + '=' + FixStr(actionId) + ',';
+	qi := qi + FLD_AAD_CMD + '=' + FixStr(c) + ';';
+	RunQuery(qi);
+end; // of procedure TableAccountActionDetailInsert
+
 
 procedure StepFillActionTable(intStatus: integer);
 var	
-	qs: Ansistring;
-	rs: TSQLQuery;
+	actionId: string;	// Unique Action ID of char 16
 	c: Ansistring;
+	desc: string;
+	dn: string;
+	email: string;
+	fname: string;
+	initPw: string;
+	lname: string;
+	mname: string;
+	mobile: string;
+	qs: Ansistring;
 	recId: integer;
-	uid: string;
+	rs: TSQLQuery;
+	title: string;
+	upn: string;
+	userName: string;
 begin
 	WriteLn('StepFillActionTable(): ', intStatus);
 	qs := 'SELECT * ';
@@ -333,106 +386,85 @@ begin
 		while not rs.EOF do
 		begin
 			//WriteLn(rs.FieldByName(FLD_CAA_DN).AsString);
-			
-			WriteLn('Unique ID: ' + GetRandomString(32));
-			
-			c := 'dsadd.exe user ';
-			c := c + EncloseDoubleQuote(rs.FieldByName(FLD_CAA_DN).AsString) + ' ';
-			c := c + '-samid ' + EncloseDoubleQuote(rs.FieldByName(FLD_CAA_USER_NAME).AsString) + ' ';
-			c := c + '-upn ' + EncloseDoubleQuote(rs.FieldByName(FLD_CAA_UPN).AsString) + ' ';
-			c := c + '-pwd ' + EncloseDoubleQuote(rs.FieldByName(FLD_CAA_INIT_PW).AsString) + ' ';
-			WriteLn(c);
-			
-			
-			
-			
-			
-			{			
-				c = "dsadd user " & EncloseWithDQ(strUserDn) & " "
-				c = c & "-samid " & EncloseWithDQ(strUserName) & " "
-				c = c & "-pwd " & EncloseWithDQ(strPassword) & " "
-				c = c & "-fn " & EncloseWithDQ(Trim(strFirstName & " " & strMiddleName)) & " "
-				c = c & "-ln " & EncloseWithDQ(strLastName) & " "
-				c = c & "-title " & EncloseWithDQ(strTitle) & " "
-				c = c & "-desc " & EncloseWithDQ(strDescription) & " "
-				c = c & "-display " & EncloseWithDQ(strUserName) & " "
-				c = c & "-upn " & EncloseWithDQ(strUserUpn) & " "
-				
-				If Len(strMobile) > 0 Then
-					c = c & "-mobile " & EncloseWithDQ(strMobile) & " "
-				End If
-				c = c & "-company " & EncloseWithDQ(strSupplierId) & " "
-				c = c & "-mustchpwd yes"
-						
-			}
-			
-			{
-			recId := rs.FieldByName(FLD_CAA_DETAIL_ID).AsInteger;
+			recId :=  rs.FieldByName(FLD_CAA_DETAIL_ID).AsInteger;
+			upn := rs.FieldByName(FLD_CAA_UPN).AsString;
+			dn := rs.FieldByName(FLD_CAA_DN).AsString;
+			initPw := rs.FieldByName(FLD_CAA_INIT_PW).AsString;
+			userName := rs.FieldByName(FLD_CAA_USER_NAME).AsString;
 			fname := rs.FieldByName(FLD_CAA_FNAME).AsString;
 			mname := rs.FieldByName(FLD_CAA_MNAME).AsString;
 			lname := rs.FieldByName(FLD_CAA_LNAME).AsString;
-			domId := rs.FieldByName(FLD_CAA_DOM_ID).AsString;
-			upnSuf := rs.FieldByName(FLD_CAA_UPN).AsString;
-			ou := rs.FieldByName(FLD_CAA_OU).AsString;
-			supName := rs.FieldByName(FLD_CAA_SUPP_ID).AsString;
-			useSupOu := rs.FieldByName(FLD_CAA_USE_SUPP_OU).AsBoolean;
-					
-			WriteLn(recId,'    ',fname,'   ',lname, '   ', domId, '    ', upnSuf, '    ', ou, '   ', supName, '    ', useSupOu);
+			title := rs.FieldByName(FLD_CAA_TITLE).AsString;
+			mobile := rs.FieldByName(FLD_CAA_MOBILE).AsString;
+			email := rs.FieldByName(FLD_CAA_EMAIL).AsString;
 			
-			userName := GenerateUserName3(supName, fname, mname, lname);
-			upn := GenerateUpn(userName, upnSuf);
-			dn := GenerateDn(userName, ou, supName, useSupOu, domId);
-			pw := GeneratePassword(); // From USupportLibrary
-//			GenerateDn(a: string; ou: string; sup: string; useSup: boolean; d: string): string;
+			desc := 'Create new account for ' + upn;
+			actionId  := TableAccountActionInsert(desc);
 			
-			WriteLn('User name:    ', userName);
-			WriteLn('UPN:          ', upn);
-			WriteLn('DN:           ', dn);
-			WriteLn('Initial password: ', pw);
-			WriteLn;
+			// Create the account using DSADD.EXE
+			c := 'dsadd.exe user ';
+			c := c + EncloseDoubleQuote(dn);
+			//WriteLn(c);
+			TableAccountActionDetailInsert(actionId, c);
 			
-			UpdateTableAccountDetail(recId, userName, upn, dn, pw);
-			} 
+			// Add a UPN to the account
+			c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' ';
+			c := c + '-upn ' + EncloseDoubleQuote(upn);
+			//WriteLn(c);
+			TableAccountActionDetailInsert(actionId, c);
+			
+			// Set the initial password on the account
+			c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' ';
+			c := c + '-pwd ' + EncloseDoubleQuote(initPw) + ' ';
+			c := c + '-mustchpwd yes';
+			//WriteLn(c);
+			TableAccountActionDetailInsert(actionId, c);
+
+			// Add first name AD attribute
+			c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -fn ' + EncloseDoubleQuote(Trim(fname + ' ' + mname));
+			TableAccountActionDetailInsert(actionId, c);
+			
+			// Add last name AD attribute
+			c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -ln ' + EncloseDoubleQuote(Trim(lname));
+			TableAccountActionDetailInsert(actionId, c);
+			
+			// Add title AD attribute
+			c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -title ' + EncloseDoubleQuote(Trim(title));
+			TableAccountActionDetailInsert(actionId, c);
+			
+			// Add display AD attribute
+			c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -display ' + EncloseDoubleQuote(Trim(userName));
+			TableAccountActionDetailInsert(actionId, c);
+			
+			if Length(mobile) > 0 then
+			begin
+				// Add mobile AD attribute if exists in the database.
+				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -mobile ' + EncloseDoubleQuote(Trim(mobile));
+				TableAccountActionDetailInsert(actionId, c);
+			end; // of if
+			
+			if Length(email) > 0 then
+			begin
+				// Add mobile AD attribute if exists in the database.
+				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -email ' + EncloseDoubleQuote(Trim(email));
+				TableAccountActionDetailInsert(actionId, c);
+			end; // of if
+			
+			
+			// Set the not delegated flag in the UserAccountControl attribute of the account
+			// NOT_DELEGATED - When this flag is set, the security context of the user is not delegated to a service even if the service account is set as trusted for Kerberos delegation.
+			//	Source: https://support.microsoft.com/en-us/kb/305144
+			c := 'adfind.exe -b ' + EncloseDoubleQuote(dn) + ' userAccountControl -adcsv | admod.exe "userAccountControl::{{.:SET:1048576}}"';
+			TableAccountActionDetailInsert(actionId, c);
+			
+			// Change the status to 300. Records added
+			TableAccountDetailUpdateStatus(recId, 300);
+			
 			rs.Next;
 		end;
 	end;
 	rs.Free;
 end; // of procedure StepFillActionTable
-
-
-
-procedure TableAccountDetailUpdateStatus(intRecordId: integer; intNewStatus: integer);
-//
-//	Update the table account_detail.
-//	Set a new status in status using intNewStatus.
-//
-var
-	//q: TSQLQuery;
-	//t: TSQLTransaction;
-	qu: Ansistring;
-begin
-	//t := TSQLTransaction.Create(gConnection);
-	//t.Database := gConnection;
-	//q := TSQLQuery.Create(gConnection);
-	//q.Database := gConnection;
-	//q.Transaction := t;
-
-	qu := 'UPDATE ' + TBL_ADT + ' ';
-	qu := qu + 'SET ';
-	qu := qu + FLD_ADT_STATUS + '=' + IntToStr(intNewStatus) + ' ';
-	qu := qu + 'WHERE ' + FLD_ADT_ID + '=' + IntToStr(intRecordId) + ';';
-	
-	RunQuery(qu);
-	
-	//q.SQL.Text := qu;
-	
-	//WriteLn(qu);
-	
-	//gConnection.ExecuteDirect(q);
-	//q.ExecSQL;
-	//t.Commit;
-end;
-
 
 
 procedure StepCheckForExisting(intStatus: integer);
@@ -494,7 +526,6 @@ begin
 end;
 
 
-
 procedure UpdateTableAccountDetail(recId: integer; userName: string; upn: string; dn: string; pw: string);
 //
 //	Update the table account_detail with the generated values
@@ -507,7 +538,7 @@ procedure UpdateTableAccountDetail(recId: integer; userName: string; upn: string
 var
 	qu: Ansistring;
 	//t: TSQLTransaction;
-	q: TSQLQuery;
+	//q: TSQLQuery;
 begin
 	qu := 'UPDATE ' + TBL_ADT + ' ';
 	qu := qu + 'SET ';
@@ -532,7 +563,6 @@ begin
 	//q.ExecSQL;
 	//t.Commit;
 end; // of procedure UpdateTableAccountDetail
-
 
 
 procedure StepCompleteMissingField(intStatus: integer);
@@ -628,12 +658,10 @@ begin
 end; // of procedure FindRecordToCreateNewAccounts
 
 
-
 procedure ProgInit();
 begin
 	DatabaseOpen();
 end;
-
 
 
 procedure ProgRun();
@@ -673,24 +701,21 @@ begin
 	WriteLn(a);
 	}
 	
-	StepCompleteMissingField(0);		// 0 > 100
-	StepCheckForExisting(100);	 		// 100 > 199;
-	StepFillActionTable(200);			// 200 > 299
+	//StepCompleteMissingField(0);		// 0 > 100
+	//StepCheckForExisting(100);	 		// 100 > 199;
+	//StepFillActionTable(200);			// 200 > 299
+	ProcessAllAds();
 end;
-
 
 
 procedure ProgDone();
 begin
 	DatabaseClose();
 end;
-
 	
 	
 begin
 	ProgInit();
 	ProgRun();
 	ProgDone();
-end.
-
-// end of program
+end. // of program
