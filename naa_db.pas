@@ -74,7 +74,7 @@ unit naa_db;
 
 
 {$MODE OBJFPC}
-
+{$H+}			// Large string support
 
 interface
 
@@ -180,9 +180,28 @@ procedure DatabaseOpen();
 //procedure InsertRecord(strDomainNetbios: string; strDn: string; strSam: string; strObjectId: string; strUpn: string; strRcd: string; strRlu: string);
 //procedure MarkInactiveRecords(strDomainNetbios: string; strLastRecordUpdated: string);
 //procedure UpdateRecord(strDomainNetbios: string; strDn: string; strSam: string; strObjectId: string; strUpn: string; strRlu: string);
-
+procedure RunQuery(qryString: string);
 
 implementation
+
+
+procedure RunQuery(qryString: string);
+//
+//	Run a query 
+//
+var
+	q: TSQLQuery;
+	t: TSQLTransaction;
+begin
+	t := TSQLTransaction.Create(gConnection);
+	t.Database := gConnection;
+	q := TSQLQuery.Create(gConnection);
+	q.Database := gConnection;
+	q.Transaction := t;
+	q.SQL.Text := qryString;
+	q.ExecSQL;
+	t.Commit;
+end; // of procedure RunQuery
 
 
 function FixStr(const s: string): string;
