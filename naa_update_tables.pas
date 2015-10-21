@@ -26,6 +26,7 @@ uses
 
 const
 	TBL_ADM =				'account_domain_adm';
+	FLD_ADM_ROOTDSE = 		'adm_root_dse';
 	FLD_ADM_ID = 			'adm_id';
 	FLD_ADM_UPN_SUFF = 		'adm_upn_suffix';
 	FLD_ADM_DOM_NT = 		'adm_domain_nt';
@@ -217,7 +218,7 @@ var
 begin
 	WriteLn('ProcessAllActiveDirectories()');
 	
-	qs := 'SELECT ' + FLD_ADM_ID + ',' + FLD_ADM_DOM_NT + ',' + FLD_ADM_OU + ' ';
+	qs := 'SELECT ' + FLD_ADM_ROOTDSE + ',' + FLD_ADM_DOM_NT + ',' + FLD_ADM_OU + ' ';
 	qs := qs + 'FROM ' + TBL_ADM + ' ';
 	qs := qs + 'WHERE ' + FLD_ADM_IS_ACTIVE + '=1';
 	qs := qs + ';';
@@ -239,7 +240,7 @@ begin
 			//WriteLn(rs.FieldByName(FLD_CAA_DETAIL_ID).AsInteger);
 			//WriteLn(rs.FieldByName(FLD_CAA_FULLNAME).AsString);
 			
-			rootDse := rs.FieldByName(FLD_ADM_ID).AsString;
+			rootDse := rs.FieldByName(FLD_ADM_ROOTDSE).AsString;
 			domainNt := rs.FieldByName(FLD_ADM_DOM_NT).AsString;
 			ou := rs.FieldByName(FLD_ADM_OU).AsString;
 			
