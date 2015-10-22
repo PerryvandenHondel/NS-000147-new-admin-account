@@ -68,6 +68,8 @@ var
 	id: integer;
 	rs: TSQLQuery; // Uses SqlDB
 begin
+	upn := LowerCase(upn);
+
 	qs := 'SELECT ' + FLD_ATV_ID + ' ';
 	qs := qs + 'FROM ' + TBL_ATV + ' ';
 	qs := qs + 'WHERE ' + FLD_ATV_DN + '=' + FixStr(dn) + ';';
