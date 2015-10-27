@@ -37,6 +37,8 @@ const
 	FLD_ATV_ID = 			'atv_id';
 	FLD_ATV_DN = 			'atv_dn';
 	FLD_ATV_UPN = 			'atv_upn';
+	FLD_ATV_SAM = 			'atv_sam';
+	FLD_ATV_MAIL = 			'atv_mail';
 	FLD_ATV_SORT = 			'atv_sort';
 	FLD_ATV_IS_ACTIVE = 	'atv_is_active';
 	FLD_ATV_RLU = 			'atv_rlu';
@@ -57,7 +59,7 @@ begin
 end; // of procedure DeleteObsoleteRecords
 	
 	
-procedure RecordAddAccount(dn: string; fname: string; lname: string; upn: string);
+procedure RecordAddAccount(dn: string; fname: string; lname: string; upn: string; sam: string; mail: string);
 //
 //	Add a new record to the table when it does not exist yet, key = dn.
 //
@@ -74,7 +76,7 @@ begin
 	qs := qs + 'FROM ' + TBL_ATV + ' ';
 	qs := qs + 'WHERE ' + FLD_ATV_DN + '=' + FixStr(dn) + ';';
 	
-	WriteLn(qs);
+	//WriteLn(qs);
 	
 	rs := TSQLQuery.Create(nil);
 	rs.Database := gConnection;
@@ -95,6 +97,9 @@ begin
 			
 		qi := qi + FLD_ATV_IS_ACTIVE + '=1,';
 		qi := qi + FLD_ATV_UPN + '=' + FixStr(upn) + ',';
+		qi := qi + FLD_ATV_SAM + '=' + FixStr(sam) + ',';
+		qi := qi + FLD_ATV_MAIL + '=' + FixStr(mail) + ',';
+		
 		qi := qi + FLD_ATV_RLU + '=' + EncloseSingleQuote(DateTimeToStr(updateDateTime)) + ';';
 		//WriteLn(qi);
 		RunQuery(qi);
@@ -112,6 +117,8 @@ begin
 			qu := qu + FLD_ATV_SORT + '=' + FixStr(lname + ', ' + fname + ' (' + upn + ')') + ',';
 		
 		qu := qu + FLD_ATV_UPN + '=' + FixStr(upn) + ',';
+		qu := qu + FLD_ATV_SAM + '=' + FixStr(sam) + ',';
+		qu := qu + FLD_ATV_MAIL + '=' + FixStr(mail) + ',';
 		qu := qu + FLD_ATV_RLU + '=' + EncloseSingleQuote(DateTimeToStr(updateDateTime)) + ' ';
 		qu := qu + 'WHERE ' + FLD_ATV_ID + '=' + IntToStr(id) + ';';
 		//WriteLn(qu);
@@ -170,7 +177,7 @@ begin
 	c := c + '-b "' + ou + ',' + rootDse + '" ';
 	//c := c + '-f "sAMAccountName=*_*" ';
 	c := c + '-f "(&(objectCategory=person)(objectClass=user))" ';
-	c := c + 'sAMAccountName givenName sn userPrincipalName ';
+	c := c + 'sAMAccountName givenName sn userPrincipalName mail ';
 	c := c + '-csv -nocsvq -csvdelim ;' ;
 	c := c + '>' + f;
 	WriteLn(c);
@@ -200,7 +207,7 @@ begin
 		if IsValidAdminAccount(dn) = true then
 		begin
 			//dn;sAMAccountName;givenName;sn;userPrincipalName
-			RecordAddAccount(dn, csv.GetValue('givenName'), csv.GetValue('sn'), csv.GetValue('userPrincipalName'));
+			RecordAddAccount(dn, csv.GetValue('givenName'), csv.GetValue('sn'), csv.GetValue('userPrincipalName'), csv.GetValue('sAMAccountName'), csv.GetValue('mail'));
 			//WriteLn('dn=', dn);
 		end; // of if
     until csv.GetEof();
