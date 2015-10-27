@@ -1,6 +1,6 @@
 {
 	
-	New Admin Account (NAA)
+	Admin Account Management (AAM)
 	
 	PROCEDURES AND FUNCTIONS
 	
@@ -31,7 +31,7 @@
 }
 
 
-program NewAdminAccount;
+program AdminAccountManagement;
 
 
 {$MODE OBJFPC}			
@@ -46,14 +46,15 @@ uses
 	SysUtils,
 	USupportLibrary,
 	SqlDB,
-	naa_db,
-	naa_read_ad;
-	//UTextFile;
+	aam_global,
+	aam_database,
+	aam_action_reset;			// ACTION 2
 	
 	
 const
 	STEP_MOD = 					27;
 	MAX_USER_NAME_LENGTH = 		20;
+
 
 	
 Type
@@ -704,7 +705,10 @@ begin
 	//StepCompleteMissingField(0);		// 0 > 100
 	//StepCheckForExisting(100);	 		// 100 > 199;
 	//StepFillActionTable(200);			// 200 > 299
-	ProcessAllAds();
+	//ProcessAllAds();
+	
+	DoActionReset();
+	
 end;
 
 

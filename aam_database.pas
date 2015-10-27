@@ -70,7 +70,7 @@ mysql> describe account_domain;
 }
 
 
-unit naa_db;
+unit aam_database;
 
 
 {$MODE OBJFPC}
@@ -83,7 +83,8 @@ uses
 	SysUtils,
 	USupportLibrary,
 	ODBCConn,
-	SqlDb;
+	SqlDb,
+	aam_global;
 	
 	
 const
