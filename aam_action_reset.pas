@@ -18,8 +18,7 @@ uses
 	USupportLibrary,
 	ODBCConn,
 	SqlDb,
-	aam_global,
-	aam_database;			// Link all database 
+	aam_global;
 	
 	
 const
@@ -38,20 +37,84 @@ const
 	VIEW_RESET_STATUS = 	'arp_status';
 	VIEW_RESET_RCD = 		'arp_rcd';
 
-	{
-	Defined in AAM_DATABASE.PAS, perhaps move to AAM_GLOBAL.PAS for global program use.
-	TBL_ACT = 				'account_action_act';
-	FLD_ACT_ID = 			'act_id';
-	FLD_ACT_ACTION_NR = 	'act_action_nr';
-	FLD_ACT_DESC = 			'act_description';
-	FLD_ACT_RCD = 			'act_rcd';
-	FLD_ACT_RLU = 			'act_rlu';
-	}
 
 procedure DoActionReset();
 
 
 implementation
+
+
+{	TBL_AAD =				'account_action_detail_aad';
+	FLD_AAD_ID = 			'aad_id';
+	FLD_AAD_ACT_ID =		'aad_act_id';
+	FLD_AAD_CMD = 			'aad_command';
+	FLD_AAD_EL = 			'aad_error_level';
+	FLD_AAD_RCD = 			'aad_rcd';
+	FLD_AAD_RLU = 			'aad_rlu';
+}
+
+procedure TableAadAdd(actId: integer; stepNum: integer; command: string);
+//
+//	Add a record to the table AAD
+//
+var
+	qi: Ansistring;
+begin
+	qi := 'INSERT INTO ' + TBL_AAD + ' ';
+	qi := qi + 'SET '; 
+	qi := qi + FLD_AAD_ACT_ID + '=' + IntToStr(actId) + ',';
+	qi := qi + FLD_AAD_STEP_NUM + '=' + IntToStr(stepNum) + ',';
+	qi := qi + FLD_AAD_CMD + '=' + FixStr(command) + ' ';
+	
+	WriteLn(qi);
+	
+	RunQuery(qi);
+end; // of procedure TableAadAdd
+
+
+function TableActAdd(desc: string): integer;
+//
+//	Insert a record in the table ACT
+//
+var
+	qi: Ansistring;
+	qs: Ansistring;
+	rs: TSQLQuery;
+	r: integer;
+begin
+	r := 0;
+
+	// Insert a new record in table ACT
+	qi := 'INSERT INTO ' + TBL_ACT + ' ';
+	qi := qi + 'SET ';
+	qi := qi + FLD_ACT_ACTION_NR + '=' + IntToStr(ACTION_RESET) + ',';
+	qi := qi + FLD_ACT_DESC + '=' + FixStr(desc) + ';';
+	WriteLn(qi);
+	RunQuery(qi);
+	
+	// Get the latest FLD_ACT_ID added for ACTION_RESET.
+	qs :='SELECT ' + FLD_ACT_ID + ' ';
+	qs := qs + 'FROM ' + TBL_ACT + ' ';
+	qs := qs + 'WHERE ' + FLD_ACT_ACTION_NR + '=' + IntToStr(ACTION_RESET) + ' ';
+	qs := qs + 'ORDER BY ' + FLD_ACT_RCD + ' DESC ';
+	qs := qs + 'LIMIT 1;';
+	WriteLn(qs);
+	
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+
+	if rs.EOF = true then
+		WriteLn('TableActAdd(): Cant find the latest record added for action: ', ACTION_RESET)
+	else
+	begin
+		r := rs.FieldByName(FLD_ACT_ID).AsInteger;
+	end;
+	
+	TableActAdd := r;
+end; // of function TableAccountActionDetailInsert
 
 
 procedure DoActionReset();
@@ -63,6 +126,8 @@ var
 	dn: string;
 	upn: string;
 	initialPassword: string;
+	actId: integer;
+	stepNum: integer;
 begin
 	WriteLn('DOACTIONRESET()');
 	WriteLn(ACTION_RESET);
@@ -88,6 +153,7 @@ begin
 	begin
 		while not rs.EOF do
 		begin
+			stepNum := 1;
 			recId := rs.FieldByName(VIEW_RESET_ID).AsInteger;
 			dn := rs.FieldByName(VIEW_RESET_DN).AsString;
 			upn := rs.FieldByName(VIEW_RESET_UPN).AsString;
@@ -95,8 +161,15 @@ begin
 			
 			WriteLn(recId:4, ' ', dn, '  ', upn, '  ', initialPassword);
 			
-			WriteLn(TableActAdd('Password reset for ' + upn));
+			actId := TableActAdd('Password reset for ' + upn);
 			
+			// Add the first step: set the password
+			TableAadAdd(actId, stepNum, 'dsmod.exe user "' + dn + '" -pwd "' + initialPassword + '"');
+			
+			// Set the 2nd step: Must change password flag on.
+			Inc(stepNum);
+			TableAadAdd(actId, stepNum, 'dsmod.exe user "' + dn + '" -mustchpwd yes');
+						
 			rs.Next;
 		end;
 	end;

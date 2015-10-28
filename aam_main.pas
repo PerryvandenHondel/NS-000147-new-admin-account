@@ -47,7 +47,6 @@ uses
 	USupportLibrary,
 	SqlDB,
 	aam_global,
-	aam_database,
 	aam_action_reset;			// ACTION 2
 	
 	
