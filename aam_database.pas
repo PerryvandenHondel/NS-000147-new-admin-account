@@ -153,20 +153,6 @@ const
 	FLD_CAA_SUPP_NAME = 	'name';
 	FLD_CAA_STATUS = 	 	'status';
 
-	TBL_ACT = 				'account_action_act';
-	FLD_ACT_ID = 			'act_id';
-	FLD_ACT_DESC = 			'act_description';
-	FLD_ACT_RCD = 			'act_rcd';
-	FLD_ACT_RLU = 			'act_rlu';
-	
-	TBL_AAD =				'account_action_detail_aad';
-	FLD_AAD_ID = 			'aad_id';
-	FLD_AAD_ACT_ID =		'aad_act_id';
-	FLD_AAD_CMD = 			'aad_command';
-	FLD_AAD_EL = 			'aad_error_level';
-	FLD_AAD_RCD = 			'aad_rcd';
-	FLD_AAD_RLU = 			'aad_rlu';
-	
 
 var
 	gConnection: TODBCConnection;               // uses ODBCConn
@@ -203,41 +189,6 @@ begin
 	q.ExecSQL;
 	t.Commit;
 end; // of procedure RunQuery
-
-
-function FixStr(const s: string): string;
-var
-	r: string;
-begin
-	if Length(s) = 0 then
-		r := 'Null'
-	else
-	begin
-		// Replace a single quote (') to double quote's ('').
-		r := StringReplace(s, '''', '''''', [rfIgnoreCase, rfReplaceAll]);
-	
-		r := EncloseSingleQuote(r);
-	end;
-
-	FixStr := r;
-end; // of function FixStr
-
-
-function FixNum(const s: string): string;
-var
-	r: string;
-	i: integer;
-	code: integer;
-begin
-	Val(s, i, code);
-	i := 0;
-	if code <> 0 then
-		r := 'Null'
-	else
-		r := s;
-		
-	FixNum := r;
-end; // of function FixNum
 
 
 procedure DatabaseOpen();
