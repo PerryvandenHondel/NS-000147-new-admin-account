@@ -97,6 +97,7 @@ const
 	FLD_ACT_ID = 			'act_id';
 	FLD_ACT_ACTION_NR = 	'act_action_nr';
 	FLD_ACT_DESC = 			'act_description';
+	FLD_ACT_STATUS = 		'act_status';
 	FLD_ACT_RCD = 			'act_rcd';
 	FLD_ACT_RLU = 			'act_rlu';
 	
@@ -106,6 +107,7 @@ const
 	FLD_AAD_STEP_NUM = 		'aad_step';
 	FLD_AAD_CMD = 			'aad_command';
 	FLD_AAD_EL = 			'aad_error_level';
+	FLD_AAD_STATUS = 		'aad_status';
 	FLD_AAD_RCD = 			'aad_rcd';
 	FLD_AAD_RLU = 			'aad_rlu';
 

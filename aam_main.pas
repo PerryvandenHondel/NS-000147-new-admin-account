@@ -47,7 +47,8 @@ uses
 	USupportLibrary,
 	SqlDB,
 	aam_global,
-	aam_action_reset;			// ACTION 2
+	aam_action_reset,				// ACTION 2
+	aam_process_actions;			// Process all actions in Actions (ACT) table and the Actions Detail (AAD) table
 	
 	
 const
@@ -707,6 +708,8 @@ begin
 	//ProcessAllAds();
 	
 	DoActionReset();
+	
+	ProcessActions();
 	
 end;
 
