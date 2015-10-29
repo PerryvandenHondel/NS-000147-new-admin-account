@@ -84,6 +84,8 @@ begin
 	}
 	
 	upn := LowerCase(upn);
+	
+	mail := LowerCase(mail);
 
 	qs := 'SELECT ' + FLD_ATV_ID + ' ';
 	qs := qs + 'FROM ' + TBL_ATV + ' ';
@@ -157,6 +159,7 @@ begin
 	v := 'BEH_;NSA_;NSI_;NSS_;KPN_;GTN_;CSC_;HP_;EDS_;HPE_';
 	a := SplitString(v, ';');
 	
+	// Bug
 	s := UpperCase(s);
 	
 	//WriteLn('IsValidAdminAccount(): ', s);
