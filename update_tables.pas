@@ -21,7 +21,7 @@ uses
 	UTextSeparated,
 	ODBCConn,
 	SqlDb,
-	naa_db;
+	aam_global;
 	
 
 const
@@ -75,6 +75,14 @@ var
 	id: integer;
 	rs: TSQLQuery; // Uses SqlDB
 begin
+	//WriteLn('RecordAddAccount(): ', dn); 
+	{
+	if Pos('NSA_Venu.Reddy', dn) > 0 then
+	begin
+		WriteLn('*** VENU REDDY DN found!');
+	end;
+	}
+	
 	upn := LowerCase(upn);
 
 	qs := 'SELECT ' + FLD_ATV_ID + ' ';
@@ -149,11 +157,19 @@ begin
 	v := 'BEH_;NSA_;NSI_;NSS_;KPN_;GTN_;CSC_;HP_;EDS_;HPE_';
 	a := SplitString(v, ';');
 	
+	s := UpperCase(s);
+	
+	//WriteLn('IsValidAdminAccount(): ', s);
+	
 	for x := 0 to High(a) do
 	begin
 		//WriteLn(x, ':', a[x]);
 		if Pos(a[x], s) > 0 then
+		begin
+			//WriteLn('   >>>', s, ' IS VALID');
 			r := true;
+			break;
+		end;
 	end; // of for
 	IsValidAdminAccount := r;
 end; // of function IsValidAdminAccount
@@ -169,12 +185,15 @@ var
 	el: integer;
 	f: string;
 	dn: string;
+	i: integer;
+	p: integer;
 begin
 	WriteLn('ProcessSingleActiveDirectory()');
 	
+	i := 2;  // Start at line 2 with data, line 1 is the header
 	
 	// Set the file name
-	f := '$$export.csv';
+	f := 'ad_dump_' + LowerCase(domainNt) + '.tmp';
 	
 	// Delete any existing file.
 	DeleteFile(f);
@@ -205,16 +224,30 @@ begin
 	// dn;sAMAccountName;givenName;sn
 	csv.ReadHeader();
 	
-	WriteLn('givenName is found at pos: ', csv.GetPosOfHeaderItem('givenName'));
+	//WriteLn('givenName is found at pos: ', csv.GetPosOfHeaderItem('givenName'));
 	
-	WriteLn('Open file: ', csv.GetPath(), ' status = ', BoolToStr(csv.GetStatus, 'OPEN', 'CLOSED'));
+	//WriteLn('Open file: ', csv.GetPath(), ' status = ', BoolToStr(csv.GetStatus, 'OPEN', 'CLOSED'));
 	repeat
 		csv.ReadLine();
+		
 		// dn;sAMAccountName;givenName;sn;userPrincipalName
-		dn := csv.GetValue('dn'); 
+		dn := csv.GetValue('dn');
+		
+		WriteLn(i: 4, ': ', dn);
+		Inc(i);
+		{
+		p := Pos('nsa_venu.', dn);
+		WriteLn('   ', p);
+		if p > 0 then
+		begin
+			WriteLn('VENU REDDY FOUND!');
+			Sleep(5000);
+		end;
+		}
 		if IsValidAdminAccount(dn) = true then
 		begin
 			//dn;sAMAccountName;givenName;sn;userPrincipalName
+			//WriteLn('  ', dn);
 			RecordAddAccount(dn, csv.GetValue('givenName'), csv.GetValue('sn'), csv.GetValue('userPrincipalName'), csv.GetValue('sAMAccountName'), csv.GetValue('mail'), csv.GetValue('whenCreated'));
 			//WriteLn('dn=', dn);
 		end; // of if
