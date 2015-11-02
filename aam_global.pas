@@ -21,6 +21,15 @@ uses
 	
 const	
 	DSN = 					'DSN_ADBEHEER_32';
+	VALID_ACTIVE = 			9;						// Only process records with _is_active = 9. 0 = inactive, 1 = active, 9 = development records
+
+	ACTION_CREATE = 			1;		// Create a new account
+	ACTION_RESET = 				2;		// Reset the password
+	ACTION_SAME = 				3;		// Make the group membership the same as a reference account.
+	ACTION_UNLOCK = 			4;		// Unlock an account
+	ACTION_DISABLE = 			5;		// Disable an account
+	ACTION_DELETE = 			6;		// Delete an account
+
 	
 	TBL_ACC	=				'account';
 	FLD_ACC_ID = 			'account_id';
@@ -85,31 +94,19 @@ const
 	FLD_CAA_SUPP_NAME = 	'name';
 	FLD_CAA_STATUS = 	 	'status';
 
-
-	ACTION_CREATE = 			1;		// Create a new account
-	ACTION_RESET = 				2;		// Reset the password
-	ACTION_SAME = 				3;		// Make the group membership the same as a reference account.
-	ACTION_UNLOCK = 			4;		// Unlock an account
-	ACTION_DISABLE = 			5;		// Disable an account
-	ACTION_DELETE = 			6;		// Delete an account
-
+	{
 	TBL_ACT = 				'account_action_act';
 	FLD_ACT_ID = 			'act_id';
+	FLD_ACT_ACTIVE = 		'act_is_active';
 	FLD_ACT_ACTION_NR = 	'act_action_nr';
 	FLD_ACT_DESC = 			'act_description';
 	FLD_ACT_STATUS = 		'act_status';
+	FLD_ACT_STEP_COUNT = 	'act_step_count';
 	FLD_ACT_RCD = 			'act_rcd';
 	FLD_ACT_RLU = 			'act_rlu';
+	}
 	
-	TBL_AAD =				'account_action_detail_aad';
-	FLD_AAD_ID = 			'aad_id';
-	FLD_AAD_ACT_ID =		'aad_act_id';
-	FLD_AAD_STEP_NUM = 		'aad_step';
-	FLD_AAD_CMD = 			'aad_command';
-	FLD_AAD_EL = 			'aad_error_level';
-	FLD_AAD_STATUS = 		'aad_status';
-	FLD_AAD_RCD = 			'aad_rcd';
-	FLD_AAD_RLU = 			'aad_rlu';
+
 
 	
 var	

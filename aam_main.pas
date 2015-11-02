@@ -47,8 +47,8 @@ uses
 	USupportLibrary,
 	SqlDB,
 	aam_global,
-	aam_action_reset,				// ACTION 2
-	aam_process_actions;			// Process all actions in Actions (ACT) table and the Actions Detail (AAD) table
+	aam_action_reset;				// ACTION 2
+	//aam_process_actions;			// Process all actions in Actions (ACT) table and the Actions Detail (AAD) table
 	
 	
 const
@@ -311,7 +311,7 @@ begin
 	RunQuery(qu);
 end; // of TableAccountDetailUpdateStatus
 
-
+{
 function TableAccountActionInsert(desc: string): string;
 //
 //	Insert a record in the table ACT
@@ -332,8 +332,9 @@ begin
 	RunQuery(qi);
 	TableAccountActionInsert := r;
 end; // of function TableAccountActionInsert
-	
+}	
 
+{
 procedure TableAccountActionDetailInsert(actionId: string; c: string);
 //
 //	Insert a record in the table AAD
@@ -347,6 +348,7 @@ begin
 	qi := qi + FLD_AAD_CMD + '=' + FixStr(c) + ';';
 	RunQuery(qi);
 end; // of procedure TableAccountActionDetailInsert
+}
 
 
 procedure StepFillActionTable(intStatus: integer);
@@ -400,66 +402,66 @@ begin
 			email := rs.FieldByName(FLD_CAA_EMAIL).AsString;
 			
 			desc := 'Create new account for ' + upn;
-			actionId  := TableAccountActionInsert(desc);
+			//actionId  := TableAccountActionInsert(desc);
 			
 			// Create the account using DSADD.EXE
 			c := 'dsadd.exe user ';
 			c := c + EncloseDoubleQuote(dn);
 			//WriteLn(c);
-			TableAccountActionDetailInsert(actionId, c);
+			//TableAccountActionDetailInsert(actionId, c);
 			
 			// Add a UPN to the account
 			c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' ';
 			c := c + '-upn ' + EncloseDoubleQuote(upn);
 			//WriteLn(c);
-			TableAccountActionDetailInsert(actionId, c);
+			//TableAccountActionDetailInsert(actionId, c);
 			
 			// Set the initial password on the account
 			c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' ';
 			c := c + '-pwd ' + EncloseDoubleQuote(initPw) + ' ';
 			c := c + '-mustchpwd yes';
 			//WriteLn(c);
-			TableAccountActionDetailInsert(actionId, c);
+			//TableAccountActionDetailInsert(actionId, c);
 
 			// Add first name AD attribute
 			c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -fn ' + EncloseDoubleQuote(Trim(fname + ' ' + mname));
-			TableAccountActionDetailInsert(actionId, c);
+			//TableAccountActionDetailInsert(actionId, c);
 			
 			// Add last name AD attribute
 			c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -ln ' + EncloseDoubleQuote(Trim(lname));
-			TableAccountActionDetailInsert(actionId, c);
+			//TableAccountActionDetailInsert(actionId, c);
 			
 			// Add title AD attribute
 			c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -title ' + EncloseDoubleQuote(Trim(title));
-			TableAccountActionDetailInsert(actionId, c);
+			//TableAccountActionDetailInsert(actionId, c);
 			
 			// Add display AD attribute
 			c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -display ' + EncloseDoubleQuote(Trim(userName));
-			TableAccountActionDetailInsert(actionId, c);
+			//TableAccountActionDetailInsert(actionId, c);
 			
 			if Length(mobile) > 0 then
 			begin
 				// Add mobile AD attribute if exists in the database.
 				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -mobile ' + EncloseDoubleQuote(Trim(mobile));
-				TableAccountActionDetailInsert(actionId, c);
+				//TableAccountActionDetailInsert(actionId, c);
 			end; // of if
 			
 			if Length(email) > 0 then
 			begin
 				// Add mobile AD attribute if exists in the database.
 				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -email ' + EncloseDoubleQuote(Trim(email));
-				TableAccountActionDetailInsert(actionId, c);
+				//TableAccountActionDetailInsert(actionId, c);
 			end; // of if
 			
 			
 			// Set the not delegated flag in the UserAccountControl attribute of the account
 			// NOT_DELEGATED - When this flag is set, the security context of the user is not delegated to a service even if the service account is set as trusted for Kerberos delegation.
 			//	Source: https://support.microsoft.com/en-us/kb/305144
-			c := 'adfind.exe -b ' + EncloseDoubleQuote(dn) + ' userAccountControl -adcsv | admod.exe "userAccountControl::{{.:SET:1048576}}"';
-			TableAccountActionDetailInsert(actionId, c);
+			//c := 'adfind.exe -b ' + EncloseDoubleQuote(dn) + ' userAccountControl -adcsv | admod.exe "userAccountControl::{{.:SET:1048576}}"';
+			//TableAccountActionDetailInsert(actionId, c);
 			
 			// Change the status to 300. Records added
-			TableAccountDetailUpdateStatus(recId, 300);
+			//TableAccountDetailUpdateStatus(recId, 300);
 			
 			rs.Next;
 		end;
@@ -707,7 +709,7 @@ begin
 	//StepFillActionTable(200);			// 200 > 299
 	//ProcessAllAds();
 	
-	DoActionReset();
+	//DoActionReset();
 	
 	ProcessActions();
 	
