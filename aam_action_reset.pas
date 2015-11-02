@@ -61,6 +61,72 @@ implementation
 } 
 
 
+
+procedure TableArpSetStatus(recId: integer; newStatus: integer);
+var
+	qu: Ansistring;
+begin
+	qu := 'UPDATE ' + VIEW_RESET;
+	qu := qu + ' SET';
+	qu := qu + ' ' + VIEW_RESET_STATUS + '=' + IntToStr(newStatus);
+	qu := qu + ' WHERE ' + VIEW_RESET_ID + '=' + IntToStr(recId);
+	qu := qu + ';';
+	
+	WriteLn('TableArpSetStatus(): ', qu);
+	
+	RunQuery(qu);
+end; // of procedure TableArpSetStatus
+
+
+procedure ActionResetSendmail(recId: integer; curAction: integer; fname: string; upn: string; initpw: string; mailto: string; ref: string);
+var
+	path: string;
+	traceCode: string; // Unique code for this action PRODID+ACTION+REC (147-2-15)
+	f: TextFile;
+	cmd: Ansistring;
+begin
+	// Build the path of the e-mail contents file.
+	traceCode := IntToStr(PROG_ID) + '-' + IntToStr(curAction) + '-' + IntToStr(recId);
+	path := traceCode + '.body';
+	
+	if FileExists(path) = true then
+		DeleteFile(path);
+		
+	Assign(f, path);
+	ReWrite(f);
+	
+	WriteLn(f, 'Beste ', fname, ',');
+	WriteLn(f);
+	WriteLn(f, 'Het password is gereset voor account ', upn);
+	WriteLn(f);
+	WriteLn(f, 'Initieel password: ' + initpw);
+	WriteLn(f);
+	WriteLn(f, 'Requested under: ', ref);
+	WriteLn(f);
+	WriteLn(f, 'Trace code: ', traceCode);
+	WriteLn(f);
+	
+	Close(f);
+	
+	cmd := ' blat.exe ' + path;
+	cmd := cmd + ' -to ' + EncloseDoubleQuote(mailto);
+	//cmd := cmd + ' -f ' + EncloseDoubleQuote('nsg.hostingadbeheer@ns.nl');
+	cmd := cmd + ' -f ' + EncloseDoubleQuote('noreply@ns.nl');
+	cmd := cmd + ' -subject ' + EncloseDoubleQuote('Password reset done for ' + upn + ' // ARGUS#' + ref + ' // ADB#' + traceCode);
+	cmd := cmd + ' -server vm70as005.rec.nsint';
+	cmd := cmd + ' -port 25';
+	
+	WriteLn(cmd);
+	
+	RunCommand(cmd);
+	
+	// Update the status to 900: Send e-mail
+	TableArpSetStatus(recId, 900);
+	
+	
+end; // of procedure ActionResetSendmail
+
+
 procedure ActionResetInformByEmail(curAction: integer; recId: integer);
 var
 	qs: Ansistring;
@@ -69,6 +135,8 @@ var
 	fname: string;
 	mailto: string;
 	initpw: string;
+	ref: string;
+	//recId: integer;
 begin
 	qs := 'SELECT *';
 	qs := qs + ' FROM ' + VIEW_RESET;
@@ -89,6 +157,7 @@ begin
 	begin
 		while not rs.EOF do
 		begin
+			recId := rs.FieldByName(VIEW_RESET_ID).AsInteger;
 			upn := rs.FieldByName(VIEW_RESET_UPN).AsString;
 			fname := rs.FieldByName(VIEW_RESET_FNAME).AsString;
 			mailto := rs.FieldByName(VIEW_RESET_MAIL_TO).AsString;
@@ -96,7 +165,7 @@ begin
 			ref := rs.FieldByName(VIEW_RESET_REFERENCE).AsString;
 			WriteLn('EMAIL CONTENTS: Beste ', fname, ', password reset for ', upn, ' is now set to: ',  initpw, ' (mailto: ', mailto, ')');
 			
-			
+			ActionResetSendmail(recId, curAction, fname, upn, initpw, mailto, ref);
 			
 			
 			
@@ -107,21 +176,6 @@ begin
 	rs.Free;
 end; // of procedure ActionResetInformByEmail
 
-
-procedure TableArpSetStatus(recId: integer; newStatus: integer);
-var
-	qu: Ansistring;
-begin
-	qu := 'UPDATE ' + VIEW_RESET;
-	qu := qu + ' SET';
-	qu := qu + ' ' + VIEW_RESET_STATUS + '=' + IntToStr(newStatus);
-	qu := qu + ' WHERE ' + VIEW_RESET_ID + '=' + IntToStr(recId);
-	qu := qu + ';';
-	
-	WriteLn('TableArpSetStatus(): ', qu);
-	
-	RunQuery(qu);
-end; // of procedure TableArpSetStatus
 
 procedure ActionResetCheck(curAction: integer; recId: integer);	
 var
