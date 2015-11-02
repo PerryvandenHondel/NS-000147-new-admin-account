@@ -49,7 +49,7 @@ implementation
 	FLD_AAD_RLU = 			'aad_rlu';
 	}
 
-
+{
 procedure TableActSetStatus(recId: integer; newStatus: integer);
 //
 //	Set the status of the field act_status to the value newStatus
@@ -170,6 +170,38 @@ begin
 	end;
 	rs.Free;
 end; // of function ProcessActionDetails
+}
+
+
+
+
+{
+	TBL_AAD =				'account_action_do_aad';
+	FLD_AAD_ID = 			'aad_id';
+	FLD_AAD_IS_ACTIVE = 	'aad_is_active';
+	FLD_AAD_ACTION_ID =		'aad_action_id';
+	FLD_AAD_ACTION_NR = 	'aad_action_nr';
+	FLD_AAD_CMD = 			'aad_command';
+	FLD_AAD_EL = 			'aad_error_level';
+	//FLD_AAD_STATUS = 		'aad_status';
+	FLD_AAD_RCD = 			'aad_rcd';
+	FLD_AAD_RLU = 			'aad_rlu';
+}
+
+procedure UpdateAadErrorLevel(recId: integer; errorLevel: integer);
+var
+	qu: Ansistring;
+begin
+	qu := 'UPDATE ' + TBL_AAD;
+	qu := qu + ' SET';
+	qu := qu + ' ' + FLD_AAD_EL + '=' + IntToStr(errorLevel);
+	qu := qu + ' WHERE ' + FLD_AAD_ID + '=' + IntToStr(recId);
+	qu := qu + ';';
+	
+	WriteLn('UpdateAadErrorLevel(): ', qu);
+	
+	RunQuery(qu);
+end; // of procedure UpdateAadErrorLevel
 
 
 procedure ProcessActions();
@@ -178,20 +210,22 @@ var
 	rs: TSQLQuery;
 	
 	recId: integer;
-	desc: string;
-	upn: string;
-	initialPassword: string;
-	actId: integer;
-	stepNum: integer;
+	cmd: string;
+	//upn: string;
+	//initialPassword: string;
+	//actId: integer;
+	//stepNum: integer;
 	r: integer;
 begin
 	WriteLn('PROCESSACTIONS()');
 	
-	qs := 'SELECT * ';
-	qs := qs + 'FROM ' + TBL_ACT + ' ';
-	qs := qs + 'WHERE ' + FLD_ACT_STATUS + '=0 ';
-	qs := qs + 'AND ' + FLD_ACT_ACTIVE + '=1 ';
-	qs := qs + 'ORDER BY ' + FLD_ACT_RCD;
+	// Select all records where the error level is not filled in,
+	// And the is_active field = 9.
+	qs := 'SELECT *';
+	qs := qs + ' FROM ' + TBL_AAD;
+	qs := qs + ' WHERE ' + FLD_AAD_EL + ' IS NULL';
+	qs := qs + ' AND ' + FLD_AAD_IS_ACTIVE + '=' + IntToStr(VALID_ACTIVE);
+	qs := qs + ' ORDER BY ' + FLD_AAD_RCD;
 	qs := qs + ';';
 	
 	WriteLn(qs);
@@ -208,14 +242,16 @@ begin
 	begin
 		while not rs.EOF do
 		begin
-			recId := rs.FieldByName(FLD_ACT_ID).AsInteger;
-			desc := rs.FieldByName(FLD_ACT_DESC).AsString;
+			recId := rs.FieldByName(FLD_AAD_ID).AsInteger;
+			cmd := rs.FieldByName(FLD_AAD_CMD).AsString;
 			
-			WriteLn(recId:4, ' ', desc);
+			WriteLn(recId:4, '     ', cmd);
 			
-			//r := ProcessActionDetails(recId);
-			WriteLn(r);
+			r := RunCommand(cmd);
+			WriteLn('RunCommand: ', cmd);
+			WriteLn('ERRORLEVEL=' , r);
 			
+			UpdateAadErrorLevel(recId, r);
 			
 			rs.Next;
 		end;
