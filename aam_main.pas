@@ -353,7 +353,7 @@ end; // of procedure TableAccountActionDetailInsert
 
 procedure StepFillActionTable(intStatus: integer);
 var	
-	actionId: string;	// Unique Action ID of char 16
+	//actionId: string;	// Unique Action ID of char 16
 	c: Ansistring;
 	desc: string;
 	dn: string;
@@ -709,10 +709,7 @@ begin
 	//StepFillActionTable(200);			// 200 > 299
 	//ProcessAllAds();
 	
-	//DoActionReset();
-	
-	ProcessActions();
-	
+	DoActionReset(ACTION_RESET);				// Add new actions to the table AAD for password resets
 end;
 
 
