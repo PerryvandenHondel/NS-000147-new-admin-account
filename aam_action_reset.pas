@@ -1,6 +1,17 @@
 //
 //	Admin Account Management -- Password reset
 //
+//
+//
+//	FLOW:
+//		DoActionReset
+//			TableAadAdd
+//			ActionResetProcess
+//			ActionResetCheck
+//			ActionResetInformByEmail
+//
+
+
 
 
 unit aam_action_reset;
