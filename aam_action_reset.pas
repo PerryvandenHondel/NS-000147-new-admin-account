@@ -325,6 +325,7 @@ var
 	upn: string;
 	initialPassword: string;
 begin
+	WriteLn('-----------------------------------------------------------------');
 	WriteLn('DOACTIONRESET()');
 	WriteLn(ACTION_RESET);
 	

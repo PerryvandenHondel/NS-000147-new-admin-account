@@ -24,7 +24,7 @@ const
 	PROG_ID = 					147;
 	VALID_ACTIVE = 				9;						// Only process records with _is_active = 9. 0 = inactive, 1 = active, 9 = development records
 
-	ACTION_CREATE = 			1;		// Create a new account
+	ACTION_NEW =	 			1;		// Create a new account
 	ACTION_RESET = 				2;		// Reset the password
 	ACTION_SAME = 				3;		// Make the group membership the same as a reference account.
 	ACTION_UNLOCK = 			4;		// Unlock an account
