@@ -1,8 +1,6 @@
 //
 //	Admin Account Management -- Password reset
 //
-//
-//
 //	FLOW:
 //		DoActionReset
 //			TableAadAdd
@@ -26,50 +24,17 @@ interface
 
 uses
 	SysUtils,
+	Process,
 	USupportLibrary,
 	ODBCConn,
 	SqlDb,
 	aam_global;
 	
-	
+
 procedure DoActionReset(curAction: integer);			// Add new actions to the table AAD for password resets
 
 
 implementation
-
-{
-	//
-	//	AAD = Action Account Do table
-	//	Table that contain all the actions that are to be done to perform an action. 
-	//
-	TBL_AAD =				'account_action_do_aad';
-	FLD_AAD_ID = 			'aad_id';
-	FLD_AAD_IS_ACTIVE = 	'aad_is_active';
-	FLD_AAD_ACTION_ID =		'aad_action_id';
-	FLD_AAD_ACTION_NR = 	'aad_action_nr';
-	FLD_AAD_CMD = 			'aad_command';
-	FLD_AAD_EL = 			'aad_error_level';
-	//FLD_AAD_STATUS = 		'aad_status';
-	FLD_AAD_RCD = 			'aad_rcd';
-	FLD_AAD_RLU = 			'aad_rlu';
-}
-
-{
-	VIEW_RESET = 			'account_action_view_reset';
-	VIEW_RESET_ID = 		'arp_id';
-	VIEW_RESET_IS_ACTIVE = 	'arp_is_active';
-	VIEW_RESET_ATV_ID = 	'arp_atv_id';
-	VIEW_RESET_DN = 		'atv_dn';
-	VIEW_RESET_UPN = 		'atv_upn'; 
-	VIEW_RESET_SORT = 		'atv_sort';
-	VIEW_RESET_ARQ_ID = 	'atv_arq_id';
-	VIEW_RESET_MAIL_TO = 	'arq_mail_to';
-	VIEW_RESET_FNAME = 		'arg_fname';
-	VIEW_RESET_REFERENCE = 	'arp_reference';
-	VIEW_RESET_INITPW = 	'arp_initial_password';
-	VIEW_RESET_STATUS = 	'arp_status';
-	VIEW_RESET_RCD = 		'arp_rcd';
-} 
 
 
 
@@ -121,7 +86,6 @@ begin
 	
 	cmd := ' blat.exe ' + path;
 	cmd := cmd + ' -to ' + EncloseDoubleQuote(mailto);
-	//cmd := cmd + ' -f ' + EncloseDoubleQuote('nsg.hostingadbeheer@ns.nl');
 	cmd := cmd + ' -f ' + EncloseDoubleQuote('noreply@ns.nl');
 	cmd := cmd + ' -subject ' + EncloseDoubleQuote('Password reset done for ' + upn + ' // ARGUS#' + ref + ' // ADB#' + traceCode);
 	cmd := cmd + ' -server vm70as005.rec.nsint';
@@ -177,10 +141,7 @@ begin
 			WriteLn('EMAIL CONTENTS: Beste ', fname, ', password reset for ', upn, ' is now set to: ',  initpw, ' (mailto: ', mailto, ')');
 			
 			ActionResetSendmail(recId, curAction, fname, upn, initpw, mailto, ref);
-			
-			
-			
-			
+
 			rs.Next;
 		end;
 	end;
@@ -409,6 +370,9 @@ begin
 			// Set the 2nd step: Write the command to "Must change password flag on".
 			TableAadAdd(recId, VALID_ACTIVE, curAction, 'dsmod.exe user "' + dn + '" -mustchpwd yes');
 			
+			if IsAccountLockedout(dn) = true then
+				// If the account is locked out, use DSMOD USER <dn> -disabled no to unlock.
+				TableAadAdd(recId, VALID_ACTIVE, curAction, 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -disabled no');
 			
 			// Execute all actions in table AAD for password resets
 			ActionResetProcess(curAction, recId);

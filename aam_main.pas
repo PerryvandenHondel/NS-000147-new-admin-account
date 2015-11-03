@@ -47,8 +47,7 @@ uses
 	USupportLibrary,
 	SqlDB,
 	aam_global,
-	aam_action_reset,				// ACTION 2
-	aam_process_actions;			// Process all actions in Actions (ACT) table and the Actions Detail (AAD) table
+	aam_action_reset;				// ACTION 2 Reset a password
 	
 	
 const
@@ -618,7 +617,7 @@ begin
 	rs.PacketRecords := -1;
 	rs.SQL.Text := qs;
 	rs.Open;
-
+	
 	if rs.EOF = true then
 		WriteLn('No records found!')
 	else
@@ -661,6 +660,15 @@ begin
 end; // of procedure FindRecordToCreateNewAccounts
 
 
+procedure ProgTest();
+//
+//	Program testing procedure
+//
+begin
+	WriteLn(IsAccountLockedOut('CN=NSA_Perry.vdHondel,OU=NSA,OU=Beheer,DC=prod,DC=ns,DC=nl'));
+end; // of procedure ProgTest
+
+
 procedure ProgInit();
 begin
 	DatabaseOpen();
@@ -668,47 +676,7 @@ end;
 
 
 procedure ProgRun();
-//var
-//	a: string;
 begin
-	//WriteLn(GenerateUserName2('NSA', 'Teresa', 'Lisbon'));
-	//WriteLn(GenerateUserName2('KPN', 'Arnold', 'Van den Schwarzennegger'));
-	//WriteLn(GenerateUserName2('KPN', 'Arnold', 'Schwarzennegger'));
-	//a := GenerateUserName2('HP', 'Piet', 'van de Regger');
-	//WriteLn(GenerateUserName2('CSC', 'Rudolf', 'van Veen'));
-	//WriteLn(GenerateUserName2('NSA', 'Richard', 'van ''t Haar'));
-	//WriteLn(GenerateUserName2('NSA', '', 'Cher'));
-	//WriteLn(GenerateUserName2('NSA', 'Margret', 'Van den Boo-Van Assel')); // > Should become Margret.vdBoovAssel
-	
-	
-	//Writeln(GenerateUpn(a, 'prod.ns.nl'));
-	//WriteLn(GenerateDn(a, 'OU=Beheer', 'HP', true, 'DC=prod,DC=ns,DC=nl'));
-	//WriteLn(GenerateDn(a, 'OU=Beheer', 'KPN', false, 'DC=rs,DC=root,DC=nedtrain,DC=nl'));
-
-	//WriteLn(ReplaceMiddleNames('van den'));
-	//WriteLn(ReplaceMiddleNames('Wachtveld-Van Bergen'));
-	{
-	a := GenerateUserName3('CSC', 'Rudolf', 'van', 'Veen');
-	WriteLn(a);
-	
-	a := GenerateUserName3('CSC', '', '', 'Madonna');
-	WriteLn(a);
-		
-	a := GenerateUserName3('CSC', 'Ruud', '', 'Madonna');
-	WriteLn(a);
-	
-	a := GenerateUserName3('CSC', 'Martina', '', 'Berg-Van den Tol');
-	WriteLn(a);
-	
-	a := GenerateUserName3('CSC', 'Martina', 'van ''t', 'Berg-Van den Tol');
-	WriteLn(a);
-	}
-	
-	//StepCompleteMissingField(0);		// 0 > 100
-	//StepCheckForExisting(100);	 		// 100 > 199;
-	//StepFillActionTable(200);			// 200 > 299
-	//ProcessAllAds();
-	
 	DoActionReset(ACTION_RESET);				// Add new actions to the table AAD for password resets
 end;
 
@@ -721,6 +689,7 @@ end;
 	
 begin
 	ProgInit();
+	//ProgTest();
 	ProgRun();
 	ProgDone();
 end. // of program

@@ -141,6 +141,7 @@ procedure DatabaseClose();
 procedure DatabaseOpen();
 procedure RunQuery(qryString: string);
 
+
 implementation
 
 
