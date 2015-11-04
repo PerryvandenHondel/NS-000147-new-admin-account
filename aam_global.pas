@@ -121,8 +121,8 @@ const
 	TBL_AAD =					'account_action_do_aad';
 	FLD_AAD_ID = 				'aad_id';
 	FLD_AAD_IS_ACTIVE = 		'aad_is_active';
-	FLD_AAD_ACTION_ID =			'aad_action_id';
 	FLD_AAD_ACTION_NR = 		'aad_action_nr';
+	FLD_AAD_ACTION_ID =			'aad_action_id';
 	FLD_AAD_CMD = 				'aad_command';
 	FLD_AAD_EL = 				'aad_error_level';
 	//FLD_AAD_STATUS = 			'aad_status';
@@ -140,9 +140,62 @@ function FixNum(const s: string): string;
 procedure DatabaseClose();
 procedure DatabaseOpen();
 procedure RunQuery(qryString: string);
+procedure TableAadRemovePrevious(actionNumber: integer; recordId: integer);
+procedure TableAadAdd(actId: integer; isActive: integer; actionNumber: integer; command: string);
 
 
 implementation
+
+
+
+procedure TableAadAdd(actId: integer; isActive: integer; actionNumber: integer; command: string);
+//
+//	Add a record to the table AAD
+//
+//		actId				Action Number.
+//		isActive			Is this active?  0=INACTIVE, 1=ACTIVE, 9=TEST
+//		actionNumber		For what action is this? 1=NEW ACCOUNT ,2=RESET PASSWORD, etc
+//		command				Full command to do
+var
+	qi: Ansistring;
+begin
+	qi := 'INSERT INTO ' + TBL_AAD;
+	qi := qi + ' SET'; 
+	qi := qi + ' ' + FLD_AAD_ACTION_ID + '=' + IntToStr(actId);
+	qi := qi + ',' + FLD_AAD_IS_ACTIVE + '=' + IntToStr(isActive);
+	qi := qi + ',' + FLD_AAD_ACTION_NR + '=' + IntToStr(actionNumber);
+	qi := qi + ',' + FLD_AAD_CMD + '=' + FixStr(command) + ';';
+	
+	WriteLn('TableAadAdd():');
+	WriteLn(qi);
+	WriteLn;
+	
+	RunQuery(qi);
+end; // of procedure TableAadAdd
+
+
+procedure TableAadRemovePrevious(actionNumber: integer; recordId: integer);
+//
+//	Remove previous records from the table AAD
+//
+//		actionNumber	Number of the action, 1=new, 2=reset, etc
+//		recordId		Record number of the specific action to remove
+//
+var
+	qu: Ansistring;
+begin
+	qu := 'DELETE FROM ' + TBL_AAD;
+	qu := qu + ' WHERE ' + FLD_AAD_ACTION_NR + '=' + IntToStr(actionNumber);
+	qu := qu + ' AND ' + FLD_AAD_ACTION_ID + '=' + IntToStr(recordId);
+	qu := qu + ';';
+	
+	WriteLn('TableAadRemovePrevious():');
+	WriteLn(qu);
+	WriteLn;
+	
+	RunQuery(qu);
+	
+end; // of procedure TableAadRemovePrevious
 
 
 function FixStr(const s: string): string;

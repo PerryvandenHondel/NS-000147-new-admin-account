@@ -64,7 +64,9 @@ procedure ProgTest();
 //	Program testing procedure
 //
 begin
-	WriteLn(IsAccountLockedOut('CN=NSA_Perry.vdHondel,OU=NSA,OU=Beheer,DC=prod,DC=ns,DC=nl'));
+	//WriteLn(IsAccountLockedOut('CN=NSA_Perry.vdHondel,OU=NSA,OU=Beheer,DC=prod,DC=ns,DC=nl'));
+	WriteLn(DoesAccountExist('CN=NSA_Perry.vdHondel,OU=NSA,OU=Beheer,DC=prod,DC=ns,DC=nl'));
+	WriteLn(DoesAccountExist('CN=KPN_Clint.Eastwood,OU=KPN,OU=Beheer,DC=test,DC=ns,DC=nl'));
 end; // of procedure ProgTest
 
 

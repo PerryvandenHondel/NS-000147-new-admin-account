@@ -197,30 +197,6 @@ begin
 end; // of procedure ActionResetCheck(
 
 
-procedure TableAadAdd(actId: integer; isActive: integer; actionNumber: integer; command: string);
-//
-//	Add a record to the table AAD
-//
-//		actId				Action Number.
-//		isActive			Is this active?  0=INACTIVE, 1=ACTIVE, 9=TEST
-//		actionNumber		For what action is this? 1=NEW ACCOUNT ,2=RESET PASSWORD, etc
-//		command				Full command to do
-var
-	qi: Ansistring;
-begin
-	qi := 'INSERT INTO ' + TBL_AAD;
-	qi := qi + ' SET'; 
-	qi := qi + ' ' + FLD_AAD_ACTION_ID + '=' + IntToStr(actId);
-	qi := qi + ',' + FLD_AAD_IS_ACTIVE + '=' + IntToStr(isActive);
-	qi := qi + ',' + FLD_AAD_ACTION_NR + '=' + IntToStr(actionNumber);
-	qi := qi + ',' + FLD_AAD_CMD + '=' + FixStr(command) + ';';
-	
-	WriteLn('TableAadAdd(): ', qi);
-	
-	RunQuery(qi);
-end; // of procedure TableAadAdd
-
-
 procedure UpdateAadErrorLevel(recId: integer; errorLevel: integer);
 var
 	qu: Ansistring;

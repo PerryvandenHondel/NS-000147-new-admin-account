@@ -34,6 +34,8 @@ uses
 	
 
 procedure DoActionNew(curAction: integer);			// Add new actions to the table AAD for password resets
+function DoesAccountExist(dn: string): boolean;
+
 
 
 implementation
@@ -56,6 +58,9 @@ const
 	VFLD_NEW_DN = 				'anw_dn';
 	VFLD_NEW_UPN = 				'anw_upn';
 	VFLD_NEW_PW =		 		'anw_password';
+	VFLD_NEW_MOBILE = 			'aps_mobile';
+	VFLD_NEW_EMAIL = 			'aps_email';
+	VFLD_NEW_TITLE = 			'ati_title';
 	VFLD_NEW_STATUS = 			'anw_status';
 	VFLD_NEW_RCD = 				'anw_rcd';
 	VFLD_NEW_RLU = 				'anw_rlu';
@@ -66,7 +71,104 @@ type
 		repl: string;
 	end;
 	
+	
+function DoesAccountExist(dn: string): boolean;
+//
+//	Check if an account exists
+//
+//		dn:			Format: CN=fname.lname,OU=somewhere,DC=domain,DC=ext
+//
+//		true:		Account is locked in the AD
+//		false:		Account is not locked in the AD
+//
+var
+	path: string;
+	p: TProcess;
+	f: TextFile;
+	line: string;	// Read a line from the nslookup.tmp file.
+	r: boolean;		// Result of the function to return.
+	lt: string;
+begin
+	r := false;
+	lt := '';
 
+	// Get a temp file to store the output of the adfind.exe command.
+	path := SysUtils.GetTempFileName(); // Path is C:\Users\<username>\AppData\Local\Temp\TMP00000.tmp
+	//WriteLn(path);
+	
+	p := TProcess.Create(nil);
+	p.Executable := 'cmd.exe'; 
+    p.Parameters.Add('/c adfind.exe -b "' + dn + '" -c >' + path);
+	p.Options := [poWaitOnExit, poUsePipes, poStderrToOutPut];
+	p.Execute;
+	
+	// Open the text file and read the lines from it.
+	Assign(f, path);
+	
+	{I+}
+	Reset(f);
+	repeat
+		ReadLn(f, line);
+		if Pos('1 Objects returned', line) > 0 then
+			r := true; // The account exists in the AD.
+	until Eof(f);
+	Close(f);
+	
+	SysUtils.DeleteFile(path);
+	
+	DoesAccountExist := r;
+end; // of function DoesAccountExist
+
+{
+	VTBL_NEW
+	VFLD_NEW_USERNAME = 		'anw_username';
+	VFLD_NEW_DN = 				'anw_dn';
+	VFLD_NEW_UPN = 				'anw_upn';
+	VFLD_NEW_PW =		 		'anw_password
+}	
+
+
+procedure TableAnwSetStatus(recId: integer; newStatus: integer);
+//
+//	Set a new status for the table ANW
+//
+//		recId: 		Record ID
+//		newStatus:	New status to update record with
+//
+var
+	qu: Ansistring;
+begin
+	qu := 'UPDATE ' + VTBL_NEW;
+	qu := qu + ' SET';
+	qu := qu + ' ' + VFLD_NEW_STATUS + '=' + IntToStr(newStatus);
+	qu := qu + ' WHERE ' + VFLD_NEW_ID + '=' + IntToStr(recId);
+	qu := qu + ';';
+	
+	WriteLn('TableAnwSetStatus(): ', qu);
+	
+	RunQuery(qu);
+end; // of procedure TableAnwSetStatus
+
+
+procedure UpdateAnw(recId: integer; userName: string; upn: string; dn: string; pw: string);
+var
+	qu: Ansistring;
+begin
+	qu := 'UPDATE ' + VTBL_NEW;
+	qu := qu + ' SET';
+	qu := qu + ' ' + VFLD_NEW_USERNAME+ '=' + EncloseSingleQuote(userName);
+	qu := qu + ',' + VFLD_NEW_DN + '=' + EncloseSingleQuote(dn);
+	qu := qu + ',' + VFLD_NEW_UPN + '=' + EncloseSingleQuote(upn);
+	qu := qu + ',' + VFLD_NEW_PW + '=' + EncloseSingleQuote(pw);
+	qu := qu + ' WHERE ' + VFLD_NEW_ID + '=' + IntToStr(recId);
+	qu := qu + ';';
+	
+	WriteLn(qu);
+	
+	RunQuery(qu);
+end; // of procedure UpdateAnw
+	
+	
 function GenerateDn(a: string; ou: string; sup: string; useSupplierOu: integer; d: string): string;
 //
 //	Generate the Distinguished Name (DN) of a account.
@@ -170,7 +272,7 @@ begin
 	// Return the value, trim all spaces around the string.
 	GenerateUserName3 := Trim(r);
 end; // of function GenerateUserName3	
-	
+
 
 procedure DoActionNew(curAction: integer);
 //
@@ -192,6 +294,11 @@ var
 	upn: string;
 	dn: string;
 	pw: string;
+	mobile: string;
+	email: string;
+	company: string;
+	title: string;
+	c: Ansistring;
 begin
 	WriteLn('-----------------------------------------------------------------');
 	WriteLn('DOACTIONNEW()');
@@ -228,24 +335,97 @@ begin
 			orgUnit := rs.FieldByName(VFLD_NEW_ORGUNIT).AsString;
 			useSuppOu := rs.FieldByName(VFLD_NEW_USE_SUPP_OU).AsInteger;
 			supName := rs.FieldByName(VFLD_NEW_SUPP_CODE).AsString;
+			mobile := rs.FieldByName(VFLD_NEW_MOBILE).AsString;
+			email := rs.FieldByName(VFLD_NEW_EMAIL).AsString;
+			company := rs.FieldByName(VFLD_NEW_SUPP_CODE).AsString;
+			title := rs.FieldByName(VFLD_NEW_TITLE).AsString;
 			
 			userName := GenerateUserName3(supName, fname, mname, lname);
 			upn := GenerateUpn(userName, upnSuff);
 			dn := GenerateDn(userName, orgUnit, supName, useSuppOu, rootDse);
 			pw := GeneratePassword(); // From USupportLibrary
-//			GenerateDn(a: string; ou: string; sup: string; useSup: boolean; d: string): string;
 			
-			WriteLn('User name:        ', userName);
-			WriteLn('UPN:              ', upn);
 			WriteLn('DN:               ', dn);
-			WriteLn('Initial password: ', pw);
-			WriteLn;
 			
-			//dn := rs.FieldByName(VIEW_RESET_DN).AsString;
-			//upn := rs.FieldByName(VIEW_RESET_UPN).AsString;
-			//initialPassword := rs.FieldByName(VIEW_RESET_INITPW).AsString;
+			if DoesAccountExist(dn) = false then
+			begin
+				// Account DN does not exist, continue...
+				
+				WriteLn('User name:        ', userName);
+				WriteLn('UPN:              ', upn);
+				WriteLn('Initial password: ', pw);
+				WriteLn;
+				
+				UpdateAnw(recId, userName, upn, dn, pw);
+						
+				TableAadRemovePrevious(curAction, recId);
 			
+				// Add the account
+				c := 'dsadd.exe user ' + EncloseDoubleQuote(dn);
+				TableAadAdd(recId, VALID_ACTIVE, curAction, c);
 			
+				// Set the UPN
+				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -upn ' + EncloseDoubleQuote(upn);
+				TableAadAdd(recId, VALID_ACTIVE, curAction, c);
+			
+				// Add first name AD attribute
+				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -fn ' + EncloseDoubleQuote(Trim(fname + ' ' + mname));
+				TableAadAdd(recId, VALID_ACTIVE, curAction, c);
+			
+				// Add last name AD attribute
+				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -ln ' + EncloseDoubleQuote(Trim(lname));
+				TableAadAdd(recId, VALID_ACTIVE, curAction, c);
+			
+				// Add title AD attribute
+				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -title ' + EncloseDoubleQuote(Trim(title));
+				TableAadAdd(recId, VALID_ACTIVE, curAction, c);
+			
+				// Add display AD attribute
+				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -display ' + EncloseDoubleQuote(Trim(userName));
+				TableAadAdd(recId, VALID_ACTIVE, curAction, c);
+			
+				// Add the mobile number if it exists
+				if Length(mobile) > 0 then
+				begin
+					// Add mobile AD attribute if exists in the database.
+					c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -mobile ' + EncloseDoubleQuote(Trim(mobile));
+					TableAadAdd(recId, VALID_ACTIVE, curAction, c);
+				end; // of if
+			
+				// Add compnay AD attribute
+				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -company ' + EncloseDoubleQuote(Trim(company));
+				TableAadAdd(recId, VALID_ACTIVE, curAction, c);
+			
+				// Add the email address when it exists.
+				if Length(email) > 0 then
+				begin
+					// Add mobile AD attribute if exists in the database.
+					c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -email ' + EncloseDoubleQuote(Trim(email));
+					TableAadAdd(recId, VALID_ACTIVE, curAction, c);
+				end; // of if
+			
+				// Set the initial password
+				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' ';
+				c := c + '-pwd ' + EncloseDoubleQuote(pw) + ' ';
+				c := c + '-mustchpwd yes';
+				TableAadAdd(recId, VALID_ACTIVE, curAction, c);
+
+				// Set the not delegated flag in the UserAccountControl attribute of the account
+				// NOT_DELEGATED - When this flag is set, the security context of the user is not delegated to a service even if the service account is set as trusted for Kerberos delegation.
+				//	Source: https://support.microsoft.com/en-us/kb/305144
+				c := 'adfind.exe -b ' + EncloseDoubleQuote(dn) + ' userAccountControl -adcsv | admod.exe "userAccountControl::{{.:SET:1048576}}"';
+				TableAadAdd(recId, VALID_ACTIVE, curAction, c);		
+			
+				// Account records created in table AAD, status = 100, continue with processing.
+				TableAnwSetStatus(recId, 100)
+			end // of if 
+			else
+			begin
+				WriteLn('========================================================');
+				WriteLn('WARNING: DN ', dn, ' does already exists!!');
+				WriteLn('========================================================');
+				TableAnwSetStatus(recId, 99); // Set status to 99 for existing record
+			end;
 			
 			rs.Next;
 		end;
