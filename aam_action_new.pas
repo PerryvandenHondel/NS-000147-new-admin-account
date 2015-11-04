@@ -417,7 +417,11 @@ begin
 				TableAadAdd(recId, VALID_ACTIVE, curAction, c);		
 			
 				// Account records created in table AAD, status = 100, continue with processing.
-				TableAnwSetStatus(recId, 100)
+				TableAnwSetStatus(recId, 100);
+				
+				// Process all the records in the table AAD
+				//TableAadProcess(curAction, recId);
+				
 			end // of if 
 			else
 			begin

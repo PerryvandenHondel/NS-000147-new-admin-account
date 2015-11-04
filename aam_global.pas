@@ -142,10 +142,11 @@ procedure DatabaseOpen();
 procedure RunQuery(qryString: string);
 procedure TableAadRemovePrevious(actionNumber: integer; recordId: integer);
 procedure TableAadAdd(actId: integer; isActive: integer; actionNumber: integer; command: string);
+procedure TableAadProcess(curAction: integer; recId: integer);
+procedure UpdateAadErrorLevel(recId: integer; errorLevel: integer);
 
 
 implementation
-
 
 
 procedure TableAadAdd(actId: integer; isActive: integer; actionNumber: integer; command: string);
@@ -172,6 +173,80 @@ begin
 	
 	RunQuery(qi);
 end; // of procedure TableAadAdd
+
+
+procedure UpdateAadErrorLevel(recId: integer; errorLevel: integer);
+var
+	qu: Ansistring;
+begin
+	qu := 'UPDATE ' + TBL_AAD;
+	qu := qu + ' SET';
+	qu := qu + ' ' + FLD_AAD_EL + '=' + IntToStr(errorLevel);
+	qu := qu + ' WHERE ' + FLD_AAD_ID + '=' + IntToStr(recId);
+	qu := qu + ';';
+	
+	WriteLn('UpdateAadErrorLevel(): ', qu);
+	
+	RunQuery(qu);
+end; // of procedure UpdateAadErrorLevel
+
+
+procedure TableAadProcess(curAction: integer; recId: integer);
+var
+	qs: Ansistring;
+	rs: TSQLQuery;
+	
+	cmd: string;
+	//upn: string;
+	//initialPassword: string;
+	//actId: integer;
+	//stepNum: integer;
+	r: integer;
+begin
+	WriteLn('TableAadProcess()');
+	
+	// Select all records where the error level is not filled in,
+	// And the is_active field = 9.
+	qs := 'SELECT *';
+	qs := qs + ' FROM ' + TBL_AAD;
+	qs := qs + ' WHERE ' + FLD_AAD_EL + ' IS NULL';
+	qs := qs + ' AND ' + FLD_AAD_ACTION_ID + '=' + IntToStr(recId);
+	qs := qs + ' AND ' + FLD_AAD_ACTION_NR + '=' + IntToStr(curAction);
+	qs := qs + ' AND ' + FLD_AAD_IS_ACTIVE + '=' + IntToStr(VALID_ACTIVE);
+	qs := qs + ' ORDER BY ' + FLD_AAD_RCD;
+	qs := qs + ';';
+	
+	WriteLn(qs);
+	
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+
+	if rs.EOF = true then
+		WriteLn('ProcessActions(): No records found!')
+	else
+	begin
+		while not rs.EOF do
+		begin
+			recId := rs.FieldByName(FLD_AAD_ID).AsInteger;
+			cmd := rs.FieldByName(FLD_AAD_CMD).AsString;
+			
+			WriteLn(recId:4, '     ', cmd);
+			
+			r := RunCommand(cmd);
+			WriteLn('RunCommand: ', cmd);
+			WriteLn('ERRORLEVEL=' , r);
+			
+			UpdateAadErrorLevel(recId, r);
+			
+			rs.Next;
+		end;
+	end;
+	rs.Free;
+end; // of procedure TableAadProcess
+
 
 
 procedure TableAadRemovePrevious(actionNumber: integer; recordId: integer);

@@ -267,9 +267,7 @@ begin
 		end;
 	end;
 	rs.Free;
-	
 end; // of procedure ProcessActions
-
 
 
 procedure UpdatePassword(recId: integer; newPassword: string);
