@@ -20,16 +20,17 @@ uses
 	SqlDb;
 	
 const	
-	DSN = 						'DSN_ADBEHEER_32';
-	PROG_ID = 					147;
+	DSN = 						'DSN_ADBEHEER_32';		// Data Source Name of the ODBC connection (32-bits)
+	PROG_ID = 					147;					// Unique program ID
 	VALID_ACTIVE = 				9;						// Only process records with _is_active = 9. 0 = inactive, 1 = active, 9 = development records
+	SLEEP_NEXT_ACTION = 		2000;					// Sleep time before next action during processing 
 
-	ACTION_NEW =	 			1;		// Create a new account
-	ACTION_RESET = 				2;		// Reset the password
-	ACTION_SAME = 				3;		// Make the group membership the same as a reference account.
-	ACTION_UNLOCK = 			4;		// Unlock an account
-	ACTION_DISABLE = 			5;		// Disable an account
-	ACTION_DELETE = 			6;		// Delete an account
+	ACTION_NEW =	 			1;						// Create a new account
+	ACTION_RESET = 				2;						// Reset the password
+	ACTION_SAME = 				3;						// Make the group membership the same as a reference account.
+	ACTION_UNLOCK = 			4;						// Unlock an account
+	ACTION_DISABLE = 			5;						// Disable an account
+	ACTION_DELETE = 			6;						// Delete an account
 
 	
 	TBL_ACC	=					'account';
@@ -175,6 +176,82 @@ begin
 end; // of procedure TableAadAdd
 
 
+procedure TableSetStatus(table: string; fieldRecord: string; recId: integer; fieldStatus: string; newStatus: integer);
+//
+//	Set a new status for the table 
+//		ANW		Account Action New
+//		ARP		Account Action Password
+//	
+//		table:				Table name
+//		fieldRecord:		Field name of the record ID
+//		recId: 				Record ID
+//		fieldStatus:		Field name of the Status ID
+//		newStatus:			New status to update record
+//
+var
+	qu: Ansistring;
+begin
+	qu := 'UPDATE ' + table;
+	qu := qu + ' SET';
+	qu := qu + ' ' + fieldStatus + '=' + IntToStr(newStatus);
+	qu := qu + ' WHERE ' + fieldRecord + '=' + IntToStr(recId);
+	qu := qu + ';';
+	
+	WriteLn('TableSetStatus(): ', qu);
+	
+	RunQuery(qu);
+end; // of procedure TableAnwSetStatus
+
+{
+procedure TableAadCheck(curAction: integer; recId: integer);	
+var
+	qs: Ansistring;
+	rs: TSQLQuery;
+	errorLevel: integer;
+	allSuccesFull: boolean;
+begin
+	qs := 'SELECT ' + FLD_AAD_EL;
+	qs := qs + ' FROM ' + TBL_AAD;
+	qs := qs + ' WHERE ' + FLD_AAD_ACTION_NR + '=' + IntToStr(curAction);
+	qs := qs + ' AND ' + FLD_AAD_ACTION_ID + '=' + IntToStr(recId);
+	qs := qs + ';';
+	
+	WriteLn('ActionResetCheck(): ', qs);
+	
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+
+	allSuccesFull := true;
+	
+	if rs.EOF = true then
+		WriteLn('ActionResetCheck(): No records found!')
+	else
+	begin
+		while not rs.EOF do
+		begin
+			errorLevel := rs.FieldByName(FLD_AAD_EL).AsInteger;
+			WriteLn(errorLevel:12);
+			if errorLevel <> 0 then
+			begin
+				// Not all steps where successful, set 
+				allSuccesFull := false;
+			end;
+			rs.Next;
+		end;
+	end;
+	rs.Free;
+	
+	if allSuccesFull = false then
+		TableArpSetStatus(recId, 99)
+	else
+		TableArpSetStatus(recId, 100)
+end; // of procedure TableAadCheck
+}
+
+
 procedure UpdateAadErrorLevel(recId: integer; errorLevel: integer);
 var
 	qu: Ansistring;
@@ -210,9 +287,9 @@ begin
 	qs := 'SELECT *';
 	qs := qs + ' FROM ' + TBL_AAD;
 	qs := qs + ' WHERE ' + FLD_AAD_EL + ' IS NULL';
+	qs := qs + ' AND ' + FLD_AAD_IS_ACTIVE + '=' + IntToStr(VALID_ACTIVE);
 	qs := qs + ' AND ' + FLD_AAD_ACTION_ID + '=' + IntToStr(recId);
 	qs := qs + ' AND ' + FLD_AAD_ACTION_NR + '=' + IntToStr(curAction);
-	qs := qs + ' AND ' + FLD_AAD_IS_ACTIVE + '=' + IntToStr(VALID_ACTIVE);
 	qs := qs + ' ORDER BY ' + FLD_AAD_RCD;
 	qs := qs + ';';
 	
@@ -233,20 +310,19 @@ begin
 			recId := rs.FieldByName(FLD_AAD_ID).AsInteger;
 			cmd := rs.FieldByName(FLD_AAD_CMD).AsString;
 			
-			WriteLn(recId:4, '     ', cmd);
-			
 			r := RunCommand(cmd);
-			WriteLn('RunCommand: ', cmd);
-			WriteLn('ERRORLEVEL=' , r);
+			
+			WriteLn(recId:6, ' RunCommand: ', cmd);
+			WriteLn('     >ERRORLEVEL=' , r);
 			
 			UpdateAadErrorLevel(recId, r);
 			
 			rs.Next;
+			Sleep(SLEEP_NEXT_ACTION); // Wait SLEEP_NEXT_ACTION seconds before the next action is processed.
 		end;
 	end;
 	rs.Free;
 end; // of procedure TableAadProcess
-
 
 
 procedure TableAadRemovePrevious(actionNumber: integer; recordId: integer);

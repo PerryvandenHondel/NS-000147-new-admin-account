@@ -61,6 +61,8 @@ const
 	VFLD_NEW_MOBILE = 			'aps_mobile';
 	VFLD_NEW_EMAIL = 			'aps_email';
 	VFLD_NEW_TITLE = 			'ati_title';
+	VFLD_NEW_REQ_FNAME = 		'vnew_requestor_fname';
+	VFLD_NEW_REQ_EMAIL = 		'vnew_requestor_email';
 	VFLD_NEW_STATUS = 			'anw_status';
 	VFLD_NEW_RCD = 				'anw_rcd';
 	VFLD_NEW_RLU = 				'anw_rlu';
@@ -126,28 +128,6 @@ end; // of function DoesAccountExist
 	VFLD_NEW_UPN = 				'anw_upn';
 	VFLD_NEW_PW =		 		'anw_password
 }	
-
-
-procedure TableAnwSetStatus(recId: integer; newStatus: integer);
-//
-//	Set a new status for the table ANW
-//
-//		recId: 		Record ID
-//		newStatus:	New status to update record with
-//
-var
-	qu: Ansistring;
-begin
-	qu := 'UPDATE ' + VTBL_NEW;
-	qu := qu + ' SET';
-	qu := qu + ' ' + VFLD_NEW_STATUS + '=' + IntToStr(newStatus);
-	qu := qu + ' WHERE ' + VFLD_NEW_ID + '=' + IntToStr(recId);
-	qu := qu + ';';
-	
-	WriteLn('TableAnwSetStatus(): ', qu);
-	
-	RunQuery(qu);
-end; // of procedure TableAnwSetStatus
 
 
 procedure UpdateAnw(recId: integer; userName: string; upn: string; dn: string; pw: string);
@@ -274,6 +254,119 @@ begin
 end; // of function GenerateUserName3	
 
 
+procedure TableAnwSetStatus(recId: integer; newStatus: integer);
+var
+	qu: Ansistring;
+begin
+	qu := 'UPDATE ' + VTBL_NEW;
+	qu := qu + ' SET';
+	qu := qu + ' ' + VFLD_NEW_STATUS + '=' + IntToStr(newStatus);
+	qu := qu + ' WHERE ' + VFLD_NEW_ID + '=' + IntToStr(recId);
+	qu := qu + ';';
+	
+	WriteLn('TableAnwSetStatus(): ', qu);
+	
+	RunQuery(qu);
+end; // of procedure TableAnwSetStatus
+
+
+procedure ActionNewSendmail(recId: integer; curAction: integer; reqFname: string; reqEmail: string; upn: string; pw: string; ref: string);
+//procedure ActionNewSendmail(recId: integer; curAction: integer; fname: string; upn: string; initpw: string; mailto: string; ref: string);
+var
+	path: string;
+	traceCode: string; // Unique code for this action PRODID+ACTION+REC (147-2-15)
+	f: TextFile;
+	cmd: Ansistring;
+begin
+	// Build the path of the e-mail contents file.
+	traceCode := IntToStr(PROG_ID) + '-' + IntToStr(curAction) + '-' + IntToStr(recId);
+	path := traceCode + '.body';
+	
+	if FileExists(path) = true then
+		DeleteFile(path);
+		
+	Assign(f, path);
+	ReWrite(f);
+	
+	WriteLn(f, 'Beste ', reqFname, ',');
+	WriteLn(f);
+	WriteLn(f, 'New account is created ', upn);
+	WriteLn(f);
+	WriteLn(f, 'Initial password: ' + pw);
+	WriteLn(f);
+	WriteLn(f, 'Requested under: ', ref);
+	WriteLn(f);
+	WriteLn(f, 'Trace code: ', traceCode);
+	WriteLn(f);
+	
+	Close(f);
+	
+	cmd := ' blat.exe ' + path;
+	cmd := cmd + ' -to ' + EncloseDoubleQuote(reqEmail);
+	cmd := cmd + ' -f ' + EncloseDoubleQuote('noreply@ns.nl');
+	cmd := cmd + ' -subject ' + EncloseDoubleQuote('New account is created for ' + upn + ' // ' + ref + ' // ADB#' + traceCode);
+	cmd := cmd + ' -server vm70as005.rec.nsint';
+	cmd := cmd + ' -port 25';
+	
+	WriteLn(cmd);
+	
+	RunCommand(cmd);
+	
+	// Update the status to 900: Send e-mail
+	TableAnwSetStatus(recId, 900);
+end; // of procedure ActionResetSendmail
+
+
+procedure TableAadCheckNew(curAction: integer; recId: integer);	
+var
+	qs: Ansistring;
+	rs: TSQLQuery;
+	errorLevel: integer;
+	allSuccesFull: boolean;
+begin
+	qs := 'SELECT ' + FLD_AAD_EL;
+	qs := qs + ' FROM ' + TBL_AAD;
+	qs := qs + ' WHERE ' + FLD_AAD_ACTION_NR + '=' + IntToStr(curAction);
+	qs := qs + ' AND ' + FLD_AAD_ACTION_ID + '=' + IntToStr(recId);
+	qs := qs + ';';
+	
+	WriteLn('TableAadCheckNew(): ', qs);
+	
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+
+	allSuccesFull := true;
+	
+	if rs.EOF = true then
+		WriteLn('ActionResetCheck(): No records found!')
+	else
+	begin
+		while not rs.EOF do
+		begin
+			errorLevel := rs.FieldByName(FLD_AAD_EL).AsInteger;
+			WriteLn(errorLevel:12);
+			if errorLevel <> 0 then
+			begin
+				// Not all steps where successful, set 
+				allSuccesFull := false;
+			end;
+			rs.Next;
+		end;
+	end;
+	rs.Free;
+	
+	if allSuccesFull = false then
+		TableAnwSetStatus(recId, 99) // failure during execution of command lines
+	else
+		TableAnwSetStatus(recId, 100) // All error levels are 0, success.
+end; // of procedure ActionResetCheck
+
+
+
+
 procedure DoActionNew(curAction: integer);
 //
 //		curAction		What is the current action (2 for password reset)
@@ -299,6 +392,9 @@ var
 	company: string;
 	title: string;
 	c: Ansistring;
+	reqFname: string;
+	reqEmail: string;
+	ref: string;
 begin
 	WriteLn('-----------------------------------------------------------------');
 	WriteLn('DOACTIONNEW()');
@@ -339,6 +435,9 @@ begin
 			email := rs.FieldByName(VFLD_NEW_EMAIL).AsString;
 			company := rs.FieldByName(VFLD_NEW_SUPP_CODE).AsString;
 			title := rs.FieldByName(VFLD_NEW_TITLE).AsString;
+			reqFname := rs.FieldByName(VFLD_NEW_REQ_FNAME).AsString;
+			reqEmail := rs.FieldByName(VFLD_NEW_REQ_EMAIL).AsString;
+			ref := rs.FieldByName(VFLD_NEW_REF).AsString;
 			
 			userName := GenerateUserName3(supName, fname, mname, lname);
 			upn := GenerateUpn(userName, upnSuff);
@@ -420,15 +519,20 @@ begin
 				TableAnwSetStatus(recId, 100);
 				
 				// Process all the records in the table AAD
-				//TableAadProcess(curAction, recId);
+				TableAadProcess(curAction, recId);
 				
+				// Check all actions for the new account creation
+				TableAadCheckNew(curAction, recId);
+				
+				// procedure ActionNewSendmail(recId: integer; curAction: integer; fname: string; upn: string; initpw: string; mailto: string; ref: string);
+				ActionNewSendmail(recId, curAction, reqFname, reqEmail, upn, pw, ref);
 			end // of if 
 			else
 			begin
 				WriteLn('========================================================');
 				WriteLn('WARNING: DN ', dn, ' does already exists!!');
 				WriteLn('========================================================');
-				TableAnwSetStatus(recId, 99); // Set status to 99 for existing record
+				TableAnwSetStatus(recId, 98); // Set status to 99 for existing record
 			end;
 			
 			rs.Next;

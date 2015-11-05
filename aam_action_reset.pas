@@ -97,8 +97,6 @@ begin
 	
 	// Update the status to 900: Send e-mail
 	TableArpSetStatus(recId, 900);
-	
-	
 end; // of procedure ActionResetSendmail
 
 
@@ -194,7 +192,7 @@ begin
 		TableArpSetStatus(recId, 99)
 	else
 		TableArpSetStatus(recId, 100)
-end; // of procedure ActionResetCheck(
+end; // of procedure ActionResetCheck
 
 
 procedure UpdateAadErrorLevel(recId: integer; errorLevel: integer);
