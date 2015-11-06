@@ -71,13 +71,13 @@ begin
 	Assign(f, path);
 	ReWrite(f);
 	
-	WriteLn(f, 'Beste ', fname, ',');
+	WriteLn(f, 'Hello ', fname, ',');
 	WriteLn(f);
-	WriteLn(f, 'Het password is gereset voor account ', upn);
+	WriteLn(f, 'The password has been reset for: ', upn);
 	WriteLn(f);
-	WriteLn(f, 'Initieel password: ' + initpw);
+	WriteLn(f, 'Initial password:                ' + initpw);
 	WriteLn(f);
-	WriteLn(f, 'Requested under: ', ref);
+	WriteLn(f, 'Requested under:                 ', ref);
 	WriteLn(f);
 	WriteLn(f, 'Trace code: ', traceCode);
 	WriteLn(f);
@@ -86,7 +86,8 @@ begin
 	
 	cmd := ' blat.exe ' + path;
 	cmd := cmd + ' -to ' + EncloseDoubleQuote(mailto);
-	cmd := cmd + ' -f ' + EncloseDoubleQuote('noreply@ns.nl');
+	cmd := cmd + ' -f ' + EncloseDoubleQuote(MAIL_FROM);
+	cmd := cmd + ' -bcc ' + EncloseDoubleQuote(MAIL_BCC);
 	cmd := cmd + ' -subject ' + EncloseDoubleQuote('Password reset done for ' + upn + ' // ARGUS#' + ref + ' // ADB#' + traceCode);
 	cmd := cmd + ' -server vm70as005.rec.nsint';
 	cmd := cmd + ' -port 25';
@@ -97,6 +98,9 @@ begin
 	
 	// Update the status to 900: Send e-mail
 	TableArpSetStatus(recId, 900);
+	
+	// Delete the body file.
+	DeleteFile(path);
 end; // of procedure ActionResetSendmail
 
 

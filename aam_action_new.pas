@@ -121,14 +121,6 @@ begin
 	DoesAccountExist := r;
 end; // of function DoesAccountExist
 
-{
-	VTBL_NEW
-	VFLD_NEW_USERNAME = 		'anw_username';
-	VFLD_NEW_DN = 				'anw_dn';
-	VFLD_NEW_UPN = 				'anw_upn';
-	VFLD_NEW_PW =		 		'anw_password
-}	
-
 
 procedure UpdateAnw(recId: integer; userName: string; upn: string; dn: string; pw: string);
 var
@@ -171,8 +163,11 @@ end; // of function GenerateDn
 	
 	
 function GenerateUpn(strAccountName: string; strDomainName: string): string;
+//
+// Generate a valid UPN (User Principal Name): fname.lname@domain.ext 
+//
 begin
-	GenerateUpn := strAccountName + '@'+ strDomainName;
+	GenerateUpn := strAccountName + '@' + strDomainName;
 end; // of function GenerateUpn
 	
 
@@ -288,22 +283,23 @@ begin
 	Assign(f, path);
 	ReWrite(f);
 	
-	WriteLn(f, 'Beste ', reqFname, ',');
+	WriteLn(f, 'Hello ', reqFname, ',');
 	WriteLn(f);
-	WriteLn(f, 'New account is created ', upn);
+	WriteLn(f, 'New account is created: ', upn);
 	WriteLn(f);
-	WriteLn(f, 'Initial password: ' + pw);
+	WriteLn(f, 'Initial password:       ' + pw);
 	WriteLn(f);
-	WriteLn(f, 'Requested under: ', ref);
+	WriteLn(f, 'Requested under:        ', ref);
 	WriteLn(f);
-	WriteLn(f, 'Trace code: ', traceCode);
+	WriteLn(f, 'Trace code:             ', traceCode);
 	WriteLn(f);
 	
 	Close(f);
 	
 	cmd := ' blat.exe ' + path;
 	cmd := cmd + ' -to ' + EncloseDoubleQuote(reqEmail);
-	cmd := cmd + ' -f ' + EncloseDoubleQuote('noreply@ns.nl');
+	cmd := cmd + ' -f ' + EncloseDoubleQuote(MAIL_FROM);
+	cmd := cmd + ' -bcc ' + EncloseDoubleQuote(MAIL_BCC);
 	cmd := cmd + ' -subject ' + EncloseDoubleQuote('New account is created for ' + upn + ' // ' + ref + ' // ADB#' + traceCode);
 	cmd := cmd + ' -server vm70as005.rec.nsint';
 	cmd := cmd + ' -port 25';
@@ -314,6 +310,9 @@ begin
 	
 	// Update the status to 900: Send e-mail
 	TableAnwSetStatus(recId, 900);
+	
+	// Delete the body file of the e-mail.
+	DeleteFile(path);
 end; // of procedure ActionResetSendmail
 
 

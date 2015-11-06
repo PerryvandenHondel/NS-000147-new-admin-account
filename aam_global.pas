@@ -24,6 +24,9 @@ const
 	PROG_ID = 					147;					// Unique program ID
 	VALID_ACTIVE = 				9;						// Only process records with _is_active = 9. 0 = inactive, 1 = active, 9 = development records
 	SLEEP_NEXT_ACTION = 		2000;					// Sleep time before next action during processing 
+	MAIL_FROM = 				'noreply@ns.nl';		// Default from e-mail address
+	MAIL_BCC = 					'perry.vandenhondel@ns.nl';
+														// Default BCC e-mail adress to sent to. More separated by ,
 
 	ACTION_NEW =	 			1;						// Create a new account
 	ACTION_RESET = 				2;						// Reset the password
