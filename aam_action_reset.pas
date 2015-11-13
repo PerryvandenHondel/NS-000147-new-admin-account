@@ -330,6 +330,7 @@ begin
 			dn := rs.FieldByName(VIEW_RESET_DN).AsString;
 			upn := rs.FieldByName(VIEW_RESET_UPN).AsString;
 			initialPassword := rs.FieldByName(VIEW_RESET_INITPW).AsString;
+			
 			if Length(initialPassword) = 0 then
 			begin
 				// When no initial password is entered in the table, generate a new password

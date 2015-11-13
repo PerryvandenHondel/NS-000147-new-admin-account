@@ -48,7 +48,8 @@ uses
 	SqlDB,
 	aam_global,
 	aam_action_new,					// ACTION 1: Create a new account
-	aam_action_reset;				// ACTION 2: Reset a password
+	aam_action_reset,				// ACTION 2: Reset a password
+	aam_action_same;				// Action 03: Make the groups the same
 	
 	
 const
@@ -78,8 +79,9 @@ end;
 
 procedure ProgRun();
 begin
-	DoActionNew(ACTION_NEW);					// Create new accounts.
-	DoActionReset(ACTION_RESET);				// Add new actions to the table AAD for password resets
+	//DoActionNew(ACTION_NEW);					// Create new accounts.
+	//DoActionReset(ACTION_RESET);				// Add new actions to the table AAD for password resets
+	DoActionSame(ACTION_SAME);					// Make the groups the same from source to target account
 end;
 
 
