@@ -52,7 +52,65 @@ const
 implementation
 
 
-procedure InsertRecordsInActionTable(recId: integer; curAction: integer; sourceDn: string; targerDn: string);
+procedure ProcessNewActions(curAction: integer; recId: integer);
+var
+	qs: Ansistring;
+	rs: TSQLQuery;
+	
+	cmd: string;
+	//upn: string;
+	//initialPassword: string;
+	//actId: integer;
+	//stepNum: integer;
+	r: integer;
+begin
+	WriteLn('ProcessNewActions()');
+	
+	// Select all records where the error level is not filled in,
+	// And the is_active field = 9.
+	qs := 'SELECT *';
+	qs := qs + ' FROM ' + TBL_AAD;
+	qs := qs + ' WHERE ' + FLD_AAD_EL + ' IS NULL';
+	qs := qs + ' AND ' + FLD_AAD_ACTION_ID + '=' + IntToStr(recId);
+	qs := qs + ' AND ' + FLD_AAD_ACTION_NR + '=' + IntToStr(curAction);
+	qs := qs + ' AND ' + FLD_AAD_IS_ACTIVE + '=' + IntToStr(VALID_ACTIVE);
+	qs := qs + ' ORDER BY ' + FLD_AAD_RCD;
+	qs := qs + ';';
+	
+	WriteLn(qs);
+	
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+
+	if rs.EOF = true then
+		WriteLn('ProcessNewActions(): No records found!')
+	else
+	begin
+		while not rs.EOF do
+		begin
+			recId := rs.FieldByName(FLD_AAD_ID).AsInteger;
+			cmd := rs.FieldByName(FLD_AAD_CMD).AsString;
+			
+			WriteLn(recId:4, '     ', cmd);
+			
+			r := RunCommand(cmd);
+			WriteLn('RunCommand: ', cmd);
+			WriteLn('ERRORLEVEL=' , r);
+			
+			UpdateAadErrorLevel(recId, r);
+			
+			rs.Next;
+		end;
+	end;
+	rs.Free;
+end; // of procedure ProcessActions
+
+
+
+procedure InsertRecordsInActionTable(recId: integer; curAction: integer; sourceDn: string; targetDn: string);
 //
 //	Obtain all the groups of sourceDn and create records in the action table to perform
 //
@@ -61,11 +119,12 @@ var
 	path: string;
 	p: TProcess;
 	f: TextFile;
+	groupDn: string;
 	line: string;	// Read a line from the nslookup.tmp file.
 begin
 	// Get a temp file to store the output of the adfind.exe command.
 	path := SysUtils.GetTempFileName(); // Path is C:\Users\<username>\AppData\Local\Temp\TMP00000.tmp
-	WriteLn(path);
+	WriteLn(path); // DEBUG
 	
 	p := TProcess.Create(nil);
 	p.Executable := 'cmd.exe'; 
@@ -81,12 +140,23 @@ begin
 	repeat
 		ReadLn(f, line);
 		if Pos('>memberOf: ', line) > 0 then
-			WriteLn(line);
+		begin
+			WriteLn(line); // DEBUG
 			
+			groupDn := RightStr(line, Length(line) - Length('>memberOf: '));
+			WriteLn(groupDn);
+			
+			//TableAadAdd(recId, VALID_ACTIVE, curAction, 'dsmod.exe user "' + dn + '" -mustchpwd yes');
+			//dsmod group  "CN=US Info,OU=Distribution Lists,DC=Contoso,DC=Com"  -addmbr "CN=Mike Danseglio,CN=Users,DC=Contoso,DC=Com" 
+			TableAadAdd(recId, VALID_ACTIVE, curAction, 'dsmod.exe group ' + EncloseDoubleQuote(groupDn)+ ' -addmbr ' + EncloseDoubleQuote(targetDn));
+			
+			
+		end; // of if	
 	until Eof(f);
 	Close(f);
 	
-	//SysUtils.DeleteFile(path);
+	// Delete the temp file 
+	SysUtils.DeleteFile(path);
 	
 end; // of procedure InsertRecordsInActionTable
 
@@ -137,6 +207,8 @@ begin
 			
 			WriteLn(recId:6, ': ', sourceDn, '   >>   ', targetDn);
 			InsertRecordsInActionTable(recId, curAction, sourceDn, targetDn);
+			
+			ProcessNewActions(curAction, recId);
 			
 			rs.Next;
 		end;
