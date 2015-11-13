@@ -8,7 +8,7 @@
 //
 
 
-program NaaUpdateTables;
+program update_tables;
 
 
 {$MODE OBJFPC}
@@ -36,10 +36,13 @@ const
 	TBL_ATV = 				'account_active_atv';
 	FLD_ATV_ID = 			'atv_id';
 	FLD_ATV_DN = 			'atv_dn';
+	FLD_ATV_SORT = 			'atv_sort';
 	FLD_ATV_UPN = 			'atv_upn';
 	FLD_ATV_SAM = 			'atv_sam';
+	FLD_ATV_FNAME = 		'atv_fname'; // givenName
+	FLD_ATV_MNAME = 		'atv_mname'; 
+	FLD_ATV_LNAME = 		'atv_lname'; // sn
 	FLD_ATV_MAIL = 			'atv_mail';
-	FLD_ATV_SORT = 			'atv_sort';
 	FLD_ATV_CREATED = 		'atv_created';
 	FLD_ATV_IS_ACTIVE = 	'atv_is_active';
 	FLD_ATV_RLU = 			'atv_rlu';
@@ -108,8 +111,13 @@ begin
 		if Length(fname) = 0 then
 			qi := qi + FLD_ATV_SORT + '=' + FixStr(lname + ' (' + upn + ')') + ',' // When only the last name is used
 		else
+		begin
 			qi := qi + FLD_ATV_SORT + '=' + FixStr(lname + ', ' + fname + ' (' + upn + ')') + ',';
-			
+			qi := qi + FLD_ATV_FNAME + '=' + FixStr(fname) + ',';
+		end; // of if
+		
+		qi := qi + FLD_ATV_LNAME + '=' + FixStr(lname) + ',';
+		
 		qi := qi + FLD_ATV_IS_ACTIVE + '=1,';
 		qi := qi + FLD_ATV_UPN + '=' + FixStr(upn) + ',';
 		qi := qi + FLD_ATV_SAM + '=' + FixStr(sam) + ',';
@@ -129,7 +137,13 @@ begin
 		if Length(fname) = 0 then
 			qu := qu + FLD_ATV_SORT + '=' + FixStr(lname + ' (' + upn + ')') + ',' // When only the last name is used
 		else
+		begin
 			qu := qu + FLD_ATV_SORT + '=' + FixStr(lname + ', ' + fname + ' (' + upn + ')') + ',';
+			qu := qu + FLD_ATV_FNAME + '=' + FixStr(fname) + ',';
+		end; // of if
+		
+		
+		qu := qu + FLD_ATV_LNAME + '=' + FixStr(lname) + ',';
 		
 		qu := qu + FLD_ATV_UPN + '=' + FixStr(upn) + ',';
 		qu := qu + FLD_ATV_SAM + '=' + FixStr(sam) + ',';

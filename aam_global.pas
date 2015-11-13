@@ -28,12 +28,12 @@ const
 	MAIL_BCC = 					'perry.vandenhondel@ns.nl';
 														// Default BCC e-mail adress to sent to. More separated by ,
 
-	ACTION_NEW =	 			1;						// Create a new account
-	ACTION_RESET = 				2;						// Reset the password
-	ACTION_SAME = 				3;						// Make the group membership the same as a reference account.
-	ACTION_UNLOCK = 			4;						// Unlock an account
-	ACTION_DISABLE = 			5;						// Disable an account
-	ACTION_DELETE = 			6;						// Delete an account
+	ACTION_NEW =	 			1;						// ARN Create a new account
+	ACTION_RESET = 				2;						// ARP Reset the password
+	ACTION_SAME = 				3;						// ASM Make the group membership the same as a reference account.
+	ACTION_UNLOCK = 			4;						// AUL Unlock an account
+	ACTION_DISABLE = 			5;						// ADA Disable an account
+	ACTION_DELETE = 			6;						// ADL Delete an account
 
 	
 	TBL_ACC	=					'account';
