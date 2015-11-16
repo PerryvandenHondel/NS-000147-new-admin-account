@@ -79,8 +79,8 @@ end;
 
 procedure ProgRun();
 begin
-	//DoActionNew(ACTION_NEW);					// Create new accounts.
-	//DoActionReset(ACTION_RESET);				// Add new actions to the table AAD for password resets
+	DoActionNew(ACTION_NEW);					// Create new accounts.
+	DoActionReset(ACTION_RESET);				// Add new actions to the table AAD for password resets
 	DoActionSame(ACTION_SAME);					// Make the groups the same from source to target account
 end;
 
