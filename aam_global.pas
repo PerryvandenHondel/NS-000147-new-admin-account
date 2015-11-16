@@ -130,6 +130,18 @@ const
 	FLD_AAD_RCD = 				'aad_rcd';
 	FLD_AAD_RLU = 				'aad_rlu';
 	
+	TBL_ATV = 					'account_active_atv';
+	FLD_ATV_ID = 				'atv_id';
+	FLD_ATV_IS_ACTIVE = 		'atv_is_active';
+	FLD_ATV_APS_ID = 			'atv_person_aps_id'; // APS_ID
+	FLD_ATV_SORT = 				'atv_sort';
+	FLD_ATV_UPN = 				'atv_upn';
+	FLD_ATV_SAM = 				'atv_sam';
+	FLD_ATV_DN = 				'atv_dn';
+	FLD_ATV_MAIL = 				'atv_mail';
+	FLD_ATV_CREATED = 			'atv_created';
+	FLD_ATV_RLU = 				'atv_rlu';
+	
 
 var	
 	gConnection: TODBCConnection;               // uses ODBCConn

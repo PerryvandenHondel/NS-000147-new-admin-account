@@ -45,6 +45,7 @@ const
 	VTBL_NEW = 					'account_action_view_new';
 	VFLD_NEW_ID = 				'anw_id';
 	VFLD_NEW_IS_ACTIVE = 		'anw_is_active';
+	VFLD_NEW_APS_ID = 			'anw_person_aps_id';
 	VFLD_NEW_FNAME = 			'aps_fname';
 	VFLD_NEW_MNAME = 			'aps_mname';
 	VFLD_NEW_LNAME = 			'aps_lname';
@@ -314,6 +315,7 @@ begin
 	
 	// Update the status to 900: Send e-mail
 	TableAnwSetStatus(recId, 900);
+	
 end; // of procedure ActionResetSendmail
 
 
@@ -347,7 +349,7 @@ begin
 		while not rs.EOF do
 		begin
 			errorLevel := rs.FieldByName(FLD_AAD_EL).AsInteger;
-			WriteLn(errorLevel:12);
+			//WriteLn(errorLevel:12);
 			if errorLevel <> 0 then
 			begin
 				// Not all steps where successful, set 
@@ -361,10 +363,48 @@ begin
 	if allSuccesFull = false then
 		TableAnwSetStatus(recId, 99) // failure during execution of command lines
 	else
-		TableAnwSetStatus(recId, 100) // All error levels are 0, success.
+		TableAnwSetStatus(recId, 100); // All error levels are 0, success.
+		
+	WriteLn;
 end; // of procedure ActionResetCheck
 
 
+procedure TableAtvAdd(apsId: integer; fname: string; mname: string; lname: string; userName: string; upn: string; dn: string);
+//
+//	Add a new record to the table ATV (Active Accounts)
+//
+//		apsId:		Record number of the person
+//		fname:		First name of the account
+//		mname:		Middle name of the account
+//		lname:		Last name of the account
+//		userName:	User name of the account
+//		upn:		User Principal Name if the account
+//		dn:			Distinguished Name of the account
+//
+var
+	sort: string;
+	qi: string;
+begin
+	WriteLn('TableAtvAdd(): Add a newly created account to ' + TBL_ATV);
+	
+	sort := lname + ', ' + fname;
+	if Length(mname) > 0 then
+		sort := sort + ' ' + mname; // If there is a middle name, add it.
+	
+	sort := sort + ' (' + upn + ')';
+	
+	qi := 'INSERT INTO ' + TBL_ATV + ' ';
+	qi := qi + 'SET ';
+	qi := qi + FLD_ATV_APS_ID + '=' + IntToStr(apsId) + ',';
+	qi := qi + FLD_ATV_SORT + '=' + FixStr(sort) + ',';
+	qi := qi + FLD_ATV_UPN + '=' + FixStr(upn) + ',';
+	qi := qi + FLD_ATV_SAM + '=' + FixStr(userName) + ',';
+	qi := qi + FLD_ATV_DN + '=' + FixStr(dn) + ';';
+	
+	WriteLn(qi);
+	
+	RunQuery(qi);
+end; // procedure TableAtvAdd
 
 
 procedure DoActionNew(curAction: integer);
@@ -375,6 +415,7 @@ var
 	qs: Ansistring;
 	rs: TSQLQuery;
 	recId: integer;
+	recApsId: integer;
 	fname: string;
 	mname: string;
 	lname: string;
@@ -422,6 +463,9 @@ begin
 		begin
 			recId := rs.FieldByName(VFLD_NEW_ID).AsInteger;
 			WriteLn(recId:4);
+			
+			// Record APS_ID. Unique ID of person
+			recApsId := rs.FieldByName(VFLD_NEW_APS_ID).AsInteger;
 			
 			fname := rs.FieldByName(VFLD_NEW_FNAME).AsString;
 			mname := rs.FieldByName(VFLD_NEW_MNAME).AsString;
@@ -513,7 +557,7 @@ begin
 				// NOT_DELEGATED - When this flag is set, the security context of the user is not delegated to a service even if the service account is set as trusted for Kerberos delegation.
 				//	Source: https://support.microsoft.com/en-us/kb/305144
 				c := 'adfind.exe -b ' + EncloseDoubleQuote(dn) + ' userAccountControl -adcsv | admod.exe "userAccountControl::{{.:SET:1048576}}"';
-				TableAadAdd(recId, VALID_ACTIVE, curAction, c);		
+				TableAadAdd(recId, VALID_ACTIVE, curAction, c);
 			
 				// Account records created in table AAD, status = 100, continue with processing.
 				TableAnwSetStatus(recId, 100);
@@ -526,6 +570,10 @@ begin
 				
 				// procedure ActionNewSendmail(recId: integer; curAction: integer; fname: string; upn: string; initpw: string; mailto: string; ref: string);
 				ActionNewSendmail(recId, curAction, reqFname, reqEmail, upn, pw, ref);
+				
+				// Add the new account to the table account_active_atv
+				TableAtvAdd(recApsId, fname, mname, lname, userName, upn, dn);
+				
 			end // of if 
 			else
 			begin
