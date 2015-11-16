@@ -97,8 +97,8 @@ begin
 			WriteLn(recId:4, '     ', cmd);
 			
 			r := RunCommand(cmd);
-			WriteLn('RunCommand: ', cmd);
-			WriteLn('ERRORLEVEL=' , r);
+			WriteLn('    >RunCommand: ', cmd);
+			WriteLn('    >ERRORLEVEL=' , r);
 			
 			UpdateAadErrorLevel(recId, r);
 			
@@ -106,8 +106,77 @@ begin
 		end;
 	end;
 	rs.Free;
-end; // of procedure ProcessActions
+end; // of procedure ProcessNewActions
 
+
+procedure TableAsmSetStatus(recId: integer; newStatus: integer);
+//
+//	Set a new status in the field status_id 
+//
+var
+	qu: Ansistring;
+begin
+	qu := 'UPDATE ' + VIEW_SAME;
+	qu := qu + ' SET';
+	qu := qu + ' ' + VIEW_SAME_STATUS + '=' + IntToStr(newStatus);
+	qu := qu + ' WHERE ' + VIEW_SAME_ID + '=' + IntToStr(recId);
+	qu := qu + ';';
+	
+	WriteLn('TableAsmSetStatus(): ', qu);
+	
+	RunQuery(qu);
+end; // of procedure TableAsmSetStatus
+
+
+procedure ProcessActionCheck(curAction: integer; recId: integer);	
+var
+	qs: Ansistring;
+	rs: TSQLQuery;
+	errorLevel: integer;
+	allSuccesFull: boolean;
+begin
+	qs := 'SELECT ' + FLD_AAD_EL;
+	qs := qs + ' FROM ' + TBL_AAD;
+	qs := qs + ' WHERE ' + FLD_AAD_ACTION_NR + '=' + IntToStr(curAction);
+	qs := qs + ' AND ' + FLD_AAD_ACTION_ID + '=' + IntToStr(recId);
+	qs := qs + ';';
+	
+	WriteLn('ProcessActionCheck(): ', qs);
+	
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+
+	allSuccesFull := true;
+	
+	if rs.EOF = true then
+		WriteLn('ProcessActionCheck(): No records found!')
+	else
+	begin
+		while not rs.EOF do
+		begin
+			errorLevel := rs.FieldByName(FLD_AAD_EL).AsInteger;
+			//WriteLn(errorLevel:12);
+			
+			if errorLevel = -2147019886 then
+				errorLevel := 0; // The account is already a member of the group. Set to 0. Not an error.
+			
+			if errorLevel <> 0 then
+			begin
+				allSuccesFull := false; // Not all steps where successful, set allSuccesFull to false;
+			end;
+			rs.Next;
+		end;
+	end;
+	rs.Free;
+	
+	if allSuccesFull = false then
+		TableAsmSetStatus(recId, 99)
+	else
+		TableAsmSetStatus(recId, 100)
+end; // of procedure ProcessActionCheck
 
 
 procedure InsertRecordsInActionTable(recId: integer; curAction: integer; sourceDn: string; targetDn: string);
@@ -149,8 +218,6 @@ begin
 			//TableAadAdd(recId, VALID_ACTIVE, curAction, 'dsmod.exe user "' + dn + '" -mustchpwd yes');
 			//dsmod group  "CN=US Info,OU=Distribution Lists,DC=Contoso,DC=Com"  -addmbr "CN=Mike Danseglio,CN=Users,DC=Contoso,DC=Com" 
 			TableAadAdd(recId, VALID_ACTIVE, curAction, 'dsmod.exe group ' + EncloseDoubleQuote(groupDn)+ ' -addmbr ' + EncloseDoubleQuote(targetDn));
-			
-			
 		end; // of if	
 	until Eof(f);
 	Close(f);
@@ -206,9 +273,14 @@ begin
 			targetDn := rs.FieldByName(VIEW_SAME_TARGET_DN).AsString;
 			
 			WriteLn(recId:6, ': ', sourceDn, '   >>   ', targetDn);
+			// Get the groups from sourceDn and add new action in the table action for targetDn
 			InsertRecordsInActionTable(recId, curAction, sourceDn, targetDn);
 			
+			// Process all these new actions
 			ProcessNewActions(curAction, recId);
+			
+			// Check if these actions are all done.
+			ProcessActionCheck(curAction, recId);
 			
 			rs.Next;
 		end;
