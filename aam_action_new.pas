@@ -64,6 +64,7 @@ const
 	VFLD_NEW_TITLE = 			'ati_title';
 	VFLD_NEW_REQ_FNAME = 		'vnew_requestor_fname';
 	VFLD_NEW_REQ_EMAIL = 		'vnew_requestor_email';
+	VFLD_NEW_REQ_MAIL_TO = 		'vnew_requestor_mail_to';
 	VFLD_NEW_STATUS = 			'anw_status';
 	VFLD_NEW_RCD = 				'anw_rcd';
 	VFLD_NEW_RLU = 				'anw_rlu';
@@ -435,6 +436,7 @@ var
 	c: Ansistring;
 	reqFname: string;
 	reqEmail: string;
+	reqMailTo: string;
 	ref: string;
 begin
 	WriteLn('-----------------------------------------------------------------');
@@ -481,6 +483,7 @@ begin
 			title := rs.FieldByName(VFLD_NEW_TITLE).AsString;
 			reqFname := rs.FieldByName(VFLD_NEW_REQ_FNAME).AsString;
 			reqEmail := rs.FieldByName(VFLD_NEW_REQ_EMAIL).AsString;
+			reqMailTo := rs.FieldByName(VFLD_NEW_REQ_MAIL_TO).AsString;
 			ref := rs.FieldByName(VFLD_NEW_REF).AsString;
 			
 			userName := GenerateUserName3(supName, fname, mname, lname);
@@ -569,7 +572,7 @@ begin
 				TableAadCheckNew(curAction, recId);
 				
 				// procedure ActionNewSendmail(recId: integer; curAction: integer; fname: string; upn: string; initpw: string; mailto: string; ref: string);
-				ActionNewSendmail(recId, curAction, reqFname, reqEmail, upn, pw, ref);
+				ActionNewSendmail(recId, curAction, reqFname, reqMailTo, upn, pw, ref);
 				
 				// Add the new account to the table account_active_atv
 				TableAtvAdd(recApsId, fname, mname, lname, userName, upn, dn);
