@@ -25,14 +25,15 @@ uses
 	
 
 const
-	TBL_ADM =				'account_domain_adm';
-	FLD_ADM_ROOTDSE = 		'adm_root_dse';
-	FLD_ADM_ID = 			'adm_id';
-	FLD_ADM_UPN_SUFF = 		'adm_upn_suffix';
-	FLD_ADM_DOM_NT = 		'adm_domain_nt';
-	FLD_ADM_IS_ACTIVE = 	'adm_is_active';
-	FLD_ADM_OU = 			'adm_org_unit';
+	TBL_ADM =					'account_domain_adm';
+	FLD_ADM_ROOTDSE = 			'adm_root_dse';
+	FLD_ADM_ID = 				'adm_id';
+	FLD_ADM_UPN_SUFF = 			'adm_upn_suffix';
+	FLD_ADM_DOM_NT = 			'adm_domain_nt';
+	FLD_ADM_IS_ACTIVE = 		'adm_is_active';
+	FLD_ADM_OU = 				'adm_org_unit';
 	
+<<<<<<< HEAD
 	TBL_ATV = 				'account_active_atv';
 	FLD_ATV_ID = 			'atv_id';
 	FLD_ATV_DN = 			'atv_dn';
@@ -46,6 +47,19 @@ const
 	FLD_ATV_CREATED = 		'atv_created';
 	FLD_ATV_IS_ACTIVE = 	'atv_is_active';
 	FLD_ATV_RLU = 			'atv_rlu';
+=======
+	TBL_ATV = 					'account_active_atv';
+	FLD_ATV_ID = 				'atv_id';
+	FLD_ATV_IS_ACTIVE = 		'atv_is_active';
+	FLD_ATV_APS_ID = 			'atv_person_aps_id'; // APS_ID
+	FLD_ATV_SORT = 				'atv_sort';
+	FLD_ATV_UPN = 				'atv_upn';
+	FLD_ATV_SAM = 				'atv_sam';
+	FLD_ATV_DN = 				'atv_dn';
+	FLD_ATV_MAIL = 				'atv_mail';
+	FLD_ATV_CREATED = 			'atv_created';
+	FLD_ATV_RLU = 				'atv_rlu';
+>>>>>>> dev-new
 
 
 var

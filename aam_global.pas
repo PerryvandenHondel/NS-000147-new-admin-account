@@ -20,6 +20,7 @@ uses
 	SqlDb;
 	
 const	
+<<<<<<< HEAD
 	DSN = 						'DSN_ADBEHEER_32';		// Data Source Name of the ODBC connection (32-bits)
 	PROG_ID = 					147;					// Unique program ID
 	VALID_ACTIVE = 				9;						// Only process records with _is_active = 9. 0 = inactive, 1 = active, 9 = development records
@@ -34,6 +35,32 @@ const
 	ACTION_UNLOCK = 			4;						// AUL Unlock an account
 	ACTION_DISABLE = 			5;						// ADA Disable an account
 	ACTION_DELETE = 			6;						// ADL Delete an account
+=======
+	DSN = 						'DSN_ADBEHEER_32';		
+		// Data Source Name of the ODBC connection (32-bits)
+	
+	PROG_ID = 					147;					
+		// Unique program ID
+	
+	VALID_ACTIVE = 				9;						
+		// Only process records with _is_active = 9. 0 = inactive, 1 = active, 9 = development records
+	
+	SLEEP_NEXT_ACTION = 		2000;					
+		// Sleep time before next action during processing 
+									
+	MAIL_FROM = 				'noreply@ns.nl';
+		// Default from address of all send e-mail
+									
+	MAIL_BCC = 					'perry.vandenhondel@ns.nl';
+		// Default BCC of all e-mail send by this program
+
+	ACTION_NEW =	 			1;						// Create a new account
+	ACTION_RESET = 				2;						// Reset the password
+	ACTION_SAME = 				3;						// Make the group membership the same as a reference account.
+	ACTION_UNLOCK = 			4;						// Unlock an account
+	ACTION_DISABLE = 			5;						// Disable an account
+	ACTION_DELETE = 			6;						// Delete an account
+>>>>>>> dev-new
 
 	
 	TBL_ACC	=					'account';
@@ -132,6 +159,18 @@ const
 	//FLD_AAD_STATUS = 			'aad_status';
 	FLD_AAD_RCD = 				'aad_rcd';
 	FLD_AAD_RLU = 				'aad_rlu';
+	
+	TBL_ATV = 					'account_active_atv';
+	FLD_ATV_ID = 				'atv_id';
+	FLD_ATV_IS_ACTIVE = 		'atv_is_active';
+	FLD_ATV_APS_ID = 			'atv_person_aps_id'; // APS_ID
+	FLD_ATV_SORT = 				'atv_sort';
+	FLD_ATV_UPN = 				'atv_upn';
+	FLD_ATV_SAM = 				'atv_sam';
+	FLD_ATV_DN = 				'atv_dn';
+	FLD_ATV_MAIL = 				'atv_mail';
+	FLD_ATV_CREATED = 			'atv_created';
+	FLD_ATV_RLU = 				'atv_rlu';
 	
 
 var	
@@ -377,7 +416,7 @@ var
 	code: integer;
 begin
 	Val(s, i, code);
-	i := 0;
+	i := 0; 
 	if code <> 0 then
 		r := 'Null'
 	else
