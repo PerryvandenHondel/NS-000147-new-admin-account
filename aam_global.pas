@@ -20,10 +20,23 @@ uses
 	SqlDb;
 	
 const	
-	DSN = 						'DSN_ADBEHEER_32';		// Data Source Name of the ODBC connection (32-bits)
-	PROG_ID = 					147;					// Unique program ID
-	VALID_ACTIVE = 				9;						// Only process records with _is_active = 9. 0 = inactive, 1 = active, 9 = development records
-	SLEEP_NEXT_ACTION = 		2000;					// Sleep time before next action during processing 
+	DSN = 						'DSN_ADBEHEER_32';		
+		// Data Source Name of the ODBC connection (32-bits)
+	
+	PROG_ID = 					147;					
+		// Unique program ID
+	
+	VALID_ACTIVE = 				9;						
+		// Only process records with _is_active = 9. 0 = inactive, 1 = active, 9 = development records
+	
+	SLEEP_NEXT_ACTION = 		2000;					
+		// Sleep time before next action during processing 
+									
+	MAIL_FROM = 				'noreply@ns.nl';
+		// Default from address of all send e-mail
+									
+	MAIL_BCC = 					'perry.vandenhondel@ns.nl';
+		// Default BCC of all e-mail send by this program
 
 	ACTION_NEW =	 			1;						// Create a new account
 	ACTION_RESET = 				2;						// Reset the password
@@ -386,7 +399,7 @@ var
 	code: integer;
 begin
 	Val(s, i, code);
-	i := 0;
+	i := 0; 
 	if code <> 0 then
 		r := 'Null'
 	else

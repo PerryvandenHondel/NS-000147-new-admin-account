@@ -86,8 +86,9 @@ begin
 	
 	cmd := ' blat.exe ' + path;
 	cmd := cmd + ' -to ' + EncloseDoubleQuote(mailto);
-	cmd := cmd + ' -f ' + EncloseDoubleQuote('noreply@ns.nl');
-	cmd := cmd + ' -subject ' + EncloseDoubleQuote('Password reset done for ' + upn + ' // ARGUS#' + ref + ' // ADB#' + traceCode);
+	cmd := cmd + ' -f ' + EncloseDoubleQuote(MAIL_FROM);
+	cmd := cmd + ' -bcc ' + EncloseDoubleQuote(MAIL_BCC);
+	cmd := cmd + ' -subject ' + EncloseDoubleQuote('Password reset done for ' + upn + ' // ' + ref + ' // ADB#' + traceCode);
 	cmd := cmd + ' -server vm70as005.rec.nsint';
 	cmd := cmd + ' -port 25';
 	

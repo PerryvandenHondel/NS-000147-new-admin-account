@@ -10,8 +10,6 @@
 //
 
 
-
-
 unit aam_action_same;
 
 
@@ -97,8 +95,8 @@ begin
 			WriteLn(recId:4, '     ', cmd);
 			
 			r := RunCommand(cmd);
-			WriteLn('    >RunCommand: ', cmd);
-			WriteLn('    >ERRORLEVEL=' , r);
+			//WriteLn('    >RunCommand: ', cmd);
+			//WriteLn('    >ERRORLEVEL=' , r);
 			
 			UpdateAadErrorLevel(recId, r);
 			
@@ -240,8 +238,8 @@ var
 	sourceDn: string;
 	targetDn: string;
 	
-	upn: string;
-	initialPassword: string;
+	//upn: string;
+	//initialPassword: string;
 begin
 	WriteLn('-----------------------------------------------------------------');
 	WriteLn('DoActionSame()');

@@ -91,10 +91,10 @@ var
 	f: TextFile;
 	line: string;	// Read a line from the nslookup.tmp file.
 	r: boolean;		// Result of the function to return.
-	lt: string;
+	//lt: string;
 begin
 	r := false;
-	lt := '';
+	//lt := '';
 
 	// Get a temp file to store the output of the adfind.exe command.
 	path := SysUtils.GetTempFileName(); // Path is C:\Users\<username>\AppData\Local\Temp\TMP00000.tmp
@@ -305,7 +305,8 @@ begin
 	
 	cmd := ' blat.exe ' + path;
 	cmd := cmd + ' -to ' + EncloseDoubleQuote(reqEmail);
-	cmd := cmd + ' -f ' + EncloseDoubleQuote('noreply@ns.nl');
+	cmd := cmd + ' -f ' + EncloseDoubleQuote(MAIL_FROM);
+	cmd := cmd + ' -bcc ' + EncloseDoubleQuote(MAIL_BCC);
 	cmd := cmd + ' -subject ' + EncloseDoubleQuote('New account is created for ' + upn + ' // ' + ref + ' // ADB#' + traceCode);
 	cmd := cmd + ' -server vm70as005.rec.nsint';
 	cmd := cmd + ' -port 25';
@@ -435,7 +436,7 @@ var
 	title: string;
 	c: Ansistring;
 	reqFname: string;
-	reqEmail: string;
+	//reqEmail: string;
 	reqMailTo: string;
 	ref: string;
 begin
@@ -482,8 +483,8 @@ begin
 			company := rs.FieldByName(VFLD_NEW_SUPP_CODE).AsString;
 			title := rs.FieldByName(VFLD_NEW_TITLE).AsString;
 			reqFname := rs.FieldByName(VFLD_NEW_REQ_FNAME).AsString;
-			reqEmail := rs.FieldByName(VFLD_NEW_REQ_EMAIL).AsString;
-			reqMailTo := rs.FieldByName(VFLD_NEW_REQ_MAIL_TO).AsString;
+			//reqEmail := rs.FieldByName(VFLD_NEW_REQ_EMAIL).AsString;
+			reqMailTo := rs.FieldByName(VFLD_NEW_REQ_MAIL_TO).AsString;		// Send mail to this requestor e-mail addres(ses)
 			ref := rs.FieldByName(VFLD_NEW_REF).AsString;
 			
 			userName := GenerateUserName3(supName, fname, mname, lname);
