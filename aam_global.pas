@@ -19,23 +19,7 @@ uses
 	SysUtils,
 	SqlDb;
 	
-const	
-<<<<<<< HEAD
-	DSN = 						'DSN_ADBEHEER_32';		// Data Source Name of the ODBC connection (32-bits)
-	PROG_ID = 					147;					// Unique program ID
-	VALID_ACTIVE = 				9;						// Only process records with _is_active = 9. 0 = inactive, 1 = active, 9 = development records
-	SLEEP_NEXT_ACTION = 		2000;					// Sleep time before next action during processing 
-	MAIL_FROM = 				'noreply@ns.nl';		// Default from e-mail address
-	MAIL_BCC = 					'perry.vandenhondel@ns.nl';
-														// Default BCC e-mail adress to sent to. More separated by ,
-
-	ACTION_NEW =	 			1;						// ARN Create a new account
-	ACTION_RESET = 				2;						// ARP Reset the password
-	ACTION_SAME = 				3;						// ASM Make the group membership the same as a reference account.
-	ACTION_UNLOCK = 			4;						// AUL Unlock an account
-	ACTION_DISABLE = 			5;						// ADA Disable an account
-	ACTION_DELETE = 			6;						// ADL Delete an account
-=======
+const
 	DSN = 						'DSN_ADBEHEER_32';		
 		// Data Source Name of the ODBC connection (32-bits)
 	
@@ -60,8 +44,6 @@ const
 	ACTION_UNLOCK = 			4;						// Unlock an account
 	ACTION_DISABLE = 			5;						// Disable an account
 	ACTION_DELETE = 			6;						// Delete an account
->>>>>>> dev-new
-
 	
 	TBL_ACC	=					'account';
 	FLD_ACC_ID = 				'account_id';

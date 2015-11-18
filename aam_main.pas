@@ -49,12 +49,7 @@ uses
 	aam_global,
 	aam_action_new,					// ACTION 1: Create a new account
 	aam_action_reset,				// ACTION 2: Reset a password
-<<<<<<< HEAD
 	aam_action_same;				// Action 03: Make the groups the same
-	
-=======
-	aam_action_same;				// ACTION 3: Make groups the same
->>>>>>> dev-new
 	
 const
 	STEP_MOD = 					27;
@@ -85,11 +80,7 @@ procedure ProgRun();
 begin
 	DoActionNew(ACTION_NEW);					// Create new accounts.
 	DoActionReset(ACTION_RESET);				// Add new actions to the table AAD for password resets
-<<<<<<< HEAD
 	DoActionSame(ACTION_SAME);					// Make the groups the same from source to target account
-=======
-	DoActionSame(ACTION_RESET);					// Make the groups the same
->>>>>>> dev-new
 end;
 
 

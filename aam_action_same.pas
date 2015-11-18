@@ -10,11 +10,6 @@
 //
 
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> dev-new
 unit aam_action_same;
 
 
@@ -100,14 +95,6 @@ begin
 			WriteLn(recId:4, '     ', cmd);
 			
 			r := RunCommand(cmd);
-<<<<<<< HEAD
-			WriteLn('    >RunCommand: ', cmd);
-			WriteLn('    >ERRORLEVEL=' , r);
-=======
-			//WriteLn('    >RunCommand: ', cmd);
-			//WriteLn('    >ERRORLEVEL=' , r);
->>>>>>> dev-new
-			
 			UpdateAadErrorLevel(recId, r);
 			
 			rs.Next;
@@ -243,18 +230,9 @@ procedure DoActionSame(curAction: integer);
 var
 	qs: Ansistring;
 	rs: TSQLQuery;
-	
 	recId: integer;
 	sourceDn: string;
 	targetDn: string;
-	
-<<<<<<< HEAD
-	upn: string;
-	initialPassword: string;
-=======
-	//upn: string;
-	//initialPassword: string;
->>>>>>> dev-new
 begin
 	WriteLn('-----------------------------------------------------------------');
 	WriteLn('DoActionSame()');

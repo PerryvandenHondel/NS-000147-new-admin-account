@@ -302,11 +302,7 @@ begin
 	cmd := cmd + ' -to ' + EncloseDoubleQuote(reqEmail);
 	cmd := cmd + ' -f ' + EncloseDoubleQuote(MAIL_FROM);
 	cmd := cmd + ' -bcc ' + EncloseDoubleQuote(MAIL_BCC);
-<<<<<<< HEAD
-	cmd := cmd + ' -subject ' + EncloseDoubleQuote('New account is created for ' + upn + ' // ' + ref + ' // ADB# ' + traceCode);
-=======
 	cmd := cmd + ' -subject ' + EncloseDoubleQuote('New account is created for ' + upn + ' // ' + ref + ' // ADB#' + traceCode);
->>>>>>> dev-new
 	cmd := cmd + ' -server vm70as005.rec.nsint';
 	cmd := cmd + ' -port 25';
 	
@@ -317,11 +313,8 @@ begin
 	// Update the status to 900: Send e-mail
 	TableAnwSetStatus(recId, 900);
 	
-<<<<<<< HEAD
 	// Delete the body file of the e-mail.
 	DeleteFile(path);
-=======
->>>>>>> dev-new
 end; // of procedure ActionResetSendmail
 
 
