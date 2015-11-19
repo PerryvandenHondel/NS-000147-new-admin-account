@@ -33,39 +33,38 @@ const
 	FLD_ADM_IS_ACTIVE = 		'adm_is_active';
 	FLD_ADM_OU = 				'adm_org_unit';
 	
-<<<<<<< HEAD
-	TBL_ATV = 				'account_active_atv';
-	FLD_ATV_ID = 			'atv_id';
-	FLD_ATV_DN = 			'atv_dn';
-	FLD_ATV_SORT = 			'atv_sort';
-	FLD_ATV_UPN = 			'atv_upn';
-	FLD_ATV_SAM = 			'atv_sam';
-	FLD_ATV_FNAME = 		'atv_fname'; // givenName
-	FLD_ATV_MNAME = 		'atv_mname'; 
-	FLD_ATV_LNAME = 		'atv_lname'; // sn
-	FLD_ATV_MAIL = 			'atv_mail';
-	FLD_ATV_CREATED = 		'atv_created';
-	FLD_ATV_IS_ACTIVE = 	'atv_is_active';
-	FLD_ATV_RLU = 			'atv_rlu';
-=======
 	TBL_ATV = 					'account_active_atv';
 	FLD_ATV_ID = 				'atv_id';
 	FLD_ATV_IS_ACTIVE = 		'atv_is_active';
 	FLD_ATV_APS_ID = 			'atv_person_aps_id'; // APS_ID
+	FLD_ATV_DN = 				'atv_dn';
 	FLD_ATV_SORT = 				'atv_sort';
 	FLD_ATV_UPN = 				'atv_upn';
 	FLD_ATV_SAM = 				'atv_sam';
-	FLD_ATV_DN = 				'atv_dn';
+	FLD_ATV_FNAME = 			'atv_fname'; // givenName
+	FLD_ATV_MNAME = 			'atv_mname'; 
+	FLD_ATV_LNAME = 			'atv_lname'; // sn
 	FLD_ATV_MAIL = 				'atv_mail';
 	FLD_ATV_CREATED = 			'atv_created';
 	FLD_ATV_RLU = 				'atv_rlu';
->>>>>>> dev-new
 
 
 var
 	updateDateTime: TDateTime;
 
 
+procedure ChangeStatusObsoleteRecord(updateDateTime: TDateTime);
+var
+	qu: string;
+begin
+	qu := 'UPDATE ' + TBL_ATV + ' ';
+	qu := qu + 'SET ';
+	qu := qu + FLD_ATV_IS_ACTIVE + '=999 ';
+	qu := qu + 'WHERE ' + FLD_ATV_RLU + '<' + EncloseSingleQuote(DateTimeToStr(updateDateTime)) + ';';
+	RunQuery(qu);
+end; // of procedure ChangeStatusObsoleteRecord
+
+	
 procedure DeleteObsoleteRecords(updateDateTime: TDateTime);
 var
 	qu: string;
@@ -75,7 +74,7 @@ begin
 	WriteLn(qu);
 	RunQuery(qu);
 end; // of procedure DeleteObsoleteRecords
-	
+
 	
 procedure RecordAddAccount(dn: string; fname: string; lname: string; upn: string; sam: string; mail: string; created: string);
 //
@@ -338,7 +337,8 @@ begin
 	updateDateTime := Now();
 	DatabaseOpen();
 	ProcessAllActiveDirectories();
-	DeleteObsoleteRecords(updateDateTime);
+	//DeleteObsoleteRecords(updateDateTime);
+	ChangeStatusObsoleteRecord(updateDateTime);
 	//WriteLn(IsValidAdminAccount('CN=NSA_Jan.vEngelen,OU=NSA,OU=Beheer,DC=test,DC=ns,DC=nl'));
 	//WriteLn(IsValidAdminAccount('CN=SVC_JkfSqlAgentT,OU=Users,OU=Beheer,DC=test,DC=ns,DC=nl'));
 	DatabaseClose();
