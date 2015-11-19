@@ -395,6 +395,7 @@ begin
 	qi := 'INSERT INTO ' + TBL_ATV + ' ';
 	qi := qi + 'SET ';
 	qi := qi + FLD_ATV_APS_ID + '=' + IntToStr(apsId) + ',';
+	qi := qi + FLD_ATV_IS_ACTIVE + '=1,';
 	qi := qi + FLD_ATV_SORT + '=' + FixStr(sort) + ',';
 	qi := qi + FLD_ATV_UPN + '=' + FixStr(upn) + ',';
 	qi := qi + FLD_ATV_SAM + '=' + FixStr(userName) + ',';
