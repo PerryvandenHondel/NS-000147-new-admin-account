@@ -561,6 +561,11 @@ begin
 				c := 'adfind.exe -b ' + EncloseDoubleQuote(dn) + ' userAccountControl -adcsv | admod.exe "userAccountControl::{{.:SET:1048576}}"';
 				TableAadAdd(recId, VALID_ACTIVE, curAction, c);
 			
+				// dsmod user <user's distinguished name (DN)> -disabled no
+				// Enable the account.
+				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -disabled no';
+				TableAadAdd(recId, VALID_ACTIVE, curAction, c);
+				
 				// Account records created in table AAD, status = 100, continue with processing.
 				TableAnwSetStatus(recId, 100);
 				
