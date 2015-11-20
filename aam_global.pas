@@ -192,9 +192,9 @@ begin
 	qi := qi + ',' + FLD_AAD_ACTION_NR + '=' + IntToStr(actionNumber);
 	qi := qi + ',' + FLD_AAD_CMD + '=' + FixStr(command) + ';';
 	
-	WriteLn('TableAadAdd():');
-	WriteLn(qi);
-	WriteLn;
+	//WriteLn('TableAadAdd():');
+	//WriteLn(qi);
+	//WriteLn;
 	
 	RunQuery(qi);
 end; // of procedure TableAadAdd

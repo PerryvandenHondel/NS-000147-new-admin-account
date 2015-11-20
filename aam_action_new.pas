@@ -57,6 +57,7 @@ const
 	VFLD_NEW_REF = 				'anw_reference';
 	VFLD_NEW_USERNAME = 		'anw_username';
 	VFLD_NEW_DN = 				'anw_dn';
+	VFLD_NEW_DOMAIN_ID = 		'anw_domain_adm_id';
 	VFLD_NEW_UPN = 				'anw_upn';
 	VFLD_NEW_PW =		 		'anw_password';
 	VFLD_NEW_MOBILE = 			'aps_mobile';
@@ -69,6 +70,15 @@ const
 	VFLD_NEW_RCD = 				'anw_rcd';
 	VFLD_NEW_RLU = 				'anw_rlu';
 
+	TBL_DGR = 					'account_default_group_dgr';
+	FLD_DGR_ID = 				'dgr_id';
+	FLD_DGR_IS_ACTIVE =			'dgr_is_active';
+	FLD_DGR_ADM_ID = 			'dgr_adm_id';
+	FLD_DGR_GROUP_DN = 			'dgr_group_dn';
+	FLD_DGR_RCD = 				'dgr_rcd';
+	FLD_DGR_RLU = 				'dgr_rlu';
+	
+	
 type
 	TMiddleNameRec = record
 		find: string;
@@ -216,7 +226,7 @@ function GenerateUserName3(strSupplier: string; fn: string; mn: string; ln: stri
 var
 	r: string;		// Return value of this function.
 begin
-	WriteLn('GenerateUserName3(): ' + strSupplier + '/' + fn + ' ' + mn + ' ' + ln);
+	//WriteLn('GenerateUserName3(): ' + strSupplier + '/' + fn + ' ' + mn + ' ' + ln);
 	
 	//strLnameBuffer := strLname;
 	
@@ -231,8 +241,8 @@ begin
 	
 	ln := ReplaceMiddleNames(ln);
 	
-	WriteLn(mn);
-	WriteLn(ln);
+	//WriteLn(mn);
+	//WriteLn(ln);
 	
 	
 	if Length(fn) = 0 then
@@ -406,6 +416,50 @@ begin
 	RunQuery(qi);
 end; // procedure TableAtvAdd
 
+{
+	TBL_DGR = 					'account_default_group_dgr';
+	FLD_DGR_ID = 				'dgr_id';
+	FLD_DGR_IS_ACTIVE =			'dgr_is_active';
+	FLD_DGR_ADM_ID = 			'dgr_adm_id';
+	FLD_DGR_GROUP_DN = 			'dgr_group_dn';
+	FLD_DGR_RCD = 				'dgr_rcd';
+	FLD_DGR_RLU = 				'dgr_rlu';
+}
+procedure AddDefaultDomainGroups(recId: integer; domainId: integer; accountDn: string; curAction: integer);
+var
+	qs: string;
+	rs: TSQLQuery;
+	groupDn: string;
+begin
+	qs := 'SELECT ' + FLD_DGR_GROUP_DN + ' ';
+	qs := qs + 'FROM ' + TBL_DGR + ' ';
+	qs := qs + 'WHERE ' + FLD_DGR_IS_ACTIVE + '=1 ';
+	qs := qs + 'AND ' + FLD_DGR_ADM_ID + '=' + IntToStr(domainId) + ' ';
+	qs := qs + 'ORDER BY ' + FLD_DGR_GROUP_DN;
+	qs := qs + ';';
+	
+	//WriteLn(qs);
+	
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+
+	if rs.EOF = true then
+		WriteLn('AddDefaultDomainGroups(): No records found!')
+	else
+	begin
+		while not rs.EOF do
+		begin
+			groupDn := rs.FieldByName(FLD_DGR_GROUP_DN).AsString;
+			TableAadAdd(recId, VALID_ACTIVE, curAction, 'dsmod.exe group ' + EncloseDoubleQuote(groupDn)+ ' -addmbr ' + EncloseDoubleQuote(accountDn));
+			rs.Next;
+		end;
+	end;
+	rs.Free;
+end;
+
 
 procedure DoActionNew(curAction: integer);
 //
@@ -437,6 +491,7 @@ var
 	//reqEmail: string;
 	reqMailTo: string;
 	ref: string;
+	domainId: integer;
 begin
 	WriteLn('-----------------------------------------------------------------');
 	WriteLn('DOACTIONNEW()');
@@ -463,7 +518,7 @@ begin
 		while not rs.EOF do
 		begin
 			recId := rs.FieldByName(VFLD_NEW_ID).AsInteger;
-			WriteLn(recId:4);
+			//WriteLn(recId:4);
 			
 			// Record APS_ID. Unique ID of person
 			recApsId := rs.FieldByName(VFLD_NEW_APS_ID).AsInteger;
@@ -484,6 +539,7 @@ begin
 			//reqEmail := rs.FieldByName(VFLD_NEW_REQ_EMAIL).AsString;
 			reqMailTo := rs.FieldByName(VFLD_NEW_REQ_MAIL_TO).AsString;		// Send mail to this requestor e-mail addres(ses)
 			ref := rs.FieldByName(VFLD_NEW_REF).AsString;
+			domainId := rs.FieldByName(VFLD_NEW_DOMAIN_ID).AsInteger;
 			
 			userName := GenerateUserName3(supName, fname, mname, lname);
 			upn := GenerateUpn(userName, upnSuff);
@@ -565,6 +621,9 @@ begin
 				// Enable the account.
 				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -disabled no';
 				TableAadAdd(recId, VALID_ACTIVE, curAction, c);
+				
+				AddDefaultDomainGroups(recId, domainId, dn, curAction);
+				
 				
 				// Account records created in table AAD, status = 100, continue with processing.
 				TableAnwSetStatus(recId, 100);
