@@ -284,10 +284,13 @@ var
 	traceCode: string; // Unique code for this action PRODID+ACTION+REC (147-2-15)
 	f: TextFile;
 	cmd: Ansistring;
+	fileAccountInfo: string;
 begin
 	// Build the path of the e-mail contents file.
 	traceCode := IntToStr(PROG_ID) + '-' + IntToStr(curAction) + '-' + IntToStr(recId);
 	path := traceCode + '.body';
+	
+	fileAccountInfo := 'accountinfo.txt';
 	
 	if FileExists(path) = true then
 		DeleteFile(path);
@@ -312,6 +315,10 @@ begin
 	cmd := cmd + ' -to ' + EncloseDoubleQuote(reqEmail);
 	cmd := cmd + ' -f ' + EncloseDoubleQuote(MAIL_FROM);
 	cmd := cmd + ' -bcc ' + EncloseDoubleQuote(MAIL_BCC);
+	
+	if FileExists(fileAccountInfo) = true then
+		cmd := cmd + ' -attacht ' + EncloseDoubleQuote(fileAccountInfo);
+		
 	cmd := cmd + ' -subject ' + EncloseDoubleQuote('New account is created for ' + upn + ' #' + ref + ' #' + traceCode);
 	cmd := cmd + ' -server vm70as005.rec.nsint';
 	cmd := cmd + ' -port 25';
@@ -623,7 +630,6 @@ begin
 				TableAadAdd(recId, VALID_ACTIVE, curAction, c);
 				
 				AddDefaultDomainGroups(recId, domainId, dn, curAction);
-				
 				
 				// Account records created in table AAD, status = 100, continue with processing.
 				TableAnwSetStatus(recId, 100);
