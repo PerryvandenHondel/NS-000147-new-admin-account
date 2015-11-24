@@ -282,10 +282,24 @@ begin
 	qu := qu + ' WHERE ' + VIEW_RESET_ID + '=' + IntToStr(recId);
 	qu := qu + ';';
 	
-	WriteLn('UpdatePassword(): ', qu);
-	
+	//WriteLn('UpdatePassword(): ', qu);
 	RunQuery(qu);
 end; // of procedure UpdatePassword
+
+
+procedure UpdateActionSha1(recId: integer; newActionSha1: string);
+var
+	qu: Ansistring;
+begin
+	qu := 'UPDATE ' + VIEW_RESET;
+	qu := qu + ' SET';
+	qu := qu + ' ' + VIEW_RESET_ACTION_SHA1 + '=' + EncloseSingleQuote(newActionSha1);
+	qu := qu + ' WHERE ' + VIEW_RESET_ID + '=' + IntToStr(recId);
+	qu := qu + ';';
+	
+	//WriteLn('UpdateActionSha1(): ', qu);
+	RunQuery(qu);
+end; // of procedure UpdateActionSha1
 
 
 procedure DoActionReset(curAction: integer);
@@ -300,10 +314,10 @@ var
 	dn: string;
 	upn: string;
 	initialPassword: string;
+	actionSha1: string; // Unique Action SHA1 number: 4a540008e0a05425b79ccefb1086dff5d18a6f4b (a 40 chars Hex number)
 begin
 	WriteLn('-----------------------------------------------------------------');
-	WriteLn('DOACTIONRESET()');
-	WriteLn(ACTION_RESET);
+	WriteLn('DOACTIONRESET()=', curAction);
 	
 	qs := 'SELECT * ';
 	qs := qs + 'FROM ' + VIEW_RESET + ' ';
@@ -331,7 +345,6 @@ begin
 			upn := rs.FieldByName(VIEW_RESET_UPN).AsString;
 			initialPassword := rs.FieldByName(VIEW_RESET_INITPW).AsString;
 			
-			
 			if Length(initialPassword) = 0 then
 			begin
 				// When no initial password is entered in the table, generate a new password
@@ -340,6 +353,11 @@ begin
 				// Update the table to register the generated password. 
 				UpdatePassword(recId, initialPassword);
 			end; // of if
+			
+			actionSha1 := GenerateSha1();
+			WriteLn('Unique SHA1 for this specific action: ', actionSha1);
+			UpdateActionSha1(recId, actionSha1);
+			
 			
 			WriteLn(recId:4, ' ', dn, '  ', upn, '  ', initialPassword);
 			

@@ -63,10 +63,14 @@ procedure ProgTest();
 //
 //	Program testing procedure
 //
+var
+	i: integer;
 begin
 	//WriteLn(IsAccountLockedOut('CN=NSA_Perry.vdHondel,OU=NSA,OU=Beheer,DC=prod,DC=ns,DC=nl'));
-	WriteLn(DoesAccountExist('CN=NSA_Perry.vdHondel,OU=NSA,OU=Beheer,DC=prod,DC=ns,DC=nl'));
-	WriteLn(DoesAccountExist('CN=KPN_Clint.Eastwood,OU=KPN,OU=Beheer,DC=test,DC=ns,DC=nl'));
+	//WriteLn(DoesAccountExist('CN=NSA_Perry.vdHondel,OU=NSA,OU=Beheer,DC=prod,DC=ns,DC=nl'));
+	//WriteLn(DoesAccountExist('CN=KPN_Clint.Eastwood,OU=KPN,OU=Beheer,DC=test,DC=ns,DC=nl'));
+	for i := 1 to 10 do
+		WriteLn(GenerateSha1());
 end; // of procedure ProgTest
 
 

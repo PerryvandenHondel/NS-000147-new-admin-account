@@ -235,8 +235,7 @@ var
 	targetDn: string;
 begin
 	WriteLn('-----------------------------------------------------------------');
-	WriteLn('DoActionSame()');
-	WriteLn(ACTION_SAME);
+	WriteLn('DoActionSame()=', curAction);
 	
 	qs := 'SELECT * ';
 	qs := qs + 'FROM ' + VIEW_SAME + ' ';

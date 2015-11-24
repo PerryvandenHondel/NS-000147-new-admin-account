@@ -115,6 +115,7 @@ const
 	VIEW_RESET = 				'account_action_view_reset';
 	VIEW_RESET_ID = 			'arp_id';
 	VIEW_RESET_IS_ACTIVE = 		'arp_is_active';
+	VIEW_RESET_ACTION_SHA1 = 	'arp_action_sha1';
 	VIEW_RESET_ATV_ID = 		'arp_atv_id';
 	VIEW_RESET_DN = 			'atv_dn';
 	VIEW_RESET_UPN = 			'atv_upn'; 
@@ -134,6 +135,7 @@ const
 	TBL_AAD =					'account_action_do_aad';
 	FLD_AAD_ID = 				'aad_id';
 	FLD_AAD_IS_ACTIVE = 		'aad_is_active';
+	FLD_AAD_ACTION_SHA1 = 		'aad_action_sha1';	// Unique Action SHA1: 40 chars Hex number.
 	FLD_AAD_ACTION_NR = 		'aad_action_nr';
 	FLD_AAD_ACTION_ID =			'aad_action_id';
 	FLD_AAD_CMD = 				'aad_command';
@@ -162,6 +164,7 @@ var
 	
 function FixStr(const s: string): string;
 function FixNum(const s: string): string;
+function GenerateSha1(): string;
 procedure DatabaseClose();
 procedure DatabaseOpen();
 procedure RunQuery(qryString: string);
@@ -274,6 +277,31 @@ begin
 		TableArpSetStatus(recId, 100)
 end; // of procedure TableAadCheck
 }
+
+
+function GenerateSha1(): string;
+const
+	MAX_LENGTH = 40;
+var
+	i: integer;
+	sValidChars: string;
+	r: string;				// Return value
+begin
+	// List of valid chars. Pick one at a time.
+	//ValidChars := 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz';
+	sValidChars := '0123456789abcdef';
+	
+	// Initialize the random number generator.
+	Randomize;
+	
+	r := '';
+	for i := 1 to MAX_LENGTH do
+	begin
+		//WriteLn(i, TAB, sValidChars[Random(Length(sValidChars))+1]);
+		r := r + sValidChars[Random(Length(sValidChars))+1]
+	end; // of for
+	GenerateSha1 := r;
+end; // of function GenerateSha1
 
 
 procedure UpdateAadErrorLevel(recId: integer; errorLevel: integer);
