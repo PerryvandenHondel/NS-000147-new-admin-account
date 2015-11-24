@@ -45,6 +45,7 @@ const
 	VTBL_NEW = 					'account_action_view_new';
 	VFLD_NEW_ID = 				'anw_id';
 	VFLD_NEW_IS_ACTIVE = 		'anw_is_active';
+	VFLD_NEW_ACTION_SHA1 = 		'anw_action_sha1';
 	VFLD_NEW_APS_ID = 			'anw_person_aps_id';
 	VFLD_NEW_FNAME = 			'aps_fname';
 	VFLD_NEW_MNAME = 			'aps_mname';
@@ -432,7 +433,10 @@ end; // procedure TableAtvAdd
 	FLD_DGR_RCD = 				'dgr_rcd';
 	FLD_DGR_RLU = 				'dgr_rlu';
 }
-procedure AddDefaultDomainGroups(recId: integer; domainId: integer; accountDn: string; curAction: integer);
+procedure AddDefaultDomainGroups(recId: integer; domainId: integer; accountDn: string; curAction: integer; actionSha1: string);
+//
+//	Add the default groups to the account.
+//
 var
 	qs: string;
 	rs: TSQLQuery;
@@ -460,7 +464,7 @@ begin
 		while not rs.EOF do
 		begin
 			groupDn := rs.FieldByName(FLD_DGR_GROUP_DN).AsString;
-			TableAadAdd(recId, VALID_ACTIVE, curAction, 'dsmod.exe group ' + EncloseDoubleQuote(groupDn)+ ' -addmbr ' + EncloseDoubleQuote(accountDn));
+			NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, 'dsmod.exe group ' + EncloseDoubleQuote(groupDn)+ ' -addmbr ' + EncloseDoubleQuote(accountDn));
 			rs.Next;
 		end;
 	end;
@@ -499,6 +503,7 @@ var
 	reqMailTo: string;
 	ref: string;
 	domainId: integer;
+	actionSha1: string;
 begin
 	WriteLn('-----------------------------------------------------------------');
 	WriteLn('DOACTIONNEW()');
@@ -564,72 +569,76 @@ begin
 				WriteLn('Initial password: ', pw);
 				WriteLn;
 				
+				actionSha1 := GenerateSha1(); // Generate a Action SHA1 unique code for this specific action.
+				WriteLn('Unique SHA1 for this specific action: ', actionSha1);
+				UpdateOneFieldString(VTBL_NEW, VFLD_NEW_ID, recId, VFLD_NEW_ACTION_SHA1, actionSha1);
+							
 				UpdateAnw(recId, userName, upn, dn, pw);
 						
 				TableAadRemovePrevious(curAction, recId);
 			
 				// Add the account
 				c := 'dsadd.exe user ' + EncloseDoubleQuote(dn);
-				TableAadAdd(recId, VALID_ACTIVE, curAction, c);
+				NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
 			
 				// Set the UPN
 				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -upn ' + EncloseDoubleQuote(upn);
-				TableAadAdd(recId, VALID_ACTIVE, curAction, c);
+				NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
 			
 				// Add first name AD attribute
 				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -fn ' + EncloseDoubleQuote(Trim(fname + ' ' + mname));
-				TableAadAdd(recId, VALID_ACTIVE, curAction, c);
+				NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
 			
 				// Add last name AD attribute
 				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -ln ' + EncloseDoubleQuote(Trim(lname));
-				TableAadAdd(recId, VALID_ACTIVE, curAction, c);
+				NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
 			
 				// Add title AD attribute
 				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -title ' + EncloseDoubleQuote(Trim(title));
-				TableAadAdd(recId, VALID_ACTIVE, curAction, c);
+				NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
 			
 				// Add display AD attribute
 				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -display ' + EncloseDoubleQuote(Trim(userName));
-				TableAadAdd(recId, VALID_ACTIVE, curAction, c);
+				NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
 			
 				// Add the mobile number if it exists
 				if Length(mobile) > 0 then
 				begin
 					// Add mobile AD attribute if exists in the database.
 					c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -mobile ' + EncloseDoubleQuote(Trim(mobile));
-					TableAadAdd(recId, VALID_ACTIVE, curAction, c);
+					NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
 				end; // of if
 			
 				// Add compnay AD attribute
 				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -company ' + EncloseDoubleQuote(Trim(company));
-				TableAadAdd(recId, VALID_ACTIVE, curAction, c);
+				NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
 			
 				// Add the email address when it exists.
 				if Length(email) > 0 then
 				begin
 					// Add mobile AD attribute if exists in the database.
 					c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -email ' + EncloseDoubleQuote(Trim(email));
-					TableAadAdd(recId, VALID_ACTIVE, curAction, c);
+					NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
 				end; // of if
 			
 				// Set the initial password
 				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' ';
 				c := c + '-pwd ' + EncloseDoubleQuote(pw) + ' ';
 				c := c + '-mustchpwd yes';
-				TableAadAdd(recId, VALID_ACTIVE, curAction, c);
+				NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
 
 				// Set the not delegated flag in the UserAccountControl attribute of the account
 				// NOT_DELEGATED - When this flag is set, the security context of the user is not delegated to a service even if the service account is set as trusted for Kerberos delegation.
 				//	Source: https://support.microsoft.com/en-us/kb/305144
 				c := 'adfind.exe -b ' + EncloseDoubleQuote(dn) + ' userAccountControl -adcsv | admod.exe "userAccountControl::{{.:SET:1048576}}"';
-				TableAadAdd(recId, VALID_ACTIVE, curAction, c);
+				NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
 			
 				// dsmod user <user's distinguished name (DN)> -disabled no
 				// Enable the account.
 				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -disabled no';
-				TableAadAdd(recId, VALID_ACTIVE, curAction, c);
+				NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
 				
-				AddDefaultDomainGroups(recId, domainId, dn, curAction);
+				AddDefaultDomainGroups(recId, domainId, dn, curAction, actionSha1);
 				
 				// Account records created in table AAD, status = 100, continue with processing.
 				TableAnwSetStatus(recId, 100);
