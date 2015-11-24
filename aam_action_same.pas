@@ -35,6 +35,7 @@ const
 	VIEW_SAME =							'account_action_view_same';
 	VIEW_SAME_ID = 						'vsame_id';
 	VIEW_SAME_IS_ACTIVE = 				'vsame_is_active';
+	VIEW_SAME_ACTION_SHA1 = 			'vsame_action_sha1';
 	VIEW_SAME_SOURCE_ID = 				'vsame_source_atv_id';
 	VIEW_SAME_SOURCE_DN = 				'vsame_source_dn';
 	VIEW_SAME_TARGET_ID = 				'vsame_target_atv_id';
@@ -174,7 +175,7 @@ begin
 end; // of procedure ProcessActionCheck
 
 
-procedure InsertRecordsInActionTable(recId: integer; curAction: integer; sourceDn: string; targetDn: string);
+procedure InsertRecordsInActionTable(recId: integer; curAction: integer; sourceDn: string; targetDn: string; actionSha1: string);
 //
 //	Obtain all the groups of sourceDn and create records in the action table to perform
 //
@@ -212,7 +213,7 @@ begin
 			
 			//TableAadAdd(recId, VALID_ACTIVE, curAction, 'dsmod.exe user "' + dn + '" -mustchpwd yes');
 			//dsmod group  "CN=US Info,OU=Distribution Lists,DC=Contoso,DC=Com"  -addmbr "CN=Mike Danseglio,CN=Users,DC=Contoso,DC=Com" 
-			TableAadAdd(recId, VALID_ACTIVE, curAction, 'dsmod.exe group ' + EncloseDoubleQuote(groupDn)+ ' -addmbr ' + EncloseDoubleQuote(targetDn));
+			NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, 'dsmod.exe group ' + EncloseDoubleQuote(groupDn)+ ' -addmbr ' + EncloseDoubleQuote(targetDn));
 		end; // of if	
 	until Eof(f);
 	Close(f);
@@ -233,6 +234,7 @@ var
 	recId: integer;
 	sourceDn: string;
 	targetDn: string;
+	actionSha1: string;
 begin
 	WriteLn('-----------------------------------------------------------------');
 	WriteLn('DoActionSame()=', curAction);
@@ -262,9 +264,14 @@ begin
 			sourceDn := rs.FieldByName(VIEW_SAME_SOURCE_DN).AsString;
 			targetDn := rs.FieldByName(VIEW_SAME_TARGET_DN).AsString;
 			
+			actionSha1 := GenerateSha1();
+			WriteLn('Unique SHA1 for this specific action: ', actionSha1);
+			//UpdateActionSha1(recId, actionSha1);
+			UpdateOneFieldString(VIEW_SAME, VIEW_SAME_ID, recId, VIEW_SAME_ACTION_SHA1, actionSha1);
+			
 			WriteLn(recId:6, ': ', sourceDn, '   >>   ', targetDn);
 			// Get the groups from sourceDn and add new action in the table action for targetDn
-			InsertRecordsInActionTable(recId, curAction, sourceDn, targetDn);
+			InsertRecordsInActionTable(recId, curAction, sourceDn, targetDn, actionSha1);
 			
 			// Process all these new actions
 			ProcessNewActions(curAction, recId);

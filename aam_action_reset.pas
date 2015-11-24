@@ -272,6 +272,7 @@ begin
 end; // of procedure ProcessActions
 
 
+{
 procedure UpdatePassword(recId: integer; newPassword: string);
 var
 	qu: Ansistring;
@@ -285,8 +286,10 @@ begin
 	//WriteLn('UpdatePassword(): ', qu);
 	RunQuery(qu);
 end; // of procedure UpdatePassword
+}
 
 
+{
 procedure UpdateActionSha1(recId: integer; newActionSha1: string);
 var
 	qu: Ansistring;
@@ -300,7 +303,7 @@ begin
 	//WriteLn('UpdateActionSha1(): ', qu);
 	RunQuery(qu);
 end; // of procedure UpdateActionSha1
-
+}
 
 procedure DoActionReset(curAction: integer);
 //
@@ -351,25 +354,27 @@ begin
 				initialPassword := GeneratePassword();
 				
 				// Update the table to register the generated password. 
-				UpdatePassword(recId, initialPassword);
+				//UpdatePassword(recId, initialPassword);
+				UpdateOneFieldString(VIEW_RESET, VIEW_RESET_ID, recId, VIEW_RESET_INITPW, initialPassword);
+				
 			end; // of if
 			
 			actionSha1 := GenerateSha1();
 			WriteLn('Unique SHA1 for this specific action: ', actionSha1);
-			UpdateActionSha1(recId, actionSha1);
-			
-			
+			//UpdateActionSha1(recId, actionSha1);
+			UpdateOneFieldString(VIEW_RESET, VIEW_RESET_ID, recId, VIEW_RESET_ACTION_SHA1, actionSha1);
+				
 			WriteLn(recId:4, ' ', dn, '  ', upn, '  ', initialPassword);
 			
 			// Add the first step: Write the command to the action_do table to setup a new password.
-			TableAadAdd(recId, VALID_ACTIVE, curAction, 'dsmod.exe user "' + dn + '" -pwd "' + initialPassword + '"');
+			NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, 'dsmod.exe user "' + dn + '" -pwd "' + initialPassword + '"');
 			
 			// Set the 2nd step: Write the command to "Must change password flag on".
-			TableAadAdd(recId, VALID_ACTIVE, curAction, 'dsmod.exe user "' + dn + '" -mustchpwd yes');
+			NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, 'dsmod.exe user "' + dn + '" -mustchpwd yes');
 			
 			if IsAccountLockedout(dn) = true then
 				// If the account is locked out, use DSMOD USER <dn> -disabled no to unlock.
-				TableAadAdd(recId, VALID_ACTIVE, curAction, 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -disabled no');
+				NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1,'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -disabled no');
 			
 			// Execute all actions in table AAD for password resets
 			ActionResetProcess(curAction, recId);

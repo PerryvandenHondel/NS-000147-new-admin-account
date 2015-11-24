@@ -162,19 +162,66 @@ var
 	gTransaction: TSQLTransaction;  			// Uses SqlDB
 	
 	
-function FixStr(const s: string): string;
 function FixNum(const s: string): string;
+function FixStr(const s: string): string;
 function GenerateSha1(): string;
 procedure DatabaseClose();
 procedure DatabaseOpen();
+procedure NewTableAadAdd(actId: integer; isActive: integer; actionNumber: integer; actionSha1: string; command: string);
 procedure RunQuery(qryString: string);
-procedure TableAadRemovePrevious(actionNumber: integer; recordId: integer);
 procedure TableAadAdd(actId: integer; isActive: integer; actionNumber: integer; command: string);
 procedure TableAadProcess(curAction: integer; recId: integer);
+procedure TableAadRemovePrevious(actionNumber: integer; recordId: integer);
 procedure UpdateAadErrorLevel(recId: integer; errorLevel: integer);
+procedure UpdateOneFieldString(table: string; keyField: string; keyValue: integer; updateField: string; updateValue: string);
 
 
 implementation
+
+
+procedure UpdateOneFieldString(table: string; keyField: string; keyValue: integer; updateField: string; updateValue: string);
+//
+//	Update a specific field in a table, use the key field and record id to specify one record.
+//
+//		table
+//		keyField
+//		keyValue
+//		updateField
+//		updateValue
+//
+var
+	qu: Ansistring;
+begin
+	qu := 'UPDATE ' + table;
+	qu := qu + ' SET';
+	qu := qu + ' ' + updateField + '=' + EncloseSingleQuote(updateValue);
+	qu := qu + ' WHERE ' + keyField + '=' + IntToStr(keyValue);
+	qu := qu + ';';
+	RunQuery(qu);
+end;
+
+
+procedure NewTableAadAdd(actId: integer; isActive: integer; actionNumber: integer; actionSha1: string; command: string);
+//
+//	Add a record to the table AAD
+//
+//		actId				Action Number.
+//		isActive			Is this active?  0=INACTIVE, 1=ACTIVE, 9=TEST
+//		actionNumber		For what action is this? 1=NEW ACCOUNT ,2=RESET PASSWORD, etc
+//		actionSha1			Unique Action SHA1 of Hex number of 40 chars length
+//		command				Full command to do
+var
+	qi: Ansistring;
+begin
+	qi := 'INSERT INTO ' + TBL_AAD;
+	qi := qi + ' SET'; 
+	qi := qi + ' ' + FLD_AAD_ACTION_ID + '=' + IntToStr(actId);
+	qi := qi + ',' + FLD_AAD_ACTION_SHA1 + '=' + EncloseSingleQuote(actionSha1);
+	qi := qi + ',' + FLD_AAD_IS_ACTIVE + '=' + IntToStr(isActive);
+	qi := qi + ',' + FLD_AAD_ACTION_NR + '=' + IntToStr(actionNumber);
+	qi := qi + ',' + FLD_AAD_CMD + '=' + FixStr(command) + ';';
+	RunQuery(qi);
+end; // of procedure NewTableAadAdd
 
 
 procedure TableAadAdd(actId: integer; isActive: integer; actionNumber: integer; command: string);
@@ -194,11 +241,6 @@ begin
 	qi := qi + ',' + FLD_AAD_IS_ACTIVE + '=' + IntToStr(isActive);
 	qi := qi + ',' + FLD_AAD_ACTION_NR + '=' + IntToStr(actionNumber);
 	qi := qi + ',' + FLD_AAD_CMD + '=' + FixStr(command) + ';';
-	
-	//WriteLn('TableAadAdd():');
-	//WriteLn(qi);
-	//WriteLn;
-	
 	RunQuery(qi);
 end; // of procedure TableAadAdd
 
