@@ -151,7 +151,7 @@ begin
 end; // of procedure ActionResetInformByEmail
 
 
-procedure ActionResetCheck(curAction: integer; recId: integer);	
+procedure ActionResetCheck(curAction: integer; recId: integer; actionSha1: string);	
 var
 	qs: Ansistring;
 	rs: TSQLQuery;
@@ -160,8 +160,9 @@ var
 begin
 	qs := 'SELECT ' + FLD_AAD_EL;
 	qs := qs + ' FROM ' + TBL_AAD;
-	qs := qs + ' WHERE ' + FLD_AAD_ACTION_NR + '=' + IntToStr(curAction);
-	qs := qs + ' AND ' + FLD_AAD_ACTION_ID + '=' + IntToStr(recId);
+	qs := qs + ' WHERE ' + FLD_AAD_ACTION_SHA1 + '=' + EncloseSingleQuote(actionSha1);
+	//qs := qs + ' WHERE ' + FLD_AAD_ACTION_NR + '=' + IntToStr(curAction);
+	//qs := qs + ' AND ' + FLD_AAD_ACTION_ID + '=' + IntToStr(recId);
 	qs := qs + ';';
 	
 	WriteLn('ActionResetCheck(): ', qs);
@@ -215,7 +216,7 @@ begin
 end; // of procedure UpdateAadErrorLevel
 
 
-procedure ActionResetProcess(curAction: integer; recId: integer);
+procedure ActionResetProcess(curAction: integer; recId: integer; actionSha1: string);
 var
 	qs: Ansistring;
 	rs: TSQLQuery;
@@ -233,9 +234,10 @@ begin
 	// And the is_active field = 9.
 	qs := 'SELECT *';
 	qs := qs + ' FROM ' + TBL_AAD;
-	qs := qs + ' WHERE ' + FLD_AAD_EL + ' IS NULL';
-	qs := qs + ' AND ' + FLD_AAD_ACTION_ID + '=' + IntToStr(recId);
-	qs := qs + ' AND ' + FLD_AAD_ACTION_NR + '=' + IntToStr(curAction);
+	qs := qs + ' WHERE ' + FLD_AAD_EL + ' IS NULL'; // Error level = 0
+	qs := qs + ' AND ' + FLD_AAD_ACTION_SHA1 + '=' + EncloseSingleQuote(actionSha1);
+	//qs := qs + ' AND ' + FLD_AAD_ACTION_ID + '=' + IntToStr(recId);
+	//qs := qs + ' AND ' + FLD_AAD_ACTION_NR + '=' + IntToStr(curAction);
 	qs := qs + ' AND ' + FLD_AAD_IS_ACTIVE + '=' + IntToStr(VALID_ACTIVE);
 	qs := qs + ' ORDER BY ' + FLD_AAD_RCD;
 	qs := qs + ';';
@@ -377,10 +379,10 @@ begin
 				NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1,'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -disabled no');
 			
 			// Execute all actions in table AAD for password resets
-			ActionResetProcess(curAction, recId);
+			ActionResetProcess(curAction, recId, actionSha1);
 
 			// Check all records that are processed for a correct execution
-			ActionResetCheck(curAction, recId);
+			ActionResetCheck(curAction, recId, actionSha1);
 			
 			// Send a e-mail to the requester with the password.
 			ActionResetInformByEmail(curAction, recId);
