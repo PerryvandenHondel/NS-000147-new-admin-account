@@ -424,15 +424,7 @@ begin
 	RunQuery(qi);
 end; // procedure TableAtvAdd
 
-{
-	TBL_DGR = 					'account_default_group_dgr';
-	FLD_DGR_ID = 				'dgr_id';
-	FLD_DGR_IS_ACTIVE =			'dgr_is_active';
-	FLD_DGR_ADM_ID = 			'dgr_adm_id';
-	FLD_DGR_GROUP_DN = 			'dgr_group_dn';
-	FLD_DGR_RCD = 				'dgr_rcd';
-	FLD_DGR_RLU = 				'dgr_rlu';
-}
+
 procedure AddDefaultDomainGroups(recId: integer; domainId: integer; accountDn: string; curAction: integer; actionSha1: string);
 //
 //	Add the default groups to the account.
