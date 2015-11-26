@@ -29,8 +29,8 @@ const
 	VALID_ACTIVE = 				9;						
 		// Only process records with _is_active = 9. 0 = inactive, 1 = active, 9 = development records
 	
-	SLEEP_NEXT_ACTION = 		2000;					
-		// Sleep time before next action during processing 
+	SLEEP_NEXT_ACTION = 		400;
+		// Sleep time before next action during processing, 1000 = 1 second.
 									
 	MAIL_FROM = 				'noreply@ns.nl';
 		// Default from address of all send e-mail
@@ -169,11 +169,13 @@ procedure DatabaseClose();
 procedure DatabaseOpen();
 procedure NewTableAadAdd(actId: integer; isActive: integer; actionNumber: integer; actionSha1: string; command: string);
 procedure RunQuery(qryString: string);
-procedure TableAadAdd(actId: integer; isActive: integer; actionNumber: integer; command: string);
+//procedure TableAadAdd(actId: integer; isActive: integer; actionNumber: integer; command: string);
 procedure TableAadProcess(curAction: integer; recId: integer);
+procedure TableAadProcessNew(actionSha1: string);
 procedure TableAadRemovePrevious(actionNumber: integer; recordId: integer);
 procedure UpdateAadErrorLevel(recId: integer; errorLevel: integer);
 procedure UpdateOneFieldString(table: string; keyField: string; keyValue: integer; updateField: string; updateValue: string);
+procedure AddRecordToTableAad(actionSha1: string; command: string; isActive: integer);
 
 
 implementation
@@ -224,6 +226,29 @@ begin
 end; // of procedure NewTableAadAdd
 
 
+procedure AddRecordToTableAad(actionSha1: string; command: string; isActive: integer);
+// OLD: procedure TableAadAdd(actId: integer; isActive: integer; actionNumber: integer; actionSha1: string; command: string);
+//
+//	Add a record to the table AAD
+//
+//		actionSha1			Unique Action SHA1 of Hex number of 40 chars length
+//		command				Full command to do
+//		isActive			Is this active?  0=INACTIVE, 1=ACTIVE, 9=TEST
+//
+var
+	qi: Ansistring;
+begin
+	qi := 'INSERT INTO ' + TBL_AAD;
+	qi := qi + ' SET'; 
+	qi := qi + ' ' + FLD_AAD_ACTION_SHA1 + '=' + EncloseSingleQuote(actionSha1);
+	qi := qi + ',' + FLD_AAD_IS_ACTIVE + '=' + IntToStr(isActive);
+	qi := qi + ',' + FLD_AAD_CMD + '=' + FixStr(command) + ';';
+	//WriteLn('AddRecordTableAdd(): ', qi);
+	RunQuery(qi);
+end; // of procedure NewTableAadAdd
+
+
+{
 procedure TableAadAdd(actId: integer; isActive: integer; actionNumber: integer; command: string);
 //
 //	Add a record to the table AAD
@@ -243,7 +268,7 @@ begin
 	qi := qi + ',' + FLD_AAD_CMD + '=' + FixStr(command) + ';';
 	RunQuery(qi);
 end; // of procedure TableAadAdd
-
+}
 
 procedure TableSetStatus(table: string; fieldRecord: string; recId: integer; fieldStatus: string; newStatus: integer);
 //
@@ -355,9 +380,7 @@ begin
 	qu := qu + ' ' + FLD_AAD_EL + '=' + IntToStr(errorLevel);
 	qu := qu + ' WHERE ' + FLD_AAD_ID + '=' + IntToStr(recId);
 	qu := qu + ';';
-	
-	WriteLn('UpdateAadErrorLevel(): ', qu);
-	
+	//WriteLn('UpdateAadErrorLevel(): ', qu);
 	RunQuery(qu);
 end; // of procedure UpdateAadErrorLevel
 
@@ -408,6 +431,58 @@ begin
 			
 			WriteLn(recId:6, ' RunCommand: ', cmd);
 			WriteLn('     >ERRORLEVEL=' , r);
+			
+			UpdateAadErrorLevel(recId, r);
+			
+			rs.Next;
+			Sleep(SLEEP_NEXT_ACTION); // Wait SLEEP_NEXT_ACTION seconds before the next action is processed.
+		end;
+	end;
+	rs.Free;
+end; // of procedure TableAadProcess
+
+
+
+procedure TableAadProcessNew(actionSha1: string);
+var
+	qs: Ansistring;
+	rs: TSQLQuery;
+	recId: integer;
+	cmd: string;
+	r: integer;
+begin
+	WriteLn('TableAadProcessNew(): ', actionSha1);
+	
+	// Select all records where the error level is not filled in,
+	// And the is_active field = 9.
+	qs := 'SELECT *';
+	qs := qs + ' FROM ' + TBL_AAD;
+	qs := qs + ' WHERE ' + FLD_AAD_EL + ' IS NULL';
+	qs := qs + ' AND ' + FLD_AAD_ACTION_SHA1 + '=' + EncloseSingleQuote(actionSha1);
+	qs := qs + ' ORDER BY ' + FLD_AAD_RCD;
+	qs := qs + ';';
+	
+	WriteLn(qs);
+	
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+
+	if rs.EOF = true then
+		WriteLn('ProcessActions(): No records found!')
+	else
+	begin
+		while not rs.EOF do
+		begin
+			recId := rs.FieldByName(FLD_AAD_ID).AsInteger;
+			cmd := rs.FieldByName(FLD_AAD_CMD).AsString;
+			
+			r := RunCommand(cmd);
+			
+			//WriteLn(recId:6, ' RunCommand: ', cmd);
+			//WriteLn('     >ERRORLEVEL=' , r);
 			
 			UpdateAadErrorLevel(recId, r);
 			

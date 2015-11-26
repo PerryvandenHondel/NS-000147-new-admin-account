@@ -93,7 +93,7 @@ begin
 			recId := rs.FieldByName(FLD_AAD_ID).AsInteger;
 			cmd := rs.FieldByName(FLD_AAD_CMD).AsString;
 			
-			WriteLn(recId:4, '     ', cmd);
+			//WriteLn(recId:4, '     ', cmd);
 			
 			r := RunCommand(cmd);
 			UpdateAadErrorLevel(recId, r);
@@ -206,10 +206,10 @@ begin
 		ReadLn(f, line);
 		if Pos('>memberOf: ', line) > 0 then
 		begin
-			WriteLn(line); // DEBUG
+			// WriteLn(line); // DEBUG
 			
 			groupDn := RightStr(line, Length(line) - Length('>memberOf: '));
-			WriteLn(groupDn);
+			//WriteLn(groupDn);
 			
 			//TableAadAdd(recId, VALID_ACTIVE, curAction, 'dsmod.exe user "' + dn + '" -mustchpwd yes');
 			//dsmod group  "CN=US Info,OU=Distribution Lists,DC=Contoso,DC=Com"  -addmbr "CN=Mike Danseglio,CN=Users,DC=Contoso,DC=Com" 
@@ -265,7 +265,7 @@ begin
 			targetDn := rs.FieldByName(VIEW_SAME_TARGET_DN).AsString;
 			
 			actionSha1 := GenerateSha1();
-			WriteLn('Unique SHA1 for this specific action: ', actionSha1);
+			WriteLn('DoActionSame(): ', actionSha1);
 			//UpdateActionSha1(recId, actionSha1);
 			UpdateOneFieldString(VIEW_SAME, VIEW_SAME_ID, recId, VIEW_SAME_ACTION_SHA1, actionSha1);
 			
