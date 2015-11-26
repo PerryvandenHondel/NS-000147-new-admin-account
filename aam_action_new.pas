@@ -12,8 +12,6 @@
 //
 
 
-
-
 unit aam_action_new;
 
 
@@ -35,7 +33,6 @@ uses
 
 procedure DoActionNew(curAction: integer);			// Add new actions to the table AAD for password resets
 function DoesAccountExist(dn: string): boolean;
-
 
 
 implementation
@@ -102,14 +99,11 @@ var
 	f: TextFile;
 	line: string;	// Read a line from the nslookup.tmp file.
 	r: boolean;		// Result of the function to return.
-	//lt: string;
 begin
 	r := false;
-	//lt := '';
 
 	// Get a temp file to store the output of the adfind.exe command.
 	path := SysUtils.GetTempFileName(); // Path is C:\Users\<username>\AppData\Local\Temp\TMP00000.tmp
-	//WriteLn(path);
 	
 	p := TProcess.Create(nil);
 	p.Executable := 'cmd.exe'; 
@@ -117,7 +111,6 @@ begin
 	p.Options := [poWaitOnExit, poUsePipes, poStderrToOutPut];
 	p.Execute;
 	
-	// Open the text file and read the lines from it.
 	Assign(f, path);
 	
 	{I+}
@@ -147,9 +140,7 @@ begin
 	qu := qu + ',' + VFLD_NEW_PW + '=' + EncloseSingleQuote(pw);
 	qu := qu + ' WHERE ' + VFLD_NEW_ID + '=' + IntToStr(recId);
 	qu := qu + ';';
-	
 	WriteLn(qu);
-	
 	RunQuery(qu);
 end; // of procedure UpdateAnw
 	
@@ -227,12 +218,7 @@ function GenerateUserName3(strSupplier: string; fn: string; mn: string; ln: stri
 var
 	r: string;		// Return value of this function.
 begin
-	//WriteLn('GenerateUserName3(): ' + strSupplier + '/' + fn + ' ' + mn + ' ' + ln);
-	
-	//strLnameBuffer := strLname;
-	
 	GenerateUserName3 := '';
-	
 	
 	if Length(mn) > 0 then
 	begin
@@ -241,11 +227,6 @@ begin
 	end; // of if
 	
 	ln := ReplaceMiddleNames(ln);
-	
-	//WriteLn(mn);
-	//WriteLn(ln);
-	
-	
 	if Length(fn) = 0 then
 		// If there is no first name, like Cher or Madonna.
 		r := strSupplier + '_' + ln
@@ -271,9 +252,7 @@ begin
 	qu := qu + ' ' + VFLD_NEW_STATUS + '=' + IntToStr(newStatus);
 	qu := qu + ' WHERE ' + VFLD_NEW_ID + '=' + IntToStr(recId);
 	qu := qu + ';';
-	
 	WriteLn('TableAnwSetStatus(): ', qu);
-	
 	RunQuery(qu);
 end; // of procedure TableAnwSetStatus
 
@@ -316,16 +295,12 @@ begin
 	cmd := cmd + ' -to ' + EncloseDoubleQuote(reqEmail);
 	cmd := cmd + ' -f ' + EncloseDoubleQuote(MAIL_FROM);
 	cmd := cmd + ' -bcc ' + EncloseDoubleQuote(MAIL_BCC);
-	
 	if FileExists(fileAccountInfo) = true then
 		cmd := cmd + ' -attacht ' + EncloseDoubleQuote(fileAccountInfo);
-		
 	cmd := cmd + ' -subject ' + EncloseDoubleQuote('New account is created for ' + upn + ' #' + ref + ' #' + traceCode);
 	cmd := cmd + ' -server vm70as005.rec.nsint';
 	cmd := cmd + ' -port 25';
-	
-	WriteLn(cmd);
-	
+
 	RunCommand(cmd);
 	
 	// Update the status to 900: Send e-mail
@@ -336,7 +311,6 @@ begin
 end; // of procedure ActionResetSendmail
 
 
-//procedure TableAadCheckNew(curAction: integer; recId: integer);	
 procedure TableAadCheckNew(actionSha1: string; recId: integer);	
 var
 	qs: Ansistring;
@@ -348,8 +322,6 @@ begin
 	qs := qs + ' FROM ' + TBL_AAD;
 	qs := qs + ' WHERE ' + FLD_AAD_ACTION_SHA1 + '=' + EncloseSingleQuote(actionSha1);
 	qs := qs + ';';
-	
-	WriteLn('TableAadCheckNew(): ', actionSha1);
 	
 	rs := TSQLQuery.Create(nil);
 	rs.Database := gConnection;
@@ -366,11 +338,9 @@ begin
 		while not rs.EOF do
 		begin
 			errorLevel := rs.FieldByName(FLD_AAD_EL).AsInteger;
-			//WriteLn(errorLevel:12);
 			if errorLevel <> 0 then
 			begin
-				// Not all steps where successful, set 
-				allSuccesFull := false;
+				allSuccesFull := false; // Not all steps where successful
 			end;
 			rs.Next;
 		end;
@@ -381,8 +351,6 @@ begin
 		TableAnwSetStatus(recId, 99) // failure during execution of command lines
 	else
 		TableAnwSetStatus(recId, 100); // All error levels are 0, success.
-		
-	WriteLn;
 end; // of procedure ActionResetCheck
 
 
@@ -418,9 +386,6 @@ begin
 	qi := qi + FLD_ATV_UPN + '=' + FixStr(upn) + ',';
 	qi := qi + FLD_ATV_SAM + '=' + FixStr(userName) + ',';
 	qi := qi + FLD_ATV_DN + '=' + FixStr(dn) + ';';
-	
-	WriteLn(qi);
-	
 	RunQuery(qi);
 end; // procedure TableAtvAdd
 
@@ -442,8 +407,6 @@ begin
 	qs := qs + 'ORDER BY ' + FLD_DGR_GROUP_DN;
 	qs := qs + ';';
 	
-	//WriteLn(qs);
-	
 	rs := TSQLQuery.Create(nil);
 	rs.Database := gConnection;
 	rs.PacketRecords := -1;
@@ -457,9 +420,8 @@ begin
 		while not rs.EOF do
 		begin
 			groupDn := rs.FieldByName(FLD_DGR_GROUP_DN).AsString;
-			//NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, 'dsmod.exe group ' + EncloseDoubleQuote(groupDn)+ ' -addmbr ' + EncloseDoubleQuote(accountDn));
 			c := 'dsmod.exe group ' + EncloseDoubleQuote(groupDn)+ ' -addmbr ' + EncloseDoubleQuote(accountDn);
-			AddRecordToTableAad(actionSha1, c, VALID_ACTIVE);
+			AddRecordToTableAad(actionSha1, c);
 			rs.Next;
 		end;
 	end;
@@ -469,7 +431,7 @@ end;
 
 procedure DoActionNew(curAction: integer);
 //
-//		curAction		What is the current action (2 for password reset)
+//		curAction		What is the current action (1 = new account)
 //
 var
 	qs: Ansistring;
@@ -501,7 +463,7 @@ var
 	actionSha1: string;
 begin
 	WriteLn('-----------------------------------------------------------------');
-	WriteLn('DOACTIONNEW()');
+	WriteLn('DOACTIONNEW(', curAction, ')');
 	
 	qs := 'SELECT * ';
 	qs := qs + 'FROM ' + VTBL_NEW + ' ';
@@ -510,7 +472,7 @@ begin
 	qs := qs + 'ORDER BY ' + VFLD_NEW_RCD;
 	qs := qs + ';';
 	
-	WriteLn(qs);
+	//WriteLn(qs);
 	
 	rs := TSQLQuery.Create(nil);
 	rs.Database := gConnection;
@@ -519,16 +481,13 @@ begin
 	rs.Open;
 
 	if rs.EOF = true then
-		WriteLn('DOACTIONNEW(): No records found!')
+		WriteLn('No records found!')
 	else
 	begin
 		while not rs.EOF do
 		begin
 			recId := rs.FieldByName(VFLD_NEW_ID).AsInteger;
-			//WriteLn(recId:4);
-			
-			// Record APS_ID. Unique ID of person
-			recApsId := rs.FieldByName(VFLD_NEW_APS_ID).AsInteger;
+			recApsId := rs.FieldByName(VFLD_NEW_APS_ID).AsInteger; // Record APS_ID. Unique ID of person
 			
 			fname := rs.FieldByName(VFLD_NEW_FNAME).AsString;
 			mname := rs.FieldByName(VFLD_NEW_MNAME).AsString;
@@ -543,11 +502,11 @@ begin
 			company := rs.FieldByName(VFLD_NEW_SUPP_CODE).AsString;
 			title := rs.FieldByName(VFLD_NEW_TITLE).AsString;
 			reqFname := rs.FieldByName(VFLD_NEW_REQ_FNAME).AsString;
-			//reqEmail := rs.FieldByName(VFLD_NEW_REQ_EMAIL).AsString;
 			reqMailTo := rs.FieldByName(VFLD_NEW_REQ_MAIL_TO).AsString;		// Send mail to this requestor e-mail addres(ses)
 			ref := rs.FieldByName(VFLD_NEW_REF).AsString;
 			domainId := rs.FieldByName(VFLD_NEW_DOMAIN_ID).AsInteger;
 			
+			// Generate the following fields.
 			userName := GenerateUserName3(supName, fname, mname, lname);
 			upn := GenerateUpn(userName, upnSuff);
 			dn := GenerateDn(userName, orgUnit, supName, useSuppOu, rootDse);
@@ -558,7 +517,7 @@ begin
 			if DoesAccountExist(dn) = false then
 			begin
 				// Account DN does not exist, continue...
-				actionSha1 := GenerateSha1(); // Generate a Action SHA1 unique code for this specific action.
+				actionSha1 := GenerateUniqueActionNumber(curAction);
 				
 				WriteLn('User name:        ', userName);
 				WriteLn('UPN:              ', upn);
@@ -570,82 +529,66 @@ begin
 							
 				UpdateAnw(recId, userName, upn, dn, pw);
 						
-				//TableAadRemovePrevious(curAction, recId);
-			
 				// Add the account
 				c := 'dsadd.exe user ' + EncloseDoubleQuote(dn);
-				//NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
-				AddRecordToTableAad(actionSha1, c, VALID_ACTIVE);
+				AddRecordToTableAad(actionSha1, c);
 			
 				// Set the UPN
 				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -upn ' + EncloseDoubleQuote(upn);
-				//NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
-				AddRecordToTableAad(actionSha1, c, VALID_ACTIVE);
-			
-			
+				AddRecordToTableAad(actionSha1, c);
+				
 				// Add first name AD attribute
 				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -fn ' + EncloseDoubleQuote(Trim(fname + ' ' + mname));
-				//NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
-				AddRecordToTableAad(actionSha1, c, VALID_ACTIVE);
-			
-			
+				AddRecordToTableAad(actionSha1, c);
+				
 				// Add last name AD attribute
 				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -ln ' + EncloseDoubleQuote(Trim(lname));
-				//NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
-				AddRecordToTableAad(actionSha1, c, VALID_ACTIVE);
-			
+				AddRecordToTableAad(actionSha1, c);
+				
 				// Add title AD attribute
 				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -title ' + EncloseDoubleQuote(Trim(title));
-				//NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
-				AddRecordToTableAad(actionSha1, c, VALID_ACTIVE);
-			
+				AddRecordToTableAad(actionSha1, c);
+				
 				// Add display AD attribute
 				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -display ' + EncloseDoubleQuote(Trim(userName));
-				//NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
-				AddRecordToTableAad(actionSha1, c, VALID_ACTIVE);
-			
+				AddRecordToTableAad(actionSha1, c);
+				
 				// Add the mobile number if it exists
 				if Length(mobile) > 0 then
 				begin
 					// Add mobile AD attribute if exists in the database.
 					c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -mobile ' + EncloseDoubleQuote(Trim(mobile));
-					//NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
-					AddRecordToTableAad(actionSha1, c, VALID_ACTIVE);
+					AddRecordToTableAad(actionSha1, c);
 				end; // of if
 			
 				// Add compnay AD attribute
 				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -company ' + EncloseDoubleQuote(Trim(company));
-				//NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
-				AddRecordToTableAad(actionSha1, c, VALID_ACTIVE);
-			
+				AddRecordToTableAad(actionSha1, c);
+				
 				// Add the email address when it exists.
 				if Length(email) > 0 then
 				begin
 					// Add mobile AD attribute if exists in the database.
 					c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -email ' + EncloseDoubleQuote(Trim(email));
-					//NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
-					AddRecordToTableAad(actionSha1, c, VALID_ACTIVE);
+					AddRecordToTableAad(actionSha1, c);
 				end; // of if
 			
 				// Set the initial password
 				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' ';
 				c := c + '-pwd ' + EncloseDoubleQuote(pw) + ' ';
 				c := c + '-mustchpwd yes';
-				//NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
-				AddRecordToTableAad(actionSha1, c, VALID_ACTIVE);
-
+				AddRecordToTableAad(actionSha1, c);
+								
 				// Set the not delegated flag in the UserAccountControl attribute of the account
 				// NOT_DELEGATED - When this flag is set, the security context of the user is not delegated to a service even if the service account is set as trusted for Kerberos delegation.
 				//	Source: https://support.microsoft.com/en-us/kb/305144
 				c := 'adfind.exe -b ' + EncloseDoubleQuote(dn) + ' userAccountControl -adcsv | admod.exe "userAccountControl::{{.:SET:1048576}}"';
-				//NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
-				AddRecordToTableAad(actionSha1, c, VALID_ACTIVE);
-			
+				AddRecordToTableAad(actionSha1, c);
+				
 				// dsmod user <user's distinguished name (DN)> -disabled no
 				// Enable the account.
 				c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -disabled no';
-				//NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, c);
-				AddRecordToTableAad(actionSha1, c, VALID_ACTIVE);
+				AddRecordToTableAad(actionSha1, c);
 				
 				AddDefaultDomainGroups(recId, domainId, dn, curAction, actionSha1);
 				
@@ -653,8 +596,8 @@ begin
 				TableAnwSetStatus(recId, 100);
 				
 				// Process all the records in the table AAD
-				//TableAadProcess(curAction, recId);
-				TableAadProcessNew(actionSha1);
+				//TableAadProcessNew(actionSha1);
+				TableAadProcessActions(actionSha1);
 				
 				// Check all actions for the new account creation
 				TableAadCheckNew(actionSha1, recId);
@@ -664,13 +607,12 @@ begin
 				
 				// Add the new account to the table account_active_atv
 				TableAtvAdd(recApsId, fname, mname, lname, userName, upn, dn);
-				
 			end // of if 
 			else
 			begin
-				WriteLn('========================================================');
-				WriteLn('WARNING: DN ', dn, ' does already exists!!');
-				WriteLn('========================================================');
+				WriteLn('================================================================================');
+				WriteLn('DoActionNew() WARNING: DN ', dn, ' does already exists!!');
+				WriteLn('=================================================================================');
 				TableAnwSetStatus(recId, 98); // Set status to 99 for existing record
 			end;
 			
@@ -678,7 +620,6 @@ begin
 		end;
 	end;
 	rs.Free;
-	
 end; // of procedure DoActionNew
 
 

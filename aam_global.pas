@@ -165,17 +165,17 @@ var
 function FixNum(const s: string): string;
 function FixStr(const s: string): string;
 function GenerateSha1(): string;
+function GenerateUniqueActionNumber(actionNumber: integer): Ansistring;
+procedure AddRecordToTableAad(actionSha1: Ansistring; command: Ansistring);
 procedure DatabaseClose();
 procedure DatabaseOpen();
-procedure NewTableAadAdd(actId: integer; isActive: integer; actionNumber: integer; actionSha1: string; command: string);
 procedure RunQuery(qryString: string);
-//procedure TableAadAdd(actId: integer; isActive: integer; actionNumber: integer; command: string);
 procedure TableAadProcess(curAction: integer; recId: integer);
 procedure TableAadProcessNew(actionSha1: string);
 procedure TableAadRemovePrevious(actionNumber: integer; recordId: integer);
 procedure UpdateAadErrorLevel(recId: integer; errorLevel: integer);
 procedure UpdateOneFieldString(table: string; keyField: string; keyValue: integer; updateField: string; updateValue: string);
-procedure AddRecordToTableAad(actionSha1: string; command: string; isActive: integer);
+procedure TableAadProcessActions(uniqueActionNumber: Ansistring);
 
 
 implementation
@@ -203,36 +203,12 @@ begin
 end;
 
 
-procedure NewTableAadAdd(actId: integer; isActive: integer; actionNumber: integer; actionSha1: string; command: string);
-//
-//	Add a record to the table AAD
-//
-//		actId				Action Number.
-//		isActive			Is this active?  0=INACTIVE, 1=ACTIVE, 9=TEST
-//		actionNumber		For what action is this? 1=NEW ACCOUNT ,2=RESET PASSWORD, etc
-//		actionSha1			Unique Action SHA1 of Hex number of 40 chars length
-//		command				Full command to do
-var
-	qi: Ansistring;
-begin
-	qi := 'INSERT INTO ' + TBL_AAD;
-	qi := qi + ' SET'; 
-	qi := qi + ' ' + FLD_AAD_ACTION_ID + '=' + IntToStr(actId);
-	qi := qi + ',' + FLD_AAD_ACTION_SHA1 + '=' + EncloseSingleQuote(actionSha1);
-	qi := qi + ',' + FLD_AAD_IS_ACTIVE + '=' + IntToStr(isActive);
-	qi := qi + ',' + FLD_AAD_ACTION_NR + '=' + IntToStr(actionNumber);
-	qi := qi + ',' + FLD_AAD_CMD + '=' + FixStr(command) + ';';
-	RunQuery(qi);
-end; // of procedure NewTableAadAdd
-
-
-procedure AddRecordToTableAad(actionSha1: string; command: string; isActive: integer);
-// OLD: procedure TableAadAdd(actId: integer; isActive: integer; actionNumber: integer; actionSha1: string; command: string);
+procedure AddRecordToTableAad(actionSha1: string; command: string);
 //
 //	Add a record to the table AAD
 //
 //		actionSha1			Unique Action SHA1 of Hex number of 40 chars length
-//		command				Full command to do
+//		command				Full command to execute
 //		isActive			Is this active?  0=INACTIVE, 1=ACTIVE, 9=TEST
 //
 var
@@ -241,34 +217,60 @@ begin
 	qi := 'INSERT INTO ' + TBL_AAD;
 	qi := qi + ' SET'; 
 	qi := qi + ' ' + FLD_AAD_ACTION_SHA1 + '=' + EncloseSingleQuote(actionSha1);
-	qi := qi + ',' + FLD_AAD_IS_ACTIVE + '=' + IntToStr(isActive);
+	qi := qi + ',' + FLD_AAD_IS_ACTIVE + '=' + IntToStr(VALID_ACTIVE);
 	qi := qi + ',' + FLD_AAD_CMD + '=' + FixStr(command) + ';';
 	//WriteLn('AddRecordTableAdd(): ', qi);
 	RunQuery(qi);
 end; // of procedure NewTableAadAdd
 
 
-{
-procedure TableAadAdd(actId: integer; isActive: integer; actionNumber: integer; command: string);
-//
-//	Add a record to the table AAD
-//
-//		actId				Action Number.
-//		isActive			Is this active?  0=INACTIVE, 1=ACTIVE, 9=TEST
-//		actionNumber		For what action is this? 1=NEW ACCOUNT ,2=RESET PASSWORD, etc
-//		command				Full command to do
+
+procedure TableAadProcessActions(uniqueActionNumber: Ansistring);
 var
-	qi: Ansistring;
+	qs: Ansistring;
+	rs: TSQLQuery;
+	recId: integer;
+	cmd: string;
+	r: integer;
 begin
-	qi := 'INSERT INTO ' + TBL_AAD;
-	qi := qi + ' SET'; 
-	qi := qi + ' ' + FLD_AAD_ACTION_ID + '=' + IntToStr(actId);
-	qi := qi + ',' + FLD_AAD_IS_ACTIVE + '=' + IntToStr(isActive);
-	qi := qi + ',' + FLD_AAD_ACTION_NR + '=' + IntToStr(actionNumber);
-	qi := qi + ',' + FLD_AAD_CMD + '=' + FixStr(command) + ';';
-	RunQuery(qi);
-end; // of procedure TableAadAdd
-}
+	WriteLn('ProcessActions(): ', uniqueActionNumber);
+	
+	// Select all records where the error level is not filled in,
+	// And the is_active field = 9.
+	qs := 'SELECT *';
+	qs := qs + ' FROM ' + TBL_AAD;
+	qs := qs + ' WHERE ' + FLD_AAD_EL + ' IS NULL';
+	qs := qs + ' AND ' + FLD_AAD_ACTION_SHA1 + '=' + EncloseSingleQuote(uniqueActionNumber);
+	qs := qs + ' AND ' + FLD_AAD_IS_ACTIVE + '=' + IntToStr(VALID_ACTIVE);
+	qs := qs + ' ORDER BY ' + FLD_AAD_RCD;
+	qs := qs + ';';
+	
+	WriteLn(qs);
+	
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+
+	if rs.EOF = true then
+		WriteLn('ProcessActions(): ', uniqueActionNumber, ': No records found!')
+	else
+	begin
+		while not rs.EOF do
+		begin
+			recId := rs.FieldByName(FLD_AAD_ID).AsInteger;
+			cmd := rs.FieldByName(FLD_AAD_CMD).AsString;
+			r := RunCommand(cmd);
+			UpdateAadErrorLevel(recId, r);
+			rs.Next;
+		end;
+	end;
+	rs.Free;
+end; // of procedure ProcessActions
+
+
+
 
 procedure TableSetStatus(table: string; fieldRecord: string; recId: integer; fieldStatus: string; newStatus: integer);
 //
@@ -296,54 +298,35 @@ begin
 	RunQuery(qu);
 end; // of procedure TableAnwSetStatus
 
-{
-procedure TableAadCheck(curAction: integer; recId: integer);	
-var
-	qs: Ansistring;
-	rs: TSQLQuery;
-	errorLevel: integer;
-	allSuccesFull: boolean;
-begin
-	qs := 'SELECT ' + FLD_AAD_EL;
-	qs := qs + ' FROM ' + TBL_AAD;
-	qs := qs + ' WHERE ' + FLD_AAD_ACTION_NR + '=' + IntToStr(curAction);
-	qs := qs + ' AND ' + FLD_AAD_ACTION_ID + '=' + IntToStr(recId);
-	qs := qs + ';';
-	
-	WriteLn('ActionResetCheck(): ', qs);
-	
-	rs := TSQLQuery.Create(nil);
-	rs.Database := gConnection;
-	rs.PacketRecords := -1;
-	rs.SQL.Text := qs;
-	rs.Open;
 
-	allSuccesFull := true;
+function GenerateUniqueActionNumber(actionNumber: integer): string;
+//
+//	Generate an unique action number
+//
+//	Layout: [actionNumber:2][38 random chars]
+//
+const
+	MAX_LENGTH = 38;
+var
+	i: integer;
+	sValidChars: string;
+	r: string;				// Return value
+begin
+	// List of valid chars. Pick one at a time.
+	//ValidChars := 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz';
+	sValidChars := '0123456789abcdef';
 	
-	if rs.EOF = true then
-		WriteLn('ActionResetCheck(): No records found!')
-	else
+	// Initialize the random number generator.
+	Randomize;
+	
+	r := '';
+	for i := 1 to MAX_LENGTH do
 	begin
-		while not rs.EOF do
-		begin
-			errorLevel := rs.FieldByName(FLD_AAD_EL).AsInteger;
-			WriteLn(errorLevel:12);
-			if errorLevel <> 0 then
-			begin
-				// Not all steps where successful, set 
-				allSuccesFull := false;
-			end;
-			rs.Next;
-		end;
-	end;
-	rs.Free;
-	
-	if allSuccesFull = false then
-		TableArpSetStatus(recId, 99)
-	else
-		TableArpSetStatus(recId, 100)
-end; // of procedure TableAadCheck
-}
+		//WriteLn(i, TAB, sValidChars[Random(Length(sValidChars))+1]);
+		r := r + sValidChars[Random(Length(sValidChars))+1]
+	end; // of for
+	GenerateUniqueActionNumber := NumberAlign(actionNumber, 2) + r;
+end; // of function GenerateUniqueActionNumber
 
 
 function GenerateSha1(): string;
@@ -440,7 +423,6 @@ begin
 	end;
 	rs.Free;
 end; // of procedure TableAadProcess
-
 
 
 procedure TableAadProcessNew(actionSha1: string);
@@ -593,6 +575,7 @@ begin
 	//WriteLn('DatabaseClose(): Closing database DSN: ', DSN);
 	gTransaction.Free;
 	gConnection.Free;
+	WriteLn('DatabaseClose()');
 end;
 
 

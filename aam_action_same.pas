@@ -124,7 +124,8 @@ begin
 end; // of procedure TableAsmSetStatus
 
 
-procedure ProcessActionCheck(curAction: integer; recId: integer);	
+procedure ActionSameCheck(uniqueActionCode: string; recId: integer);
+//procedure ProcessActionCheck(curAction: integer; recId: integer);	
 var
 	qs: Ansistring;
 	rs: TSQLQuery;
@@ -133,11 +134,12 @@ var
 begin
 	qs := 'SELECT ' + FLD_AAD_EL;
 	qs := qs + ' FROM ' + TBL_AAD;
-	qs := qs + ' WHERE ' + FLD_AAD_ACTION_NR + '=' + IntToStr(curAction);
-	qs := qs + ' AND ' + FLD_AAD_ACTION_ID + '=' + IntToStr(recId);
+	//qs := qs + ' WHERE ' + FLD_AAD_ACTION_NR + '=' + IntToStr(curAction);
+	//qs := qs + ' AND ' + FLD_AAD_ACTION_ID + '=' + IntToStr(recId);
+	qs := qs + ' WHERE ' + FLD_AAD_ACTION_SHA1 + '=' + EncloseSingleQuote(uniqueActionCode);
 	qs := qs + ';';
 	
-	WriteLn('ProcessActionCheck(): ', qs);
+	WriteLn('ActionSameCheck(): ', qs);
 	
 	rs := TSQLQuery.Create(nil);
 	rs.Database := gConnection;
@@ -148,13 +150,12 @@ begin
 	allSuccesFull := true;
 	
 	if rs.EOF = true then
-		WriteLn('ProcessActionCheck(): No records found!')
+		WriteLn('ActionSameCheck(): ', uniqueActionCode, ': No records found!')
 	else
 	begin
 		while not rs.EOF do
 		begin
 			errorLevel := rs.FieldByName(FLD_AAD_EL).AsInteger;
-			//WriteLn(errorLevel:12);
 			
 			if errorLevel = -2147019886 then
 				errorLevel := 0; // The account is already a member of the group. Set to 0. Not an error.
@@ -185,6 +186,7 @@ var
 	p: TProcess;
 	f: TextFile;
 	groupDn: string;
+	c: Ansistring;
 	line: string;	// Read a line from the nslookup.tmp file.
 begin
 	// Get a temp file to store the output of the adfind.exe command.
@@ -213,7 +215,9 @@ begin
 			
 			//TableAadAdd(recId, VALID_ACTIVE, curAction, 'dsmod.exe user "' + dn + '" -mustchpwd yes');
 			//dsmod group  "CN=US Info,OU=Distribution Lists,DC=Contoso,DC=Com"  -addmbr "CN=Mike Danseglio,CN=Users,DC=Contoso,DC=Com" 
-			NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, 'dsmod.exe group ' + EncloseDoubleQuote(groupDn)+ ' -addmbr ' + EncloseDoubleQuote(targetDn));
+			//NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, 'dsmod.exe group ' + EncloseDoubleQuote(groupDn)+ ' -addmbr ' + EncloseDoubleQuote(targetDn));
+			c := 'dsmod.exe group ' + EncloseDoubleQuote(groupDn)+ ' -addmbr ' + EncloseDoubleQuote(targetDn);
+			AddRecordToTableAad(actionSha1, c);
 		end; // of if	
 	until Eof(f);
 	Close(f);
@@ -237,7 +241,7 @@ var
 	actionSha1: string;
 begin
 	WriteLn('-----------------------------------------------------------------');
-	WriteLn('DoActionSame()=', curAction);
+	WriteLn('DoActionSame(', curAction, ')');
 	
 	qs := 'SELECT * ';
 	qs := qs + 'FROM ' + VIEW_SAME + ' ';
@@ -246,7 +250,7 @@ begin
 	qs := qs + 'ORDER BY ' + VIEW_SAME_RCD;
 	qs := qs + ';';
 	
-	WriteLn(qs);
+	//WriteLn(qs);
 	
 	rs := TSQLQuery.Create(nil);
 	rs.Database := gConnection;
@@ -264,9 +268,9 @@ begin
 			sourceDn := rs.FieldByName(VIEW_SAME_SOURCE_DN).AsString;
 			targetDn := rs.FieldByName(VIEW_SAME_TARGET_DN).AsString;
 			
-			actionSha1 := GenerateSha1();
+			actionSha1 := GenerateUniqueActionNumber(curAction);
 			WriteLn('DoActionSame(): ', actionSha1);
-			//UpdateActionSha1(recId, actionSha1);
+			
 			UpdateOneFieldString(VIEW_SAME, VIEW_SAME_ID, recId, VIEW_SAME_ACTION_SHA1, actionSha1);
 			
 			WriteLn(recId:6, ': ', sourceDn, '   >>   ', targetDn);
@@ -274,10 +278,11 @@ begin
 			InsertRecordsInActionTable(recId, curAction, sourceDn, targetDn, actionSha1);
 			
 			// Process all these new actions
-			ProcessNewActions(curAction, recId);
+			TableAadProcessActions(actionSha1);
 			
 			// Check if these actions are all done.
-			ProcessActionCheck(curAction, recId);
+			//ProcessActionCheck(curAction, recId);
+			ActionSameCheck(actionSha1, recId);
 			
 			rs.Next;
 		end;

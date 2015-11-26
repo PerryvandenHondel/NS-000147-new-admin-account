@@ -10,13 +10,11 @@
 //
 
 
-
-
 unit aam_action_reset;
 
 
 {$MODE OBJFPC}
-{$H+}			// Large string support
+{$H+}			// Large string support (Ansistring)
 
 
 interface
@@ -314,7 +312,7 @@ procedure DoActionReset(curAction: integer);
 var
 	qs: Ansistring;
 	rs: TSQLQuery;
-	
+	c: Ansistring;
 	recId: integer;
 	dn: string;
 	upn: string;
@@ -322,7 +320,7 @@ var
 	actionSha1: string; // Unique Action SHA1 number: 4a540008e0a05425b79ccefb1086dff5d18a6f4b (a 40 chars Hex number)
 begin
 	WriteLn('-----------------------------------------------------------------');
-	WriteLn('DOACTIONRESET()=', curAction);
+	WriteLn('DOACTIONRESET(', curAction, ')');
 	
 	qs := 'SELECT * ';
 	qs := qs + 'FROM ' + VIEW_RESET + ' ';
@@ -331,7 +329,7 @@ begin
 	qs := qs + 'ORDER BY ' + VIEW_RESET_RCD;
 	qs := qs + ';';
 	
-	WriteLn(qs);
+	//WriteLn(qs);
 	
 	rs := TSQLQuery.Create(nil);
 	rs.Database := gConnection;
@@ -361,7 +359,7 @@ begin
 				
 			end; // of if
 			
-			actionSha1 := GenerateSha1();
+			actionSha1 := GenerateUniqueActionNumber(curAction);
 			WriteLn('Unique SHA1 for this specific action: ', actionSha1);
 			//UpdateActionSha1(recId, actionSha1);
 			UpdateOneFieldString(VIEW_RESET, VIEW_RESET_ID, recId, VIEW_RESET_ACTION_SHA1, actionSha1);
@@ -369,17 +367,23 @@ begin
 			WriteLn(recId:4, ' ', dn, '  ', upn, '  ', initialPassword);
 			
 			// Add the first step: Write the command to the action_do table to setup a new password.
-			NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, 'dsmod.exe user "' + dn + '" -pwd "' + initialPassword + '"');
+			c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -pwd ' + EncloseDoubleQuote(initialPassword);
+			AddRecordToTableAad(actionSha1, c);
 			
 			// Set the 2nd step: Write the command to "Must change password flag on".
-			NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1, 'dsmod.exe user "' + dn + '" -mustchpwd yes');
+			c :=  'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -mustchpwd yes';
+			AddRecordToTableAad(actionSha1, c);
 			
 			if IsAccountLockedout(dn) = true then
+			begin
 				// If the account is locked out, use DSMOD USER <dn> -disabled no to unlock.
-				NewTableAadAdd(recId, VALID_ACTIVE, curAction, actionSha1,'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -disabled no');
+				c :=  'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -disabled no';
+				AddRecordToTableAad(actionSha1, c);
+			end;
 			
 			// Execute all actions in table AAD for password resets
-			ActionResetProcess(curAction, recId, actionSha1);
+			//ActionResetProcess(curAction, recId, actionSha1);
+			TableAadProcessActions(actionSha1);
 
 			// Check all records that are processed for a correct execution
 			ActionResetCheck(curAction, recId, actionSha1);
