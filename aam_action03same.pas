@@ -50,7 +50,7 @@ const
 
 implementation
 
-
+{
 procedure ProcessNewActions(curAction: integer; recId: integer);
 var
 	qs: Ansistring;
@@ -103,7 +103,7 @@ begin
 	end;
 	rs.Free;
 end; // of procedure ProcessNewActions
-
+}
 
 procedure TableAsmSetStatus(recId: integer; newStatus: integer);
 //
@@ -125,7 +125,6 @@ end; // of procedure TableAsmSetStatus
 
 
 procedure ActionSameCheck(uniqueActionCode: string; recId: integer);
-//procedure ProcessActionCheck(curAction: integer; recId: integer);	
 var
 	qs: Ansistring;
 	rs: TSQLQuery;

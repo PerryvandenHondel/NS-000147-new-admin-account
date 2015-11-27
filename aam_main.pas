@@ -74,6 +74,7 @@ begin
 	//	WriteLn(GenerateUniqueActionNumber(2));
 	//end;
 	//TableAadCheckNew('e683e4c327ce4486dc06ef934589668ebf919b00', 994);
+	WriteLn(GenerateUniqueActionNumber(1));
 end; // of procedure ProgTest
 
 

@@ -164,7 +164,7 @@ var
 	
 function FixNum(const s: string): string;
 function FixStr(const s: string): string;
-function GenerateSha1(): string;
+//function GenerateSha1(): string;
 function GenerateUniqueActionNumber(actionNumber: integer): Ansistring; // Same as a SHA1 code of 40 chars in length
 procedure AddRecordToTableAad(actionSha1: Ansistring; command: Ansistring);
 procedure DatabaseClose();
@@ -310,7 +310,10 @@ const
 var
 	i: integer;
 	sValidChars: string;
-	r: string;				// Return value
+	generatedActionCode: string;				// Return value
+	qs: Ansistring;
+	rs: TSQLQuery;
+	returnActionCode: string;
 begin
 	// List of valid chars. Pick one at a time.
 	//ValidChars := 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz';
@@ -320,39 +323,45 @@ begin
 	// Initialize the random number generator.
 	Randomize;
 	
-	r := '';
+	generatedActionCode := '';
 	for i := 1 to MAX_LENGTH do
 	begin
 		//WriteLn(i, TAB, sValidChars[Random(Length(sValidChars))+1]);
-		r := r + sValidChars[Random(Length(sValidChars))+1]
+		generatedActionCode := generatedActionCode + sValidChars[Random(Length(sValidChars))+1];
 	end; // of for
-	GenerateUniqueActionNumber := NumberAlign(actionNumber, 2) + r;
+	generatedActionCode := NumberAlign(actionNumber, 2) + generatedActionCode;
+	
+	//SELECT DISTINCT aad_action_sha1
+	//FROM account_action_do_aad
+	//ORDER BY aad_action_sha1;
+	// Search for the generated generatedActionCode
+	qs := 'SELECT DISTINCT ' + FLD_AAD_ACTION_SHA1;
+	qs := qs + ' FROM ' + TBL_AAD;
+	qs := qs + ' WHERE ' + FLD_AAD_ACTION_SHA1 + '=' + EncloseSingleQuote(generatedActionCode);
+	
+	//WriteLn(qs);
+	
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+
+	if rs.EOF = true then
+	begin
+		//WriteLn('GenerateUniqueActionNumber(): ', generatedActionCode, ' is not found in the table ', TBL_AAD);
+		returnActionCode := generatedActionCode;
+	end
+	else
+	begin
+		// The generatedActionCode is found, generate another one using the function recursively
+		//WriteLn('GenerateUniqueActionNumber(): ', generatedActionCode, ' is found in the table ', TBL_AAD, ' generating another one');
+		returnActionCode := GenerateUniqueActionNumber(actionNumber);
+	end;
+	rs.Free;
+	
+	GenerateUniqueActionNumber := returnActionCode;
 end; // of function GenerateUniqueActionNumber
-
-
-function GenerateSha1(): string;
-const
-	MAX_LENGTH = 40;
-var
-	i: integer;
-	sValidChars: string;
-	r: string;				// Return value
-begin
-	// List of valid chars. Pick one at a time.
-	//ValidChars := 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz';
-	sValidChars := '0123456789abcdef';
-	
-	// Initialize the random number generator.
-	Randomize;
-	
-	r := '';
-	for i := 1 to MAX_LENGTH do
-	begin
-		//WriteLn(i, TAB, sValidChars[Random(Length(sValidChars))+1]);
-		r := r + sValidChars[Random(Length(sValidChars))+1]
-	end; // of for
-	GenerateSha1 := r;
-end; // of function GenerateSha1
 
 
 procedure UpdateAadErrorLevel(recId: integer; errorLevel: integer);
