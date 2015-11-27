@@ -29,7 +29,7 @@ const
 	VALID_ACTIVE = 				9;						
 		// Only process records with _is_active = 9. 0 = inactive, 1 = active, 9 = development records
 	
-	SLEEP_NEXT_ACTION = 		400;
+	SLEEP_NEXT_ACTION = 		1500;
 		// Sleep time before next action during processing, 1000 = 1 second.
 									
 	MAIL_FROM = 				'noreply@ns.nl';
