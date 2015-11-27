@@ -165,7 +165,7 @@ var
 function FixNum(const s: string): string;
 function FixStr(const s: string): string;
 function GenerateSha1(): string;
-function GenerateUniqueActionNumber(actionNumber: integer): Ansistring;
+function GenerateUniqueActionNumber(actionNumber: integer): Ansistring; // Same as a SHA1 code of 40 chars in length
 procedure AddRecordToTableAad(actionSha1: Ansistring; command: Ansistring);
 procedure DatabaseClose();
 procedure DatabaseOpen();
@@ -316,6 +316,7 @@ begin
 	//ValidChars := 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz';
 	sValidChars := '0123456789abcdef';
 	
+	Sleep(10);
 	// Initialize the random number generator.
 	Randomize;
 	

@@ -12,7 +12,7 @@
 //
 
 
-unit aam_action_new;
+unit aam_action01new;
 
 
 {$MODE OBJFPC}
@@ -33,7 +33,7 @@ uses
 
 procedure DoActionNew(curAction: integer);			// Add new actions to the table AAD for password resets
 function DoesAccountExist(dn: string): boolean;
-
+procedure TableAadCheckNew(actionSha1: string; recId: integer);
 
 implementation
 
@@ -317,8 +317,9 @@ var
 	rs: TSQLQuery;
 	errorLevel: integer;
 	allSuccesFull: boolean;
+	cmd: Ansistring;
 begin
-	qs := 'SELECT ' + FLD_AAD_EL;
+	qs := 'SELECT ' + FLD_AAD_EL + ',' + FLD_AAD_CMD;
 	qs := qs + ' FROM ' + TBL_AAD;
 	qs := qs + ' WHERE ' + FLD_AAD_ACTION_SHA1 + '=' + EncloseSingleQuote(actionSha1);
 	qs := qs + ';';
@@ -335,17 +336,23 @@ begin
 		WriteLn('TableAadCheckNew(): No records found with ActionSha1: ', actionSha1)
 	else
 	begin
+		WriteLn('TableAadCheckNew(): Checking all action for ActionSha1: ', actionSha1);
 		while not rs.EOF do
 		begin
 			errorLevel := rs.FieldByName(FLD_AAD_EL).AsInteger;
+			cmd := rs.FieldByName(FLD_AAD_CMD).AsString;
+			WriteLn('  ', cmd, ' >>ERRORLEVEL=', errorLevel);
 			if errorLevel <> 0 then
 			begin
+				WriteLn('    ***FAILED***');
 				allSuccesFull := false; // Not all steps where successful
 			end;
 			rs.Next;
 		end;
 	end;
 	rs.Free;
+	
+	WriteLn('TableAadCheckNew() allSuccessFull=', allSuccesFull);
 	
 	if allSuccesFull = false then
 		TableAnwSetStatus(recId, 99) // failure during execution of command lines

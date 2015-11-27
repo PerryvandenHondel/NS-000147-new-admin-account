@@ -45,6 +45,7 @@ const
 	FLD_ATV_MNAME = 			'atv_mname'; 
 	FLD_ATV_LNAME = 			'atv_lname'; // sn
 	FLD_ATV_MAIL = 				'atv_mail';
+	FLD_ATV_UAC = 				'atv_uac';
 	FLD_ATV_CREATED = 			'atv_created';
 	FLD_ATV_RLU = 				'atv_rlu';
 
@@ -76,13 +77,18 @@ begin
 end; // of procedure DeleteObsoleteRecords
 
 	
-procedure RecordAddAccount(dn: string; fname: string; lname: string; upn: string; sam: string; mail: string; created: string);
+procedure RecordAddAccount(dn: string; fname: string; lname: string; upn: string; sam: string; mail: string; created: string; uac: string);
 //
 //	Add a new record to the table when it does not exist yet, key = dn.
 //	
-//		dn:		Distinguished Name of the object
-//		fname:	First name
-//		lname:	Last name
+//		dn:			Distinguished Name of the object
+//		fname:		First name
+//		lname:		Last name
+//		upn:		User Principal Name > fname.lname@domain.ext
+//		sam:		sAMAccountName
+//		mail:		E-mail address
+//		created: 	Date Time of creation 
+//		uac:		User Account Control value
 //
 var
 	qs: string;
@@ -91,16 +97,7 @@ var
 	id: integer;
 	rs: TSQLQuery; // Uses SqlDB
 begin
-	//WriteLn('RecordAddAccount(): ', dn); 
-	{
-	if Pos('NSA_Venu.Reddy', dn) > 0 then
-	begin
-		WriteLn('*** VENU REDDY DN found!');
-	end;
-	}
-	
 	upn := LowerCase(upn);
-	
 	mail := LowerCase(mail);
 
 	qs := 'SELECT ' + FLD_ATV_ID + ' ';
@@ -130,12 +127,12 @@ begin
 		end; // of if
 		
 		qi := qi + FLD_ATV_LNAME + '=' + FixStr(lname) + ',';
-		
 		qi := qi + FLD_ATV_IS_ACTIVE + '=1,';
 		qi := qi + FLD_ATV_UPN + '=' + FixStr(upn) + ',';
 		qi := qi + FLD_ATV_SAM + '=' + FixStr(sam) + ',';
 		qi := qi + FLD_ATV_MAIL + '=' + FixStr(mail) + ',';
 		qi := qi + FLD_ATV_CREATED + '=' + FixStr(created) + ',';
+		qi := qi + FLD_ATV_UAC + '=' + uac + ',';
 		qi := qi + FLD_ATV_RLU + '=' + EncloseSingleQuote(DateTimeToStr(updateDateTime)) + ';';
 		//WriteLn(qi);
 		RunQuery(qi);
@@ -162,6 +159,7 @@ begin
 		qu := qu + FLD_ATV_SAM + '=' + FixStr(sam) + ',';
 		qu := qu + FLD_ATV_MAIL + '=' + FixStr(mail) + ',';
 		qu := qu + FLD_ATV_CREATED + '=' + FixStr(created) + ',';
+		qu := qu + FLD_ATV_UAC + '=' + uac + ',';
 		qu := qu + FLD_ATV_RLU + '=' + EncloseSingleQuote(DateTimeToStr(updateDateTime)) + ' ';
 		qu := qu + 'WHERE ' + FLD_ATV_ID + '=' + IntToStr(id) + ';';
 		//WriteLn(qu);
@@ -230,9 +228,8 @@ begin
 	
 	c := 'adfind.exe ';
 	c := c + '-b "' + ou + ',' + rootDse + '" ';
-	//c := c + '-f "sAMAccountName=*_*" ';
 	c := c + '-f "(&(objectCategory=person)(objectClass=user))" ';
-	c := c + 'sAMAccountName givenName sn userPrincipalName mail whenCreated ';
+	c := c + 'sAMAccountName givenName sn userPrincipalName mail userAccountControl whenCreated ';
 	c := c + '-csv -nocsvq -csvdelim ; ';
 	// Convert the whenCreated AD datetime to readable format.
 	c := c + '-tdcgt -tdcfmt "%YYYY%-%MM%-%DD% %HH%:%mm%:%ss%"';
@@ -265,25 +262,12 @@ begin
 		
 		WriteLn(i: 4, ': ', dn);
 		Inc(i);
-		{
-		p := Pos('nsa_venu.', dn);
-		WriteLn('   ', p);
-		if p > 0 then
-		begin
-			WriteLn('VENU REDDY FOUND!');
-			Sleep(5000);
-		end;
-		}
 		if IsValidAdminAccount(dn) = true then
 		begin
-			//dn;sAMAccountName;givenName;sn;userPrincipalName
-			//WriteLn('  ', dn);
-			RecordAddAccount(dn, csv.GetValue('givenName'), csv.GetValue('sn'), csv.GetValue('userPrincipalName'), csv.GetValue('sAMAccountName'), csv.GetValue('mail'), csv.GetValue('whenCreated'));
-			//WriteLn('dn=', dn);
+			RecordAddAccount(dn, csv.GetValue('givenName'), csv.GetValue('sn'), csv.GetValue('userPrincipalName'), csv.GetValue('sAMAccountName'), csv.GetValue('mail'), csv.GetValue('whenCreated'), csv.GetValue('userAccountControl'));
 		end; // of if
     until csv.GetEof();
 	csv.CloseFile();
-
 	csv.Free;
 end; // of procedure ProcessSingleActiveDirectory
 

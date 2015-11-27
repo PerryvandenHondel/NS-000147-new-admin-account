@@ -47,9 +47,9 @@ uses
 	USupportLibrary,
 	SqlDB,
 	aam_global,
-	aam_action_new,					// ACTION 1: Create a new account
-	aam_action_reset,				// ACTION 2: Reset a password
-	aam_action_same;				// Action 03: Make the groups the same
+	aam_action01new,				// ACTION 1: Create a new account
+	aam_action02reset,				// ACTION 2: Reset a password
+	aam_action03same;				// Action 03: Make the groups the same of an account
 	
 const
 	STEP_MOD = 					27;
@@ -69,8 +69,11 @@ begin
 	//WriteLn(IsAccountLockedOut('CN=NSA_Perry.vdHondel,OU=NSA,OU=Beheer,DC=prod,DC=ns,DC=nl'));
 	//WriteLn(DoesAccountExist('CN=NSA_Perry.vdHondel,OU=NSA,OU=Beheer,DC=prod,DC=ns,DC=nl'));
 	//WriteLn(DoesAccountExist('CN=KPN_Clint.Eastwood,OU=KPN,OU=Beheer,DC=test,DC=ns,DC=nl'));
-	for i := 1 to 10 do
-		WriteLn(GenerateSha1());
+	//for i := 1 to 100 do
+	//begin
+	//	WriteLn(GenerateUniqueActionNumber(2));
+	//end;
+	//TableAadCheckNew('e683e4c327ce4486dc06ef934589668ebf919b00', 994);
 end; // of procedure ProgTest
 
 

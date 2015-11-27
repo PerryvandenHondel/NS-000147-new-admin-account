@@ -10,7 +10,7 @@
 //
 
 
-unit aam_action_reset;
+unit aam_action02reset;
 
 
 {$MODE OBJFPC}
