@@ -1,6 +1,6 @@
 //
 //	PROGRAM
-//		NAA
+//		UPDATE_TABLES.EXE
 //
 //	SUB
 //		Read AD and fill database tables with the latest account information
@@ -49,9 +49,15 @@ const
 	FLD_ATV_CREATED = 			'atv_created';
 	FLD_ATV_RLU = 				'atv_rlu';
 
+	TBL_ADD = 					'account_domain_dc_add';
+	FLD_ADD_ID = 				'add_id';
+	FLD_ADD_ADM_ID = 			'add_adm_id';
+	FLD_ADD_FQDN = 				'add_fqdn';
+	
 
 var
 	updateDateTime: TDateTime;
+	flagRealLogon: boolean;
 
 
 procedure ChangeStatusObsoleteRecord(updateDateTime: TDateTime);
@@ -65,18 +71,7 @@ begin
 	RunQuery(qu);
 end; // of procedure ChangeStatusObsoleteRecord
 
-	
-procedure DeleteObsoleteRecords(updateDateTime: TDateTime);
-var
-	qu: string;
-begin
-	qu := 'DELETE FROM ' + TBL_ATV + ' ';
-	qu := qu + 'WHERE ' + FLD_ATV_RLU + '<' + EncloseSingleQuote(DateTimeToStr(updateDateTime)) + ';';
-	WriteLn(qu);
-	RunQuery(qu);
-end; // of procedure DeleteObsoleteRecords
 
-	
 procedure RecordAddAccount(dn: string; fname: string; lname: string; upn: string; sam: string; mail: string; created: string; uac: string);
 //
 //	Add a new record to the table when it does not exist yet, key = dn.
@@ -316,14 +311,176 @@ begin
 	rs.Free;
 end; // of procedure ProcessAllAds()
 
+{
+	TBL_ADD = 					'account_domain_dc_add';
+	FLD_ADD_ID = 				'add_id';
+	FLD_ADD_ADM_ID = 			'add_adm_id';
+	FLD_ADD_FQDN = 				'add_fqdn';
+}
+procedure AddRecordToTableAdd(domainId: integer; fqdn: Ansistring);
+var
+	qi: Ansistring;
+begin
+	qi := 'INSERT INTO ' + TBL_ADD + ' ' ;
+	qi := qi + 'SET ' + FLD_ADD_FQDN + '=' + EncloseSingleQuote(fqdn) + ',';
+	qi := qi + FLD_ADD_ADM_ID + '=' + IntToStr(domainId) + ';';
+	RunQuery(qi);
+end;
+
+
+procedure FindAllDcsForOneDomain(domainId: integer; rootDse: Ansistring);
+var
+	path: Ansistring;
+	f: TextFile;
+	line: Ansistring;
+	c: Ansistring;
+	el: integer;
+begin
+	path := SysUtils.GetTempFileName();
+	
+	// Delete any existing file.
+	DeleteFile(path);
+	
+	c := 'adfind.exe ';
+	c := c + '-b ' + EncloseDoubleQuote(rootDse) + ' ';
+	c := c + '-sc dclist>' + path;
+	WriteLn(c);
+	
+	el := RunCommand(c);
+	// Open the text file and read the lines from it.
+	Assign(f, path);
+	
+	{I+}
+	Reset(f);
+	repeat
+		ReadLn(f, line);
+		Writeln(domainId, ': ', line);
+		AddRecordToTableAdd(domainId, line);
+	until Eof(f);
+	Close(f);
+	
+	SysUtils.DeleteFile(path);
+	
+	
+	
+	
+end;
+
+
+procedure FillTableAdd();
+var
+	qs: Ansistring;
+	rs: TSQLQuery;		// Uses SqlDB
+	domainId: integer;
+	rootDse: Ansistring;
+begin
+	// Clean all records from the DC table ADD
+	RunQuery('TRUNCATE TABLE ' +  TBL_ADD+ ';');
+	
+	qs := 'SELECT ' + FLD_ADM_ID + ',' + FLD_ADM_ROOTDSE + ' ';
+	qs := qs + 'FROM ' + TBL_ADM + ' ';
+	qs := qs + 'WHERE ' + FLD_ADM_IS_ACTIVE + '=1';
+	qs := qs + ';';
+
+	WriteLn(qs);
+	
+	
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+
+	if rs.EOF = true then
+		WriteLn('No records found!')
+	else
+	begin
+		while not rs.EOF do
+		begin
+			domainId := rs.FieldByName(FLD_ADM_ID).AsInteger;
+			rootDse := rs.FieldByName(FLD_ADM_ROOTDSE).AsString;
+			
+			WriteLn(domainId, ': ', rootDse);
+			
+			FindAllDcsForOneDomain(domainId, rootDse);
+			
+			
+			rs.Next;
+		end;
+	end;
+	rs.Free;
+end;
+
+
+procedure CalculateRealLogon(recId: integer; dn: Ansistring);
+begin
+	WriteLn('Calculate real logon for ', recId, ': ', dn);
+end;
+
+
+
+procedure FindRecordsRealLogon();
+var
+	qs: Ansistring;
+	rs: TSQLQuery;		// Uses SqlDB
+begin
+	qs := 'SELECT ' + FLD_ATV_ID + ',' + FLD_ATV_DN + ' ';
+	qs := qs + 'FROM ' + TBL_ATV + ' ';
+	qs := qs + 'WHERE ' +  FLD_ATV_IS_ACTIVE + '=1;';
+	
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+
+	if rs.EOF = true then
+		WriteLn('No records found!')
+	else
+	begin
+		while not rs.EOF do
+		begin
+			CalculateRealLogon(rs.FieldByName(FLD_ATV_ID).AsInteger, rs.FieldByName(FLD_ATV_DN).AsString);
+			rs.Next;
+		end;
+	end;
+	rs.Free;
+end;
+
+
+procedure ProgramUsage();
+begin
+	WriteLn('Usage:');
+	WriteLn('  ' + ParamStr(0) + ' <option>');
+	WriteLn;
+	WriteLn('Options:');
+	WriteLn('	--real-logon		Calculate the real logon timestamp by connecting all DC''s in the domain');
+	WriteLn('	--help				The help information');
+	WriteLn;
+	Halt(0);
+end;
+
 
 begin
+	flagRealLogon := false;
+	if ParamCount = 1 then
+	
+	case ParamStr(1) of
+		'--real-logon': flagRealLogon := true;
+		'--help': ProgramUsage();
+	end;
+
+	WriteLn('Calculate the real last logon per account: ', flagRealLogon);
+	
 	updateDateTime := Now();
 	DatabaseOpen();
-	ProcessAllActiveDirectories();
-	//DeleteObsoleteRecords(updateDateTime);
-	ChangeStatusObsoleteRecord(updateDateTime);
-	//WriteLn(IsValidAdminAccount('CN=NSA_Jan.vEngelen,OU=NSA,OU=Beheer,DC=test,DC=ns,DC=nl'));
-	//WriteLn(IsValidAdminAccount('CN=SVC_JkfSqlAgentT,OU=Users,OU=Beheer,DC=test,DC=ns,DC=nl'));
+	//ProcessAllActiveDirectories();
+	//ChangeStatusObsoleteRecord(updateDateTime);
+	if flagRealLogon = true then
+	begin
+		FillTableAdd();
+		FindRecordsRealLogon();
+	end;
+	
 	DatabaseClose();
 end.  // of program NaaUpdateTables
