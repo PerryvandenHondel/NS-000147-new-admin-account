@@ -36,6 +36,7 @@ const
 	TBL_ATV = 					'account_active_atv';
 	FLD_ATV_ID = 				'atv_id';
 	FLD_ATV_IS_ACTIVE = 		'atv_is_active';
+	FLD_ATV_ADM_ID = 			'atv_adm_id';
 	FLD_ATV_APS_ID = 			'atv_person_aps_id'; // APS_ID
 	FLD_ATV_DN = 				'atv_dn';
 	FLD_ATV_SORT = 				'atv_sort';
@@ -46,6 +47,7 @@ const
 	FLD_ATV_LNAME = 			'atv_lname'; // sn
 	FLD_ATV_MAIL = 				'atv_mail';
 	FLD_ATV_UAC = 				'atv_uac';
+	FLD_ATV_REAL_LAST_LOGON = 	'atv_real_last_logon';
 	FLD_ATV_CREATED = 			'atv_created';
 	FLD_ATV_RLU = 				'atv_rlu';
 
@@ -72,10 +74,36 @@ begin
 end; // of procedure ChangeStatusObsoleteRecord
 
 
-procedure RecordAddAccount(dn: string; fname: string; lname: string; upn: string; sam: string; mail: string; created: string; uac: string);
+function GetDomainIdFromRootDse(rootDse: Ansistring): integer;
+var
+	qs: string;
+	rs: TSQLQuery; // Uses SqlDB
+	returnValue: integer;
+begin
+	qs := 'SELECT ' + FLD_ADM_ID + ' ';
+	qs := qs + 'FROM ' + TBL_ADM + ' ';
+	qs := qs + 'WHERE ' + FLD_ADM_ROOTDSE + '=' + EncloseSingleQuote(rootDse) + ';';
+	
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+
+	if rs.Eof = true then
+		returnValue := 0
+	else
+		returnValue := rs.FieldByName(FLD_ADM_ID).AsInteger;
+		
+	GetDomainIdFromRootDse := returnValue;
+end;
+
+
+procedure RecordAddAccount(domainId: integer; dn: string; fname: string; lname: string; upn: string; sam: string; mail: string; created: string; uac: string);
 //
 //	Add a new record to the table when it does not exist yet, key = dn.
 //	
+//		domainId:	Unique record number of the domain in table ADM
 //		dn:			Distinguished Name of the object
 //		fname:		First name
 //		lname:		Last name
@@ -122,6 +150,7 @@ begin
 		end; // of if
 		
 		qi := qi + FLD_ATV_LNAME + '=' + FixStr(lname) + ',';
+		qi := qi + FLD_ATV_ADM_ID + '=' + IntToStr(domainId) + ',';
 		qi := qi + FLD_ATV_IS_ACTIVE + '=1,';
 		qi := qi + FLD_ATV_UPN + '=' + FixStr(upn) + ',';
 		qi := qi + FLD_ATV_SAM + '=' + FixStr(sam) + ',';
@@ -149,7 +178,7 @@ begin
 		
 		
 		qu := qu + FLD_ATV_LNAME + '=' + FixStr(lname) + ',';
-		
+		qu := qu + FLD_ATV_ADM_ID + '=' + IntToStr(domainId) + ',';
 		qu := qu + FLD_ATV_UPN + '=' + FixStr(upn) + ',';
 		qu := qu + FLD_ATV_SAM + '=' + FixStr(sam) + ',';
 		qu := qu + FLD_ATV_MAIL + '=' + FixStr(mail) + ',';
@@ -196,8 +225,8 @@ begin
 	end; // of for
 	IsValidAdminAccount := r;
 end; // of function IsValidAdminAccount
-	
-	
+
+
 procedure ProcessSingleActiveDirectory(rootDse: string; domainNt: string; ou: string);
 //
 //	Process a single AD domain.
@@ -209,9 +238,14 @@ var
 	f: string;
 	dn: string;
 	i: integer;
-	p: integer;
+	//p: integer;
+	domainId: integer;
 begin
 	WriteLn('ProcessSingleActiveDirectory()');
+	
+	domainId := GetDomainIdFromRootDse(rootDse);
+	WriteLn('  Domain ID=', domainId);
+	
 	
 	i := 2;  // Start at line 2 with data, line 1 is the header
 	
@@ -259,7 +293,7 @@ begin
 		Inc(i);
 		if IsValidAdminAccount(dn) = true then
 		begin
-			RecordAddAccount(dn, csv.GetValue('givenName'), csv.GetValue('sn'), csv.GetValue('userPrincipalName'), csv.GetValue('sAMAccountName'), csv.GetValue('mail'), csv.GetValue('whenCreated'), csv.GetValue('userAccountControl'));
+			RecordAddAccount(domainId, dn, csv.GetValue('givenName'), csv.GetValue('sn'), csv.GetValue('userPrincipalName'), csv.GetValue('sAMAccountName'), csv.GetValue('mail'), csv.GetValue('whenCreated'), csv.GetValue('userAccountControl'));
 		end; // of if
     until csv.GetEof();
 	csv.CloseFile();
@@ -311,12 +345,7 @@ begin
 	rs.Free;
 end; // of procedure ProcessAllAds()
 
-{
-	TBL_ADD = 					'account_domain_dc_add';
-	FLD_ADD_ID = 				'add_id';
-	FLD_ADD_ADM_ID = 			'add_adm_id';
-	FLD_ADD_FQDN = 				'add_fqdn';
-}
+
 procedure AddRecordToTableAdd(domainId: integer; fqdn: Ansistring);
 var
 	qi: Ansistring;
@@ -334,7 +363,6 @@ var
 	f: TextFile;
 	line: Ansistring;
 	c: Ansistring;
-	el: integer;
 begin
 	path := SysUtils.GetTempFileName();
 	
@@ -344,9 +372,10 @@ begin
 	c := 'adfind.exe ';
 	c := c + '-b ' + EncloseDoubleQuote(rootDse) + ' ';
 	c := c + '-sc dclist>' + path;
-	WriteLn(c);
+	//WriteLn(c);
 	
-	el := RunCommand(c);
+	RunCommand(c);
+	
 	// Open the text file and read the lines from it.
 	Assign(f, path);
 	
@@ -354,16 +383,12 @@ begin
 	Reset(f);
 	repeat
 		ReadLn(f, line);
-		Writeln(domainId, ': ', line);
+		//Writeln(domainId, ': ', line);
 		AddRecordToTableAdd(domainId, line);
 	until Eof(f);
 	Close(f);
 	
 	SysUtils.DeleteFile(path);
-	
-	
-	
-	
 end;
 
 
@@ -381,9 +406,7 @@ begin
 	qs := qs + 'FROM ' + TBL_ADM + ' ';
 	qs := qs + 'WHERE ' + FLD_ADM_IS_ACTIVE + '=1';
 	qs := qs + ';';
-
-	WriteLn(qs);
-	
+	//WriteLn(qs);
 	
 	rs := TSQLQuery.Create(nil);
 	rs.Database := gConnection;
@@ -400,10 +423,9 @@ begin
 			domainId := rs.FieldByName(FLD_ADM_ID).AsInteger;
 			rootDse := rs.FieldByName(FLD_ADM_ROOTDSE).AsString;
 			
-			WriteLn(domainId, ': ', rootDse);
+			//WriteLn(domainId, ': ', rootDse);
 			
 			FindAllDcsForOneDomain(domainId, rootDse);
-			
 			
 			rs.Next;
 		end;
@@ -412,9 +434,81 @@ begin
 end;
 
 
-procedure CalculateRealLogon(recId: integer; dn: Ansistring);
+function CalculateRealLogon(recId: integer; dn: Ansistring): TDateTime;
+var
+	qs: Ansistring;
+	rs: TSQLQuery;		// Uses SqlDB
+	c: Ansistring;
+	fqdn: Ansistring;
+	path: Ansistring;
+	f: TextFile;
+	line: Ansistring;
+	mostRecentLastLogon: TDateTime;
 begin
 	WriteLn('Calculate real logon for ', recId, ': ', dn);
+	
+	mostRecentLastLogon := StrToDateTime('1601-01-01 00:00:00');
+	
+	path := SysUtils.GetTempFileName(); // Path is C:\Users\<username>\AppData\Local\Temp\TMP00000.tmp
+	SysUtils.DeleteFile(path);
+	WriteLn('CalculateRealLogon(): path=', path);
+	
+	qs := 'SELECT ' + FLD_ADD_FQDN + ',' + FLD_ATV_DN + ' ';
+	qs := qs + 'FROM ' + TBL_ATV + ' ';
+	qs := qs + 'INNER JOIN ' + TBL_ADD + ' ON ' + FLD_ADD_ADM_ID + '=' + FLD_ATV_ADM_ID + ' ';
+	qs := qs + 'WHERE ' + FLD_ATV_DN + '=' + EncloseSingleQuote(dn) + ' ';
+	qs := qs + 'ORDER BY ' + FLD_ADD_FQDN + ';';
+	
+	WriteLn('    ', qs);
+	
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+	
+	if rs.EOF = true then
+		WriteLn('No records found!')
+	else
+	begin
+		while not rs.EOF do
+		begin
+			fqdn := rs.FieldByName(FLD_ADD_FQDN).AsString;
+			dn := rs.FieldByName(FLD_ATV_DN).AsString;
+			
+			// Obtain the lastLogon value per domain controller for a DN
+			c := 'adfind.exe -h ' + EncloseDoubleQuote(LowerCase(fqdn)) + ' ';
+			c := c + '-b ' + EncloseDoubleQuote(dn) + ' ';
+			c := c + 'lastLogon ';
+			c := c + '-csv -csvnoheader -tdcs -tdcsfmt "%YYYY%-%MM%-%DD% %HH%:%mm%:%ss%" ';
+			c := c + '-nodn ';
+			c := c + '-nocsvq ';
+			c := c + '>>' + path;
+			//WriteLn(c);
+			RunCommand(c);
+			
+			rs.Next;
+		end;
+	end;
+	rs.Free;
+	
+	// Open the text file and read the lines from it.
+	Assign(f, path);
+	
+	{I+}
+	Reset(f);
+	repeat
+		ReadLn(f, line);
+		WriteLn(line);
+		if (Length(line) > 0) and (line[1] <> '0') then
+			mostRecentLastLogon := GetMostRecent(mostRecentLastLogon, StrToDateTime(line));
+	until Eof(f);
+	Close(f);
+	
+	SysUtils.DeleteFile(path);
+	
+	
+	CalculateRealLogon := mostRecentLastLogon;
 end;
 
 
@@ -423,6 +517,9 @@ procedure FindRecordsRealLogon();
 var
 	qs: Ansistring;
 	rs: TSQLQuery;		// Uses SqlDB
+	mostRecentLastLogon: TDateTime;
+	qu: Ansistring;
+	recordId: integer;
 begin
 	qs := 'SELECT ' + FLD_ATV_ID + ',' + FLD_ATV_DN + ' ';
 	qs := qs + 'FROM ' + TBL_ATV + ' ';
@@ -440,7 +537,15 @@ begin
 	begin
 		while not rs.EOF do
 		begin
-			CalculateRealLogon(rs.FieldByName(FLD_ATV_ID).AsInteger, rs.FieldByName(FLD_ATV_DN).AsString);
+			recordId := rs.FieldByName(FLD_ATV_ID).AsInteger;
+			mostRecentLastLogon := CalculateRealLogon(recordId, rs.FieldByName(FLD_ATV_DN).AsString);
+			WriteLn(' >>Most recent last logon is: ', DateTimeToStr(mostRecentLastLogon));
+			
+			qu := 'UPDATE ' + TBL_ATV + ' ';
+			qu := qu + 'SET ' + FLD_ATV_REAL_LAST_LOGON + '=' + EncloseSingleQuote(DateTimeToStr(mostRecentLastLogon)) + ' ';
+			qu := qu + 'WHERE ' + FLD_ATV_ID + '=' + IntToStr(recordId) + ';';
+			WriteLn(qu);
+			RunQuery(qu);
 			rs.Next;
 		end;
 	end;
@@ -478,7 +583,7 @@ begin
 	//ChangeStatusObsoleteRecord(updateDateTime);
 	if flagRealLogon = true then
 	begin
-		FillTableAdd();
+		FillTableAdd(); // Fill the ADD (Account Domain DC's) with all DC's from a domain
 		FindRecordsRealLogon();
 	end;
 	
