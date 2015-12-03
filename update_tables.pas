@@ -5,7 +5,13 @@
 //	SUB
 //		Read AD and fill database tables with the latest account information
 //
-//
+//	Program flow:
+//		MAIN
+//			UpdateMaxPasswordAgeForEachDomain
+//				GetDomainMaxPasswordAge
+//			ProcessAllActiveDirectories();
+//			ChangeStatusObsoleteRecord();
+//					
 
 
 program update_tables;
@@ -16,7 +22,9 @@ program update_tables;
 
 
 uses
+	StrUtils,
 	SysUtils,
+	Process,
 	USupportLibrary,
 	UTextSeparated,
 	ODBCConn,
@@ -30,6 +38,7 @@ const
 	FLD_ADM_ID = 				'adm_id';
 	FLD_ADM_UPN_SUFF = 			'adm_upn_suffix';
 	FLD_ADM_DOM_NT = 			'adm_domain_nt';
+	FLD_ADM_MAX_PASSSWORD_AGE_SECS = 'adm_max_password_age_secs';
 	FLD_ADM_IS_ACTIVE = 		'adm_is_active';
 	FLD_ADM_OU = 				'adm_org_unit';
 	
@@ -48,6 +57,7 @@ const
 	FLD_ATV_MAIL = 				'atv_mail';
 	FLD_ATV_UAC = 				'atv_uac';
 	FLD_ATV_REAL_LAST_LOGON = 	'atv_real_last_logon';
+	FLD_ATV_PWD_LAST_SET = 		'atv_password_last_set';
 	FLD_ATV_CREATED = 			'atv_created';
 	FLD_ATV_RLU = 				'atv_rlu';
 
@@ -56,6 +66,7 @@ const
 	FLD_ADD_ADM_ID = 			'add_adm_id';
 	FLD_ADD_FQDN = 				'add_fqdn';
 	
+	SECONDS_PER_DAY = 			86400;
 
 var
 	updateDateTime: TDateTime;
@@ -99,7 +110,7 @@ begin
 end;
 
 
-procedure RecordAddAccount(domainId: integer; dn: string; fname: string; lname: string; upn: string; sam: string; mail: string; created: string; uac: string);
+procedure RecordAddAccount(domainId: integer; dn: string; fname: string; lname: string; upn: string; sam: string; mail: string; created: string; uac: string; pwdLastSet: string);
 //
 //	Add a new record to the table when it does not exist yet, key = dn.
 //	
@@ -156,6 +167,7 @@ begin
 		qi := qi + FLD_ATV_SAM + '=' + FixStr(sam) + ',';
 		qi := qi + FLD_ATV_MAIL + '=' + FixStr(mail) + ',';
 		qi := qi + FLD_ATV_CREATED + '=' + FixStr(created) + ',';
+		qi := qi + FLD_ATV_PWD_LAST_SET + '=' + FixStr(pwdLastSet) + ',';
 		qi := qi + FLD_ATV_UAC + '=' + uac + ',';
 		qi := qi + FLD_ATV_RLU + '=' + EncloseSingleQuote(DateTimeToStr(updateDateTime)) + ';';
 		//WriteLn(qi);
@@ -176,13 +188,13 @@ begin
 			qu := qu + FLD_ATV_FNAME + '=' + FixStr(fname) + ',';
 		end; // of if
 		
-		
 		qu := qu + FLD_ATV_LNAME + '=' + FixStr(lname) + ',';
 		qu := qu + FLD_ATV_ADM_ID + '=' + IntToStr(domainId) + ',';
 		qu := qu + FLD_ATV_UPN + '=' + FixStr(upn) + ',';
 		qu := qu + FLD_ATV_SAM + '=' + FixStr(sam) + ',';
 		qu := qu + FLD_ATV_MAIL + '=' + FixStr(mail) + ',';
 		qu := qu + FLD_ATV_CREATED + '=' + FixStr(created) + ',';
+		qu := qu + FLD_ATV_PWD_LAST_SET + '=' + FixStr(pwdLastSet) + ',';
 		qu := qu + FLD_ATV_UAC + '=' + uac + ',';
 		qu := qu + FLD_ATV_RLU + '=' + EncloseSingleQuote(DateTimeToStr(updateDateTime)) + ' ';
 		qu := qu + 'WHERE ' + FLD_ATV_ID + '=' + IntToStr(id) + ';';
@@ -256,16 +268,21 @@ begin
 	DeleteFile(f);
 	
 	c := 'adfind.exe ';
-	c := c + '-b "' + ou + ',' + rootDse + '" ';
-	c := c + '-f "(&(objectCategory=person)(objectClass=user))" ';
-	c := c + 'sAMAccountName givenName sn userPrincipalName mail userAccountControl whenCreated ';
-	c := c + '-csv -nocsvq -csvdelim ; ';
-	// Convert the whenCreated AD datetime to readable format.
-	c := c + '-tdcgt -tdcfmt "%YYYY%-%MM%-%DD% %HH%:%mm%:%ss%"';
+	c := c + '-b "' + ou + ',' + rootDse + '"';
+	c := c + ' ';
+	c := c + '-f "(&(objectCategory=person)(objectClass=user))"';
+	c := c + ' ';
+	c := c + 'sAMAccountName givenName sn userPrincipalName mail userAccountControl whenCreated pwdLastSet';
+	c := c + ' ';
+	c := c + '-csv -nocsvq -csvdelim ;';
+	c := c + ' ';
+	c := c + '-tdcgt -tdcfmt "%YYYY%-%MM%-%DD% %HH%:%mm%:%ss%"'; // Convert whenCreated
+	c := c + ' ';
+	c := c + '-tdcs -tdcsfmt "%YYYY%-%MM%-%DD% %HH%:%mm%:%ss%"'; // Convert lastlogonTimestamp, lockoutTime, pwdLastSet
 	c := c + '>' + f;
 	WriteLn(c);
 	
-	el := RunCommand(c);
+	el := USupportLibrary.RunCommand(c);
 	if el = 0 then
 	begin
 		WriteLn('File export done!');
@@ -289,15 +306,17 @@ begin
 		// dn;sAMAccountName;givenName;sn;userPrincipalName
 		dn := csv.GetValue('dn');
 		
-		WriteLn(i: 4, ': ', dn);
+		// Use one line to show the processed 
+		Write(i: 4, ': ', dn, #13);
 		Inc(i);
 		if IsValidAdminAccount(dn) = true then
 		begin
-			RecordAddAccount(domainId, dn, csv.GetValue('givenName'), csv.GetValue('sn'), csv.GetValue('userPrincipalName'), csv.GetValue('sAMAccountName'), csv.GetValue('mail'), csv.GetValue('whenCreated'), csv.GetValue('userAccountControl'));
+			RecordAddAccount(domainId, dn, csv.GetValue('givenName'), csv.GetValue('sn'), csv.GetValue('userPrincipalName'), csv.GetValue('sAMAccountName'), csv.GetValue('mail'), csv.GetValue('whenCreated'), csv.GetValue('userAccountControl'), csv.GetValue('pwdLastSet'));
 		end; // of if
     until csv.GetEof();
 	csv.CloseFile();
 	csv.Free;
+	WriteLn;
 end; // of procedure ProcessSingleActiveDirectory
 
 
@@ -316,7 +335,7 @@ begin
 	qs := qs + 'WHERE ' + FLD_ADM_IS_ACTIVE + '=1';
 	qs := qs + ';';
 
-	WriteLn(qs);
+	//WriteLn(qs);
 	
 	rs := TSQLQuery.Create(nil);
 	rs.Database := gConnection;
@@ -330,13 +349,10 @@ begin
 	begin
 		while not rs.EOF do
 		begin
-			//WriteLn(rs.FieldByName(FLD_CAA_DETAIL_ID).AsInteger);
-			//WriteLn(rs.FieldByName(FLD_CAA_FULLNAME).AsString);
-			
 			rootDse := rs.FieldByName(FLD_ADM_ROOTDSE).AsString;
 			domainNt := rs.FieldByName(FLD_ADM_DOM_NT).AsString;
 			ou := rs.FieldByName(FLD_ADM_OU).AsString;
-			
+
 			ProcessSingleActiveDirectory(rootDse, domainNt, ou);
 
 			rs.Next;
@@ -374,7 +390,7 @@ begin
 	c := c + '-sc dclist>' + path;
 	//WriteLn(c);
 	
-	RunCommand(c);
+	USupportLibrary.RunCommand(c);
 	
 	// Open the text file and read the lines from it.
 	Assign(f, path);
@@ -422,11 +438,7 @@ begin
 		begin
 			domainId := rs.FieldByName(FLD_ADM_ID).AsInteger;
 			rootDse := rs.FieldByName(FLD_ADM_ROOTDSE).AsString;
-			
-			//WriteLn(domainId, ': ', rootDse);
-			
 			FindAllDcsForOneDomain(domainId, rootDse);
-			
 			rs.Next;
 		end;
 	end;
@@ -447,20 +459,18 @@ var
 begin
 	WriteLn('Calculate real logon for ', recId, ': ', dn);
 	
+	// Initialize the most recent last logon date time with:
 	mostRecentLastLogon := StrToDateTime('1601-01-01 00:00:00');
 	
 	path := SysUtils.GetTempFileName(); // Path is C:\Users\<username>\AppData\Local\Temp\TMP00000.tmp
-	SysUtils.DeleteFile(path);
-	WriteLn('CalculateRealLogon(): path=', path);
+	SysUtils.DeleteFile(path); // Delete any file that might exists.
 	
 	qs := 'SELECT ' + FLD_ADD_FQDN + ',' + FLD_ATV_DN + ' ';
 	qs := qs + 'FROM ' + TBL_ATV + ' ';
 	qs := qs + 'INNER JOIN ' + TBL_ADD + ' ON ' + FLD_ADD_ADM_ID + '=' + FLD_ATV_ADM_ID + ' ';
 	qs := qs + 'WHERE ' + FLD_ATV_DN + '=' + EncloseSingleQuote(dn) + ' ';
 	qs := qs + 'ORDER BY ' + FLD_ADD_FQDN + ';';
-	
-	WriteLn('    ', qs);
-	
+
 	rs := TSQLQuery.Create(nil);
 	rs.Database := gConnection;
 	rs.PacketRecords := -1;
@@ -484,8 +494,7 @@ begin
 			c := c + '-nodn ';
 			c := c + '-nocsvq ';
 			c := c + '>>' + path;
-			//WriteLn(c);
-			RunCommand(c);
+			USupportLibrary.RunCommand(c);
 			
 			rs.Next;
 		end;
@@ -501,16 +510,17 @@ begin
 		ReadLn(f, line);
 		WriteLn(line);
 		if (Length(line) > 0) and (line[1] <> '0') then
+			// Only read the date time when
+			// - The length of the line is longer then 0.
+			// - The line does not start with a year 0.
 			mostRecentLastLogon := GetMostRecent(mostRecentLastLogon, StrToDateTime(line));
 	until Eof(f);
 	Close(f);
 	
 	SysUtils.DeleteFile(path);
 	
-	
 	CalculateRealLogon := mostRecentLastLogon;
 end;
-
 
 
 procedure FindRecordsRealLogon();
@@ -544,7 +554,7 @@ begin
 			qu := 'UPDATE ' + TBL_ATV + ' ';
 			qu := qu + 'SET ' + FLD_ATV_REAL_LAST_LOGON + '=' + EncloseSingleQuote(DateTimeToStr(mostRecentLastLogon)) + ' ';
 			qu := qu + 'WHERE ' + FLD_ATV_ID + '=' + IntToStr(recordId) + ';';
-			WriteLn(qu);
+			
 			RunQuery(qu);
 			rs.Next;
 		end;
@@ -553,6 +563,97 @@ begin
 end;
 
 
+function GetDomainMaxPasswordAge(rootDse: string): integer;
+//
+//	Get the maximum password age of an AD domain as defined in it's Domain Policy
+//
+//		rootDse:	Format: DC=domain,DC=ext
+//
+var
+	path: string;
+	p: TProcess;
+	f: TextFile;
+	line: string;
+	//r: longint;
+	rs: string;
+begin
+	//r := 0;
+
+	// Get a temp file to store the output of the adfind.exe command.
+	path := SysUtils.GetTempFileName(); // Path is C:\Users\<username>\AppData\Local\Temp\TMP00000.tmp
+	
+	p := TProcess.Create(nil);
+	p.Executable := 'cmd.exe'; 
+    p.Parameters.Add('/c adfind.exe -b ' + EncloseDoubleQuote(rootDse) + ' -s base maxPwdAge >' + path);
+	p.Options := [poWaitOnExit, poUsePipes, poStderrToOutPut];
+	p.Execute;
+	
+	// Open the text file and read the lines from it.
+	Assign(f, path);
+	
+	{I+}
+	Reset(f);
+	repeat
+		ReadLn(f, line);
+		if Pos('>maxPwdAge: ', line) > 0 then
+			rs := Trim(StringReplace(line, '>maxPwdAge: ', '', [rfIgnoreCase])); 
+	until Eof(f);
+	Close(f);
+	
+	// Delete the temp file
+	SysUtils.DeleteFile(path);
+	rs := ReplaceText(rs, '0000000', ''); 
+	rs := ReplaceText(rs, '-', '');
+	
+	GetDomainMaxPasswordAge := StrToInt(rs);
+end; // of GetDomainMaxPasswordAge
+
+
+procedure UpdateMaxPasswordAgeForEachDomain();
+var
+	qs: Ansistring;
+	rs: TSQLQuery;		// Uses SqlDB
+	domainId: integer;
+	rootDse: Ansistring;
+	maxPasswordAgeSecs: integer;
+	qu: Ansistring;
+begin
+	qs := 'SELECT ' + FLD_ADM_ID + ',' + FLD_ADM_ROOTDSE + ' ';
+	qs := qs + 'FROM ' + TBL_ADM + ' ';
+	qs := qs + 'WHERE ' + FLD_ADM_IS_ACTIVE + '=1';
+	qs := qs + ';';
+	//WriteLn(qs);
+	
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+
+	if rs.EOF = true then
+		WriteLn('No records found!')
+	else
+	begin
+		while not rs.EOF do
+		begin
+			domainId := rs.FieldByName(FLD_ADM_ID).AsInteger;
+			rootDse := rs.FieldByName(FLD_ADM_ROOTDSE).AsString;
+			
+			maxPasswordAgeSecs := GetDomainMaxPasswordAge(rootDse);
+			WriteLn(rootDse, ' maxPwdAge: ', maxPasswordAgeSecs, ' seconds');
+	
+			qu := 'UPDATE ' + TBL_ADM + ' ';
+			qu := qu + 'SET ' + FLD_ADM_MAX_PASSSWORD_AGE_SECS + '=' + IntToStr(maxPasswordAgeSecs) + ' ';
+			qu := qu + 'WHERE ' + FLD_ADM_ID + '=' + IntToStr(domainId) + ';';
+			
+			RunQuery(qu);
+			rs.Next;
+		end;
+	end;
+	rs.Free;
+end;
+
+	
 procedure ProgramUsage();
 begin
 	WriteLn('Usage:');
@@ -562,7 +663,6 @@ begin
 	WriteLn('	--real-logon		Calculate the real logon timestamp by connecting all DC''s in the domain');
 	WriteLn('	--help				The help information');
 	WriteLn;
-	Halt(0);
 end;
 
 
@@ -575,12 +675,19 @@ begin
 		'--help': ProgramUsage();
 	end;
 
-	WriteLn('Calculate the real last logon per account: ', flagRealLogon);
+	//WriteLn('Calculate the real last logon per account: ', flagRealLogon);
+	
 	
 	updateDateTime := Now();
 	DatabaseOpen();
-	//ProcessAllActiveDirectories();
-	//ChangeStatusObsoleteRecord(updateDateTime);
+	
+	// Update the max password age from each AD domain.
+	UpdateMaxPasswordAgeForEachDomain();
+	
+	// Get all information from accounts
+	ProcessAllActiveDirectories();
+	ChangeStatusObsoleteRecord(updateDateTime);
+	
 	if flagRealLogon = true then
 	begin
 		FillTableAdd(); // Fill the ADD (Account Domain DC's) with all DC's from a domain
