@@ -38,9 +38,47 @@ const
 	MAIL_BCC = 					'perry.vandenhondel@ns.nl';
 		// Default BCC of all e-mail send by this program
 
-	ACTION_NEW =	 			1;						// Create a new account
-	ACTION_RESET = 				2;						// Reset the password
-	ACTION_SAME = 				3;						// Make the group membership the same as a reference account.
+	TBL_ADM =										'account_domain_adm';
+	FLD_ADM_ROOTDSE = 								'adm_root_dse';
+	FLD_ADM_ID = 									'adm_id';
+	FLD_ADM_UPN_SUFF = 								'adm_upn_suffix';
+	FLD_ADM_DOM_NT = 								'adm_domain_nt';
+	FLD_ADM_MAX_PASSSWORD_AGE_SECS = 				'adm_max_password_age_secs';
+	FLD_ADM_MAX_PASSSWORD_AGE_DAYS = 				'adm_max_password_age_days';
+	FLD_ADM_PRE_ALERT_DAYS = 						'adm_pre_alert_days';
+	
+	FLD_ADM_IS_ACTIVE = 							'adm_is_active';
+	FLD_ADM_OU = 									'adm_org_unit';
+	
+	TBL_ATV = 										'account_active_atv';
+	FLD_ATV_ID = 									'atv_id';
+	FLD_ATV_IS_ACTIVE = 							'atv_is_active';
+	FLD_ATV_ADM_ID = 								'atv_adm_id';
+	FLD_ATV_APS_ID = 								'atv_person_aps_id'; // APS_ID
+	FLD_ATV_DN = 									'atv_dn';
+	FLD_ATV_SORT = 									'atv_sort';
+	FLD_ATV_UPN = 									'atv_upn';
+	FLD_ATV_SAM = 									'atv_sam';
+	FLD_ATV_FNAME = 								'atv_fname'; // givenName
+	FLD_ATV_MNAME = 								'atv_mname'; 
+	FLD_ATV_LNAME =						 			'atv_lname'; // sn
+	FLD_ATV_MAIL = 									'atv_mail';
+	FLD_ATV_UAC = 									'atv_uac';
+	FLD_ATV_UAC_ACCOUNTDISABLED = 					'atv_uac_accountdisabled';
+	FLD_ATV_UAC_NOT_DELEGATED = 					'atv_uac_not_delegated';
+	FLD_ATV_REAL_LAST_LOGON = 						'atv_real_last_logon';
+	FLD_ATV_PWD_LAST_SET = 							'atv_password_last_set';
+	FLD_ATV_CREATED = 								'atv_created';
+	FLD_ATV_RLU = 									'atv_rlu';
+
+	TBL_ADD =					 					'account_domain_dc_add';
+	FLD_ADD_ID = 									'add_id';
+	FLD_ADD_ADM_ID = 								'add_adm_id';
+	FLD_ADD_FQDN = 									'add_fqdn';
+		
+	ACTION_NEW =	 								1;						// Create a new account
+	ACTION_RESET = 									2;						// Reset the password
+	ACTION_SAME = 									3;						// Make the group membership the same as a reference account.
 	ACTION_UNLOCK = 			4;						// Unlock an account
 	ACTION_DISABLE = 			5;						// Disable an account
 	ACTION_DELETE = 			6;						// Delete an account
@@ -140,23 +178,22 @@ const
 	FLD_AAD_ACTION_ID =			'aad_action_id';
 	FLD_AAD_CMD = 				'aad_command';
 	FLD_AAD_EL = 				'aad_error_level';
-	//FLD_AAD_STATUS = 			'aad_status';
 	FLD_AAD_RCD = 				'aad_rcd';
 	FLD_AAD_RLU = 				'aad_rlu';
-	
-	TBL_ATV = 					'account_active_atv';
-	FLD_ATV_ID = 				'atv_id';
-	FLD_ATV_IS_ACTIVE = 		'atv_is_active';
-	FLD_ATV_APS_ID = 			'atv_person_aps_id'; // APS_ID
-	FLD_ATV_SORT = 				'atv_sort';
-	FLD_ATV_UPN = 				'atv_upn';
-	FLD_ATV_SAM = 				'atv_sam';
-	FLD_ATV_DN = 				'atv_dn';
-	FLD_ATV_MAIL = 				'atv_mail';
-	FLD_ATV_CREATED = 			'atv_created';
-	FLD_ATV_RLU = 				'atv_rlu';
-	
 
+	// ACCOUNT_INFORMED = AID
+	TBL_AID = 					'account_informed_aid';
+	FLD_AID_ID = 				'aid_id';
+	FLD_AID_IS_ACTIVE = 		'aid_is_active';
+	FLD_AID_APS_ID = 			'aid_aps_id'; 	// Person ID from APS
+	FLD_AID_ATV_ID = 			'aid_atv_id';	// Active Account ID (ATV_ID)
+	FLD_AID_MSG = 				'aid_message';
+	FLD_AID_MSG_TYPE =			'aid_message_type';
+	FLD_AID_INFORMED_ON = 		'aid_informed_on';
+	FLD_AID_RCD = 				'aid_rcd';
+	FLD_AID_RLU = 				'aid_rlu';
+	
+	
 var	
 	gConnection: TODBCConnection;               // uses ODBCConn
 	gTransaction: TSQLTransaction;  			// Uses SqlDB
@@ -511,6 +548,9 @@ end; // of procedure TableAadRemovePrevious
 
 
 function FixStr(const s: string): string;
+//
+// Fix the string value to be included in the query string
+//
 var
 	r: string;
 begin
@@ -529,6 +569,9 @@ end; // of function FixStr
 
 
 function FixNum(const s: string): string;
+//
+// Fix the number value to be included in the query string
+//
 var
 	r: string;
 	i: integer;
@@ -547,7 +590,7 @@ end; // of function FixNum
 
 procedure RunQuery(qryString: string);
 //
-//	Run a query 
+// Run a query 
 //
 var
 	q: TSQLQuery;
@@ -565,9 +608,9 @@ end; // of procedure RunQuery
 
 
 procedure DatabaseOpen();
-{
-	Open a DSN connection with name strDsnNew
-}
+//
+// Open a DSN connection with name strDsnNew
+//
 begin
 	WriteLn('DatabaseOpen(): Opening database using DSN: ',  DSN);
 	
@@ -581,6 +624,9 @@ end;
 
 
 procedure DatabaseClose();
+//
+// Close the database connection.
+//
 begin
 	//WriteLn('DatabaseClose(): Closing database DSN: ', DSN);
 	gTransaction.Free;

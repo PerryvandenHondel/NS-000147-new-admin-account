@@ -10,6 +10,7 @@
 //			UpdateMaxPasswordAgeForEachDomain
 //				GetDomainMaxPasswordAge
 //			ProcessAllActiveDirectories();
+//				ProcessSingleActiveDirectory();
 //			ChangeStatusObsoleteRecord();
 //					
 
@@ -33,40 +34,7 @@ uses
 	
 
 const
-	TBL_ADM =					'account_domain_adm';
-	FLD_ADM_ROOTDSE = 			'adm_root_dse';
-	FLD_ADM_ID = 				'adm_id';
-	FLD_ADM_UPN_SUFF = 			'adm_upn_suffix';
-	FLD_ADM_DOM_NT = 			'adm_domain_nt';
-	FLD_ADM_MAX_PASSSWORD_AGE_SECS = 'adm_max_password_age_secs';
-	FLD_ADM_IS_ACTIVE = 		'adm_is_active';
-	FLD_ADM_OU = 				'adm_org_unit';
-	
-	TBL_ATV = 					'account_active_atv';
-	FLD_ATV_ID = 				'atv_id';
-	FLD_ATV_IS_ACTIVE = 		'atv_is_active';
-	FLD_ATV_ADM_ID = 			'atv_adm_id';
-	FLD_ATV_APS_ID = 			'atv_person_aps_id'; // APS_ID
-	FLD_ATV_DN = 				'atv_dn';
-	FLD_ATV_SORT = 				'atv_sort';
-	FLD_ATV_UPN = 				'atv_upn';
-	FLD_ATV_SAM = 				'atv_sam';
-	FLD_ATV_FNAME = 			'atv_fname'; // givenName
-	FLD_ATV_MNAME = 			'atv_mname'; 
-	FLD_ATV_LNAME = 			'atv_lname'; // sn
-	FLD_ATV_MAIL = 				'atv_mail';
-	FLD_ATV_UAC = 				'atv_uac';
-	FLD_ATV_REAL_LAST_LOGON = 	'atv_real_last_logon';
-	FLD_ATV_PWD_LAST_SET = 		'atv_password_last_set';
-	FLD_ATV_CREATED = 			'atv_created';
-	FLD_ATV_RLU = 				'atv_rlu';
-
-	TBL_ADD =					 					'account_domain_dc_add';
-	FLD_ADD_ID = 									'add_id';
-	FLD_ADD_ADM_ID = 								'add_adm_id';
-	FLD_ADD_FQDN = 									'add_fqdn';
-	
-	SECONDS_PER_DAY = 								86400;
+	SECONDS_PER_DAY = 								86400;		// 24*60*60 = 86400
 
 	ADS_UF_SCRIPT =									1;        	// 0x1
 	ADS_UF_ACCOUNTDISABLE =							2;        	// 0x2
@@ -96,14 +64,12 @@ var
 	flagRealLogon: boolean;
 
 
-function IsUncFlagActive(uncValue: integer; uncFlag: integer): boolean;
-var
-	r: boolean;
+function IsUacFlagActive(uncValue: integer; uncFlag: integer): integer;
 begin
 	if (uncValue and uncFlag) = uncFlag then
-		r := true
+		IsUacFlagActive := 1
 	else
-		r := false;
+		IsUacFlagActive := 0;
 end;
 
 	
@@ -123,6 +89,8 @@ begin;
 		IsDisabled := true
 	else
 		IsDisabled := false;
+		
+	
 end; // of function IsDisabled
 	
 	
@@ -200,7 +168,8 @@ begin
 	rs.SQL.Text := qs;
 	rs.Open;
 
-	WriteLn(dn, ': ', IsUncFlagActive(unc, ADS_UF_ACCOUNTDISABLE));
+	//WriteLn;
+	//WriteLn(dn, ': ', BoolToStr(IsUacFlagActive(StrToInt(uac), ADS_UF_ACCOUNTDISABLE)));
 	
 	if rs.Eof = true then
 	begin
@@ -225,6 +194,8 @@ begin
 		qi := qi + FLD_ATV_CREATED + '=' + FixStr(created) + ',';
 		qi := qi + FLD_ATV_PWD_LAST_SET + '=' + FixStr(pwdLastSet) + ',';
 		qi := qi + FLD_ATV_UAC + '=' + uac + ',';
+		qi := qi + FLD_ATV_UAC_ACCOUNTDISABLED + '=' + IntToStr(IsUacFlagActive(StrToInt(uac), ADS_UF_ACCOUNTDISABLE)) + ',';
+		qi := qi + FLD_ATV_UAC_NOT_DELEGATED + '=' + IntToStr(IsUacFlagActive(StrToInt(uac), ADS_UF_NOT_DELEGATED)) + ',';
 		qi := qi + FLD_ATV_RLU + '=' + EncloseSingleQuote(DateTimeToStr(updateDateTime)) + ';';
 		//WriteLn(qi);
 		RunQuery(qi);
@@ -252,6 +223,8 @@ begin
 		qu := qu + FLD_ATV_CREATED + '=' + FixStr(created) + ',';
 		qu := qu + FLD_ATV_PWD_LAST_SET + '=' + FixStr(pwdLastSet) + ',';
 		qu := qu + FLD_ATV_UAC + '=' + uac + ',';
+		qu := qu + FLD_ATV_UAC_ACCOUNTDISABLED + '=' + IntToStr(IsUacFlagActive(StrToInt(uac), ADS_UF_ACCOUNTDISABLE)) + ',';
+		qu := qu + FLD_ATV_UAC_NOT_DELEGATED + '=' + IntToStr(IsUacFlagActive(StrToInt(uac), ADS_UF_NOT_DELEGATED)) + ',';
 		qu := qu + FLD_ATV_RLU + '=' + EncloseSingleQuote(DateTimeToStr(updateDateTime)) + ' ';
 		qu := qu + 'WHERE ' + FLD_ATV_ID + '=' + IntToStr(id) + ';';
 		//WriteLn(qu);
@@ -309,11 +282,11 @@ var
 	//p: integer;
 	domainId: integer;
 begin
+	WriteLn;
 	WriteLn('ProcessSingleActiveDirectory()');
 	
 	domainId := GetDomainIdFromRootDse(rootDse);
-	WriteLn('  Domain ID=', domainId);
-	
+	WriteLn('Domain ID=', domainId);
 	
 	i := 2;  // Start at line 2 with data, line 1 is the header
 	
@@ -353,13 +326,9 @@ begin
 	// dn;sAMAccountName;givenName;sn
 	csv.ReadHeader();
 	
-	//WriteLn('givenName is found at pos: ', csv.GetPosOfHeaderItem('givenName'));
-	
-	//WriteLn('Open file: ', csv.GetPath(), ' status = ', BoolToStr(csv.GetStatus, 'OPEN', 'CLOSED'));
 	repeat
 		csv.ReadLine();
 		
-		// dn;sAMAccountName;givenName;sn;userPrincipalName
 		dn := csv.GetValue('dn');
 		
 		// Use one line to show the processed 
@@ -384,6 +353,7 @@ var
 	ou: string;
 	rs: TSQLQuery;		// Uses SqlDB
 begin
+	WriteLn;
 	WriteLn('ProcessAllActiveDirectories()');
 	
 	qs := 'SELECT ' + FLD_ADM_ROOTDSE + ',' + FLD_ADM_DOM_NT + ',' + FLD_ADM_OU + ' ';
@@ -502,7 +472,7 @@ begin
 end;
 
 
-function CalculateRealLogon(recId: integer; dn: Ansistring): TDateTime;
+function CalculateRealLogon(recId: integer; dn: Ansistring; created: Ansistring): TDateTime;
 var
 	qs: Ansistring;
 	rs: TSQLQuery;		// Uses SqlDB
@@ -513,10 +483,15 @@ var
 	line: Ansistring;
 	mostRecentLastLogon: TDateTime;
 begin
-	WriteLn('Calculate real logon for ', recId, ': ', dn);
+	WriteLn;
+	WriteLn('Calculating the real logon for ', dn, ' (', recId, ') 
+	WriteLn('The real logon is made equal to the creation date: ', created);
 	
 	// Initialize the most recent last logon date time with:
-	mostRecentLastLogon := StrToDateTime('1601-01-01 00:00:00');
+	// Set the real last logon date time as created date time. That's the start.
+	// After creation of the account the last logon date time will overwrite the
+	// mostRecentLastLogon with logon date times from the specific AD DC's
+	mostRecentLastLogon := StrToDateTime(created);
 	
 	path := SysUtils.GetTempFileName(); // Path is C:\Users\<username>\AppData\Local\Temp\TMP00000.tmp
 	SysUtils.DeleteFile(path); // Delete any file that might exists.
@@ -582,14 +557,17 @@ end;
 procedure FindRecordsRealLogon();
 var
 	qs: Ansistring;
-	rs: TSQLQuery;		// Uses SqlDB
+	rs: TSQLQuery; // Uses SqlDB
 	mostRecentLastLogon: TDateTime;
 	qu: Ansistring;
+	created: Ansistring;
 	recordId: integer;
+	dn: Ansistring;
 begin
-	qs := 'SELECT ' + FLD_ATV_ID + ',' + FLD_ATV_DN + ' ';
+	qs := 'SELECT ' + FLD_ATV_ID + ',' + FLD_ATV_DN + ',' + FLD_ATV_CREATED + ' ';
 	qs := qs + 'FROM ' + TBL_ATV + ' ';
-	qs := qs + 'WHERE ' +  FLD_ATV_IS_ACTIVE + '=1;';
+	qs := qs + 'WHERE ' +  FLD_ATV_IS_ACTIVE + '=1 ';
+	qs := qs + 'ORDER BY ' + FLD_ATV_RLU + ';';
 	
 	rs := TSQLQuery.Create(nil);
 	rs.Database := gConnection;
@@ -604,7 +582,10 @@ begin
 		while not rs.EOF do
 		begin
 			recordId := rs.FieldByName(FLD_ATV_ID).AsInteger;
-			mostRecentLastLogon := CalculateRealLogon(recordId, rs.FieldByName(FLD_ATV_DN).AsString);
+			dn := rs.FieldByName(FLD_ATV_DN).AsString;
+			created := rs.FieldByName(FLD_ATV_CREATED).AsString;
+			
+			mostRecentLastLogon := CalculateRealLogon(recordId, dn, created);
 			WriteLn(' >>Most recent last logon is: ', DateTimeToStr(mostRecentLastLogon));
 			
 			qu := 'UPDATE ' + TBL_ATV + ' ';
@@ -619,7 +600,7 @@ begin
 end;
 
 
-function GetDomainMaxPasswordAge(rootDse: string): integer;
+function GetDomainMaxPasswordAgeInSeconds(rootDse: string): double;
 //
 //	Get the maximum password age of an AD domain as defined in it's Domain Policy
 //
@@ -661,7 +642,7 @@ begin
 	rs := ReplaceText(rs, '0000000', ''); 
 	rs := ReplaceText(rs, '-', '');
 	
-	GetDomainMaxPasswordAge := StrToInt(rs);
+	GetDomainMaxPasswordAgeInSeconds := StrToFloat(rs);
 end; // of GetDomainMaxPasswordAge
 
 
@@ -671,7 +652,8 @@ var
 	rs: TSQLQuery;		// Uses SqlDB
 	domainId: integer;
 	rootDse: Ansistring;
-	maxPasswordAgeSecs: integer;
+	maxPasswordAgeSecs: double;
+	maxPasswordAgeDays: double;
 	qu: Ansistring;
 begin
 	qs := 'SELECT ' + FLD_ADM_ID + ',' + FLD_ADM_ROOTDSE + ' ';
@@ -695,11 +677,13 @@ begin
 			domainId := rs.FieldByName(FLD_ADM_ID).AsInteger;
 			rootDse := rs.FieldByName(FLD_ADM_ROOTDSE).AsString;
 			
-			maxPasswordAgeSecs := GetDomainMaxPasswordAge(rootDse);
-			WriteLn(rootDse, ' maxPwdAge: ', maxPasswordAgeSecs, ' seconds');
+			//maxPasswordAgeSecs := GetDomainMaxPasswordAge(rootDse);
+			maxPasswordAgeSecs := GetDomainMaxPasswordAgeInSeconds(rootDse);
+			maxPasswordAgeDays := maxPasswordAgeSecs / 86400;
+			WriteLn(rootDse, ' Domain policy maximum password age is ', Int(maxPasswordAgeDays):0:0, ' days');
 	
 			qu := 'UPDATE ' + TBL_ADM + ' ';
-			qu := qu + 'SET ' + FLD_ADM_MAX_PASSSWORD_AGE_SECS + '=' + IntToStr(maxPasswordAgeSecs) + ' ';
+			qu := qu + 'SET ' + FLD_ADM_MAX_PASSSWORD_AGE_DAYS + '=' + FloatToStr(maxPasswordAgeDays) + ' ';
 			qu := qu + 'WHERE ' + FLD_ADM_ID + '=' + IntToStr(domainId) + ';';
 			
 			RunQuery(qu);
@@ -728,12 +712,14 @@ begin
 	
 	case ParamStr(1) of
 		'--real-logon': flagRealLogon := true;
-		'--help': ProgramUsage();
+		'--help': 
+			begin
+				ProgramUsage();
+				Halt(0);
+			end;
+			
 	end;
 
-	//WriteLn('Calculate the real last logon per account: ', flagRealLogon);
-	
-	
 	updateDateTime := Now();
 	DatabaseOpen();
 	

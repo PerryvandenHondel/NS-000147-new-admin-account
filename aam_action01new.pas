@@ -180,7 +180,7 @@ function ReplaceMiddleNames(s: string): string;
 // Replace all occurances of MiddleNameArray.Find for MiddleNameArray.Repl.
 //
 var
-	MiddleNameArray: Array[1..6] of TMiddleNameRec;
+	MiddleNameArray: Array[1..7] of TMiddleNameRec;
 	i: integer;	
 	sBuff: string;
 begin
@@ -205,6 +205,10 @@ begin
 	
 	MiddleNameArray[6].find := 'la '; 
 	MiddleNameArray[6].repl := 'l';
+	
+	MiddleNameArray[7].find := 'op '; 
+	MiddleNameArray[7].repl := 'o';
+	
 	
 	for i := 1 to Length(MiddleNameArray) do
 	begin
