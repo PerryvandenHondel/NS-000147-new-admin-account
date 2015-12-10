@@ -12,8 +12,15 @@
 //			ProcessAllActiveDirectories();
 //				ProcessSingleActiveDirectory();
 //			ChangeStatusObsoleteRecord();
-//					
-
+//			
+//			When the flag --real-logon is selected also do:
+//
+//			LastLogonAllDomains
+//				LastLogonOneDomain
+//					LastLogonOneDc
+//						LastLogonAddRecord
+//			LastLogonUpdateActiveAccounts
+//				
 
 program update_tables;
 
@@ -92,7 +99,6 @@ begin;
 		
 	
 end; // of function IsDisabled
-	
 	
 	
 procedure ChangeStatusObsoleteRecord(updateDateTime: TDateTime);
@@ -332,7 +338,7 @@ begin
 		dn := csv.GetValue('dn');
 		
 		// Use one line to show the processed 
-		Write(i: 4, ': ', dn, #13);
+		Write('Updating database: ', i:4, ' [', AlignLeft(dn, 120), ']'#13);
 		Inc(i);
 		if IsValidAdminAccount(dn) = true then
 		begin
@@ -343,6 +349,175 @@ begin
 	csv.Free;
 	WriteLn;
 end; // of procedure ProcessSingleActiveDirectory
+
+
+procedure LastLogonAddRecord(domainId: integer; host: Ansistring; dn: Ansistring; lastLogon: Ansistring);
+var	
+	qi: Ansistring;
+begin
+	// Skip lines with empty lastLogon values.
+	if Length(lastLogon) = 0 then
+		Exit;
+	
+	// Do not all lines with DN, that's the header
+	if Pos('dn', dn) > 0 then
+		Exit; 
+		
+	// Do not process  the lastLogon with invalid date formats.
+	if Pos('lastLogon', lastLogon) > 0 then
+		Exit;
+	
+	//WriteLn(#9#9, domainId, '  ' , host, '   ', dn, '     ', lastLogon);
+	
+	qi := 'INSERT INTO ' + TBL_ALL;
+	qi := qi + ' ';
+	qi := qi + 'SET';
+	qi := qi + ' ';
+	qi := qi + FLD_ALL_ADM_ID + '=' + IntToStr(domainId);
+	qi := qi + ',';
+	qi := qi + FLD_ALL_HOST + '=' + FixStr(host);
+	qi := qi + ',';
+	qi := qi + FLD_ALL_DN + '=' + FixStr(dn);
+	qi := qi + ',';
+	qi := qi + FLD_ALL_LL + '=' + FixStr(lastLogon);
+	qi := qi + ';';
+	
+	//WriteLn(qi);
+	RunQuery(qi);
+end;
+
+
+procedure LastLogonOneDc(domainId: integer; rootDse: Ansistring; host: Ansistring; ou: Ansistring);
+var	
+	c: Ansistring;
+	path: Ansistring;
+	f: TextFile;
+	line: Ansistring;
+	lineSeparated: TStringArray;
+begin
+	WriteLn('LastLogonOneDc(): ', domainId, '    ', rootDse, '     ', host, '  ', ou);
+	
+	// Get a unique temp path to a file.
+	path := SysUtils.GetTempFileName();
+	// Delete any existing file.
+	SysUtils.DeleteFile(path);
+	
+	host := LowerCase(host); // Proper host name, all small caps.
+	
+	c := 'adfind.exe ';
+	c := c + '-h ' + EncloseDoubleQuote(host) + ' ';
+	c := c + '-b ' + EncloseDoubleQuote(ou + ',' + rootDse) + ' ';
+	c := c + '-f "' + #38 + '(objectClass=user)(objectCategory=person)" ';
+	c := c + 'lastLogon ';
+	c := c + '-jtsv -csvnoq ';
+	c := c + '-tdcs -tdcsfmt "%YYYY%-%MM%-%DD% %HH%:%mm%:%ss%" ';
+	c := c + '>' + path;
+	//WriteLn(c);
+
+	RunCommand(c);
+	
+	AssignFile(f, path);
+	{I+}
+	try 
+		Reset(f);
+		repeat
+			ReadLn(f, line);
+			//WriteLn(#9, line);
+			SetLength(lineSeparated, 0);
+			lineSeparated := SplitString(line, #9);
+			LastLogonAddRecord(domainId, host, lineSeparated[0], lineSeparated[1]);
+		until Eof(f);
+		CloseFile(f);
+	except
+		on E: EInOutError do
+			WriteLn('ERROR: File ', path, ' handeling error occurred, Details: ', E.ClassName, '/', E.Message);
+	end;
+	SysUtils.DeleteFile(path);
+end;
+
+
+procedure LastLogonOneDomain(domainId: integer; rootDse: Ansistring; ou: Ansistring);
+var
+	path: Ansistring;
+	f: TextFile;
+	line: Ansistring;
+	c: Ansistring;
+begin
+	path := SysUtils.GetTempFileName();
+	
+	// Delete any existing file.
+	DeleteFile(path);
+	
+	c := 'adfind.exe ';
+	c := c + '-b ' + EncloseDoubleQuote(rootDse) + ' ';
+	c := c + '-sc dclist>' + path;
+	//WriteLn(c);
+	
+	USupportLibrary.RunCommand(c);
+	
+	// Open the text file and read the lines from it.
+	Assign(f, path);
+	
+	{I+}
+	Reset(f);
+	repeat
+		ReadLn(f, line); // line contains the specific DC.
+		LastLogonOneDc(domainId, rootDse, line, ou);
+	until Eof(f);
+	Close(f);
+	
+	SysUtils.DeleteFile(path);
+end;
+
+
+procedure LastLogonAllDomains();
+var
+	qs: string;
+	rootDse: string;
+	domainId: integer;
+	//domainNt: string;
+	ou: string;
+	rs: TSQLQuery;		// Uses SqlDB
+begin
+	WriteLn;
+	WriteLn('LastLogonAllDomains()');
+	
+	qs := 'SELECT ' + FLD_ADM_ID + ',' + FLD_ADM_ROOTDSE + ',' + FLD_ADM_OU + ' ';
+	qs := qs + 'FROM ' + TBL_ADM + ' ';
+	qs := qs + 'WHERE ' + FLD_ADM_IS_ACTIVE + '=1';
+	qs := qs + ';';
+
+	//WriteLn(qs);
+	
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+
+	if rs.EOF = true then
+		WriteLn('No records found!')
+	else
+	begin
+		while not rs.EOF do
+		begin
+			begin
+				domainId := rs.FieldByName(FLD_ADM_ID).AsInteger;
+				rootDse := rs.FieldByName(FLD_ADM_ROOTDSE).AsString;
+				//domainNt := rs.FieldByName(FLD_ADM_DOM_NT).AsString;
+				ou := rs.FieldByName(FLD_ADM_OU).AsString;
+
+				WriteLn('- ', rootDse);
+			
+				LastLogonOneDomain(domainId, rootDse, ou);
+
+				//ProcessSingleActiveDirectory(rootDse, domainNt, ou);
+			end;
+			rs.Next;
+		end;
+	end;
+	rs.Free;
+end; // of procedure ProcessAllAds()
 
 
 procedure ProcessAllActiveDirectories();
@@ -398,80 +573,7 @@ begin
 	RunQuery(qi);
 end;
 
-
-procedure FindAllDcsForOneDomain(domainId: integer; rootDse: Ansistring);
-var
-	path: Ansistring;
-	f: TextFile;
-	line: Ansistring;
-	c: Ansistring;
-begin
-	path := SysUtils.GetTempFileName();
-	
-	// Delete any existing file.
-	DeleteFile(path);
-	
-	c := 'adfind.exe ';
-	c := c + '-b ' + EncloseDoubleQuote(rootDse) + ' ';
-	c := c + '-sc dclist>' + path;
-	//WriteLn(c);
-	
-	USupportLibrary.RunCommand(c);
-	
-	// Open the text file and read the lines from it.
-	Assign(f, path);
-	
-	{I+}
-	Reset(f);
-	repeat
-		ReadLn(f, line);
-		//Writeln(domainId, ': ', line);
-		AddRecordToTableAdd(domainId, line);
-	until Eof(f);
-	Close(f);
-	
-	SysUtils.DeleteFile(path);
-end;
-
-
-procedure FillTableAdd();
-var
-	qs: Ansistring;
-	rs: TSQLQuery;		// Uses SqlDB
-	domainId: integer;
-	rootDse: Ansistring;
-begin
-	// Clean all records from the DC table ADD
-	RunQuery('TRUNCATE TABLE ' +  TBL_ADD+ ';');
-	
-	qs := 'SELECT ' + FLD_ADM_ID + ',' + FLD_ADM_ROOTDSE + ' ';
-	qs := qs + 'FROM ' + TBL_ADM + ' ';
-	qs := qs + 'WHERE ' + FLD_ADM_IS_ACTIVE + '=1';
-	qs := qs + ';';
-	//WriteLn(qs);
-	
-	rs := TSQLQuery.Create(nil);
-	rs.Database := gConnection;
-	rs.PacketRecords := -1;
-	rs.SQL.Text := qs;
-	rs.Open;
-
-	if rs.EOF = true then
-		WriteLn('No records found!')
-	else
-	begin
-		while not rs.EOF do
-		begin
-			domainId := rs.FieldByName(FLD_ADM_ID).AsInteger;
-			rootDse := rs.FieldByName(FLD_ADM_ROOTDSE).AsString;
-			FindAllDcsForOneDomain(domainId, rootDse);
-			rs.Next;
-		end;
-	end;
-	rs.Free;
-end;
-
-
+{
 function CalculateRealLogon(recId: integer; dn: Ansistring; created: Ansistring): TDateTime;
 var
 	qs: Ansistring;
@@ -484,7 +586,7 @@ var
 	mostRecentLastLogon: TDateTime;
 begin
 	WriteLn;
-	WriteLn('Calculating the real logon for ', dn, ' (', recId, ') 
+	WriteLn('Calculating the real logon for ', dn, ' (', recId);
 	WriteLn('The real logon is made equal to the creation date: ', created);
 	
 	// Initialize the most recent last logon date time with:
@@ -535,7 +637,6 @@ begin
 	// Open the text file and read the lines from it.
 	Assign(f, path);
 	
-	{I+}
 	Reset(f);
 	repeat
 		ReadLn(f, line);
@@ -552,8 +653,49 @@ begin
 	
 	CalculateRealLogon := mostRecentLastLogon;
 end;
+}
+
+function GetRealLastLogon(dn: Ansistring; created: TDateTime): TDateTime;
+var
+	qs: Ansistring;
+	rs: TSQLQuery; // Uses SqlDB
+	lastLogin: TDateTime;
+	returnDateTime: TDateTime;
+begin
+	qs := 'SELECT ' + FLD_ALL_LL;
+	qs := qs + ' ';
+	qs := qs + 'FROM ' + TBL_ALL;
+	qs := qs + ' ';
+	qs := qs + 'WHERE ' + FLD_ALL_DN + '=' + EncloseSingleQuote(dn); 
+	qs := qs + ' '; 
+	qs := qs + 'ORDER BY ' + FLD_ALL_LL + ' DESC';
+	qs := qs + ' '; 
+	qs := qs + 'LIMIT 1';
+	qs := qs + ';'; 
+	
+	//WriteLn(qs);
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+
+	if rs.EOF = true then
+		// There is  no last logon found, returns the created value.
+		returnDateTime := created
+	else
+	begin
+		// Compare the created date with the obtained lastlogon date time.
+		// Returns the most recent one.
+		lastLogin := StrToDateTime(rs.FieldByName(FLD_ALL_LL).AsString);
+		returnDateTime := GetMostRecent(lastLogin, created);
+	end;
+	//WriteLn('GetRealLastLogon(): ', dn, ' > ', DateTimeToStr(returnDateTime));
+	GetRealLastLogon := returnDateTime;
+end;
 
 
+{
 procedure FindRecordsRealLogon();
 var
 	qs: Ansistring;
@@ -592,6 +734,62 @@ begin
 			qu := qu + 'SET ' + FLD_ATV_REAL_LAST_LOGON + '=' + EncloseSingleQuote(DateTimeToStr(mostRecentLastLogon)) + ' ';
 			qu := qu + 'WHERE ' + FLD_ATV_ID + '=' + IntToStr(recordId) + ';';
 			
+			RunQuery(qu);
+			rs.Next;
+		end;
+	end;
+	rs.Free;
+end;
+}
+
+
+procedure LastLogonUpdateActiveAccounts();
+var
+	qs: Ansistring;
+	qu: Ansistring;
+	rs: TSQLQuery; // Uses SqlDB
+	created: TDateTime;
+	recordId: integer;
+	dn: Ansistring;
+	realLastLogon: TDateTime;
+begin
+	WriteLn('LastLogonUpdateActiveAccounts(): Obtaining the real last logon per account and updating ATV table, please wait...');
+	qs := 'SELECT ' + FLD_ATV_ID + ',' + FLD_ATV_DN + ',' + FLD_ATV_CREATED + ' ';
+	qs := qs + 'FROM ' + TBL_ATV + ' ';
+	qs := qs + 'WHERE ' +  FLD_ATV_IS_ACTIVE + '=1 ';
+	qs := qs + 'ORDER BY ' + FLD_ATV_RLU + ';';
+	
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+
+	if rs.EOF = true then
+		WriteLn('No records found!')
+	else
+	begin
+		while not rs.EOF do
+		begin
+			recordId := rs.FieldByName(FLD_ATV_ID).AsInteger;
+			dn := rs.FieldByName(FLD_ATV_DN).AsString;
+			created := StrToDateTime(rs.FieldByName(FLD_ATV_CREATED).AsString);
+			
+			//WriteLn(#9, recordId, ' ', dn, ' ', DateTimeToStr(created));
+			
+			realLastLogon := GetRealLastLogon(dn, created);
+			
+			// Update the active account record with the most recent logon date time value.
+			qu := 'UPDATE ' + TBL_ATV;
+			qu := qu + ' ';
+			qu := qu + 'SET';
+			qu := qu + ' ';
+			qu := qu + FLD_ATV_REAL_LAST_LOGON + '=' + EncloseSingleQuote(DateTimeToStr(realLastLogon));
+			qu := qu + ' ';
+			qu := qu + 'WHERE ' + FLD_ATV_ID + '=' + IntToStr(recordId);
+			qu := qu + ';';
+			
+			//WriteLn(qu);
 			RunQuery(qu);
 			rs.Next;
 		end;
@@ -717,7 +915,6 @@ begin
 				ProgramUsage();
 				Halt(0);
 			end;
-			
 	end;
 
 	updateDateTime := Now();
@@ -732,8 +929,10 @@ begin
 	
 	if flagRealLogon = true then
 	begin
-		FillTableAdd(); // Fill the ADD (Account Domain DC's) with all DC's from a domain
-		FindRecordsRealLogon();
+		// Collect all last login date times for an account of all domain controllers.
+		LastLogonAllDomains();
+		// Update the active account with the accurate last logon date time.
+		LastLogonUpdateActiveAccounts();
 	end;
 	
 	DatabaseClose();

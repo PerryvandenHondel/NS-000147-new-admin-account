@@ -38,6 +38,7 @@ const
 	MAIL_BCC = 					'perry.vandenhondel@ns.nl';
 		// Default BCC of all e-mail send by this program
 
+	
 	TBL_ADM =										'account_domain_adm';
 	FLD_ADM_ROOTDSE = 								'adm_root_dse';
 	FLD_ADM_ID = 									'adm_id';
@@ -46,10 +47,10 @@ const
 	FLD_ADM_MAX_PASSSWORD_AGE_SECS = 				'adm_max_password_age_secs';
 	FLD_ADM_MAX_PASSSWORD_AGE_DAYS = 				'adm_max_password_age_days';
 	FLD_ADM_PRE_ALERT_DAYS = 						'adm_pre_alert_days';
-	
 	FLD_ADM_IS_ACTIVE = 							'adm_is_active';
 	FLD_ADM_OU = 									'adm_org_unit';
 	
+	// Table Active Account (ATV)
 	TBL_ATV = 										'account_active_atv';
 	FLD_ATV_ID = 									'atv_id';
 	FLD_ATV_IS_ACTIVE = 							'atv_is_active';
@@ -193,6 +194,16 @@ const
 	FLD_AID_RCD = 				'aid_rcd';
 	FLD_AID_RLU = 				'aid_rlu';
 	
+	// ACCOUNT LAST LOGIN PER DC (ALL)
+	TBL_ALL = 					'account_last_logon_per_dc_all';
+	FLD_ALL_ID = 				'all_id';
+	FLD_ALL_ADM_ID = 			'all_adm_id';
+	FLD_ALL_HOST = 				'all_host';
+	FLD_ALL_DN = 				'all_dn';
+	FLD_ALL_LL = 				'all_last_logon';
+	FLD_ALL_RCD = 				'all_rcd';
+	FLD_ALL_RLU = 				'all_rlu';
+
 	
 var	
 	gConnection: TODBCConnection;               // uses ODBCConn
