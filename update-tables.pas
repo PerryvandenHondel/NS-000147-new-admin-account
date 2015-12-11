@@ -30,6 +30,7 @@ program update_tables;
 
 
 uses
+	DateUtils,
 	StrUtils,
 	SysUtils,
 	Process,
@@ -68,7 +69,6 @@ const
 	
 var
 	updateDateTime: TDateTime;
-	flagRealLogon: boolean;
 
 
 function IsUacFlagActive(uncValue: integer; uncFlag: integer): integer;
@@ -158,14 +158,24 @@ var
 	qu: string;
 	id: integer;
 	rs: TSQLQuery; // Uses SqlDB
+	passwordLastSetDaysAgo: integer;
 begin
 	upn := LowerCase(upn);
 	mail := LowerCase(mail);
 
+	// Calculate the password last set age in days.
+	if Pos('0000-00-00', pwdLastSet) > 0 then
+		// pwdLastSet is set to change at next logon, age becomes 0 days old.
+		passwordLastSetDaysAgo := 0
+	else
+	begin
+		passwordLastSetDaysAgo := DaysBetween(Now(), StrToDateTime(pwdLastSet));
+	end;
+	//WriteLn('RecordAddAccount(): passwordLastSetDaysAgo=', passwordLastSetDaysAgo);
+
 	qs := 'SELECT ' + FLD_ATV_ID + ' ';
 	qs := qs + 'FROM ' + TBL_ATV + ' ';
 	qs := qs + 'WHERE ' + FLD_ATV_DN + '=' + FixStr(dn) + ';';
-	
 	//WriteLn(qs);
 	
 	rs := TSQLQuery.Create(nil);
@@ -199,6 +209,7 @@ begin
 		qi := qi + FLD_ATV_MAIL + '=' + FixStr(mail) + ',';
 		qi := qi + FLD_ATV_CREATED + '=' + FixStr(created) + ',';
 		qi := qi + FLD_ATV_PWD_LAST_SET + '=' + FixStr(pwdLastSet) + ',';
+		qi := qi + FLD_ATV_PWD_LAST_SET_DAYS_AGO + '=' + IntToStr(passwordLastSetDaysAgo) + ',';
 		qi := qi + FLD_ATV_UAC + '=' + uac + ',';
 		qi := qi + FLD_ATV_UAC_ACCOUNTDISABLED + '=' + IntToStr(IsUacFlagActive(StrToInt(uac), ADS_UF_ACCOUNTDISABLE)) + ',';
 		qi := qi + FLD_ATV_UAC_NOT_DELEGATED + '=' + IntToStr(IsUacFlagActive(StrToInt(uac), ADS_UF_NOT_DELEGATED)) + ',';
@@ -228,6 +239,7 @@ begin
 		qu := qu + FLD_ATV_MAIL + '=' + FixStr(mail) + ',';
 		qu := qu + FLD_ATV_CREATED + '=' + FixStr(created) + ',';
 		qu := qu + FLD_ATV_PWD_LAST_SET + '=' + FixStr(pwdLastSet) + ',';
+		qu := qu + FLD_ATV_PWD_LAST_SET_DAYS_AGO + '=' + IntToStr(passwordLastSetDaysAgo) + ',';
 		qu := qu + FLD_ATV_UAC + '=' + uac + ',';
 		qu := qu + FLD_ATV_UAC_ACCOUNTDISABLED + '=' + IntToStr(IsUacFlagActive(StrToInt(uac), ADS_UF_ACCOUNTDISABLE)) + ',';
 		qu := qu + FLD_ATV_UAC_NOT_DELEGATED + '=' + IntToStr(IsUacFlagActive(StrToInt(uac), ADS_UF_NOT_DELEGATED)) + ',';
@@ -282,25 +294,27 @@ var
 	c: string;
 	csv: CTextSeparated;
 	el: integer;
-	f: string;
+	path: Ansistring;
 	dn: string;
 	i: integer;
-	//p: integer;
 	domainId: integer;
 begin
 	WriteLn;
 	WriteLn('ProcessSingleActiveDirectory()');
 	
 	domainId := GetDomainIdFromRootDse(rootDse);
-	WriteLn('Domain ID=', domainId);
+	//WriteLn('Domain ID=', domainId);
 	
 	i := 2;  // Start at line 2 with data, line 1 is the header
 	
+	// TODO: Use a temp file here
 	// Set the file name
-	f := 'ad_dump_' + LowerCase(domainNt) + '.tmp';
+	//f := 'ad_dump_' + LowerCase(domainNt) + '.tmp';
+	path := SysUtils.GetTempFileName(); // Path is C:\Users\<username>\AppData\Local\Temp\TMP00000.tmp
+	
 	
 	// Delete any existing file.
-	DeleteFile(f);
+	DeleteFile(path);
 	
 	c := 'adfind.exe ';
 	c := c + '-b "' + ou + ',' + rootDse + '"';
@@ -314,7 +328,7 @@ begin
 	c := c + '-tdcgt -tdcfmt "%YYYY%-%MM%-%DD% %HH%:%mm%:%ss%"'; // Convert whenCreated
 	c := c + ' ';
 	c := c + '-tdcs -tdcsfmt "%YYYY%-%MM%-%DD% %HH%:%mm%:%ss%"'; // Convert lastlogonTimestamp, lockoutTime, pwdLastSet
-	c := c + '>' + f;
+	c := c + '>' + path;
 	WriteLn(c);
 	
 	el := USupportLibrary.RunCommand(c);
@@ -325,11 +339,10 @@ begin
 	else
 		WriteLn('ERROR ', el, ' running command ', c);
 		
-	csv := CTextSeparated.Create(f);
+	csv := CTextSeparated.Create(path);
     csv.OpenFileRead();
 	csv.ShowVerboseOutput(false);
 	csv.SetSeparator(';'); // Tab char as separator
-	// dn;sAMAccountName;givenName;sn
 	csv.ReadHeader();
 	
 	repeat
@@ -347,14 +360,18 @@ begin
     until csv.GetEof();
 	csv.CloseFile();
 	csv.Free;
+	
+	SysUtils.DeleteFile(path); // Delete the temp file in path.
+	
 	WriteLn;
 end; // of procedure ProcessSingleActiveDirectory
 
 
-procedure LastLogonAddRecord(domainId: integer; host: Ansistring; dn: Ansistring; lastLogon: Ansistring);
+procedure LastLogonAddRecord(domainId: integer; host: Ansistring; dn: Ansistring; lastLogon: TDateTime);
 var	
 	qi: Ansistring;
 begin
+{
 	// Skip lines with empty lastLogon values.
 	if Length(lastLogon) = 0 then
 		Exit;
@@ -368,7 +385,7 @@ begin
 		Exit;
 	
 	//WriteLn(#9#9, domainId, '  ' , host, '   ', dn, '     ', lastLogon);
-	
+}
 	qi := 'INSERT INTO ' + TBL_ALL;
 	qi := qi + ' ';
 	qi := qi + 'SET';
@@ -379,7 +396,7 @@ begin
 	qi := qi + ',';
 	qi := qi + FLD_ALL_DN + '=' + FixStr(dn);
 	qi := qi + ',';
-	qi := qi + FLD_ALL_LL + '=' + FixStr(lastLogon);
+	qi := qi + FLD_ALL_LL + '=' + FixStr(DateTimeToStr(lastLogon));
 	qi := qi + ';';
 	
 	//WriteLn(qi);
@@ -394,23 +411,36 @@ var
 	f: TextFile;
 	line: Ansistring;
 	lineSeparated: TStringArray;
+	dn: Ansistring;
+	dateToCheck: Ansistring;
+	convertedDateTime: TDateTime;
 begin
-	WriteLn('LastLogonOneDc(): ', domainId, '    ', rootDse, '     ', host, '  ', ou);
+	host := LowerCase(host); // Proper host name, all small caps.
+	WriteLn(#9, '- Domain Controller ', host);
 	
 	// Get a unique temp path to a file.
 	path := SysUtils.GetTempFileName();
 	// Delete any existing file.
 	SysUtils.DeleteFile(path);
 	
-	host := LowerCase(host); // Proper host name, all small caps.
-	
 	c := 'adfind.exe ';
-	c := c + '-h ' + EncloseDoubleQuote(host) + ' ';
-	c := c + '-b ' + EncloseDoubleQuote(ou + ',' + rootDse) + ' ';
-	c := c + '-f "' + #38 + '(objectClass=user)(objectCategory=person)" ';
-	c := c + 'lastLogon ';
-	c := c + '-jtsv -csvnoq ';
-	c := c + '-tdcs -tdcsfmt "%YYYY%-%MM%-%DD% %HH%:%mm%:%ss%" ';
+	c := c + '-h ' + EncloseDoubleQuote(host);
+	c := c + ' ';
+	c := c + '-b ' + EncloseDoubleQuote(ou + ',' + rootDse);
+	c := c + ' ';
+	c := c + '-f "' + #38 + '(objectClass=user)(objectCategory=person)"';
+	c := c + ' ';
+	c := c + 'lastLogon';
+	c := c + ' ';
+	c := c + '-jtsv';			// Output in Tab separated values
+	c := c + ' ';
+	c := c + '-csvnoq'; 		// Do not add quote's around the exported values
+	c := c + ' ';
+	c := c + '-csvnoheader';	// Do not add a header to output file
+	c := c + ' ';
+	c := c + '-tdcs';
+	c := c + ' ';
+	c := c + '-tdcsfmt "%YYYY%-%MM%-%DD% %HH%:%mm%:%ss%"';
 	c := c + '>' + path;
 	//WriteLn(c);
 
@@ -424,8 +454,14 @@ begin
 			ReadLn(f, line);
 			//WriteLn(#9, line);
 			SetLength(lineSeparated, 0);
-			lineSeparated := SplitString(line, #9);
-			LastLogonAddRecord(domainId, host, lineSeparated[0], lineSeparated[1]);
+			lineSeparated := SplitString(line, #9); // Tab separated
+			
+			dn := lineSeparated[0];
+			dateToCheck := lineSeparated[1]; 
+			
+			if TryStrToDateTime(dateToCheck, convertedDateTime) = true then
+				LastLogonAddRecord(domainId, host, dn, convertedDateTime);
+
 		until Eof(f);
 		CloseFile(f);
 	except
@@ -504,14 +540,12 @@ begin
 			begin
 				domainId := rs.FieldByName(FLD_ADM_ID).AsInteger;
 				rootDse := rs.FieldByName(FLD_ADM_ROOTDSE).AsString;
-				//domainNt := rs.FieldByName(FLD_ADM_DOM_NT).AsString;
 				ou := rs.FieldByName(FLD_ADM_OU).AsString;
 
-				WriteLn('- ', rootDse);
+				WriteLn('- Domain ', rootDse);
 			
 				LastLogonOneDomain(domainId, rootDse, ou);
 
-				//ProcessSingleActiveDirectory(rootDse, domainNt, ou);
 			end;
 			rs.Next;
 		end;
@@ -573,87 +607,6 @@ begin
 	RunQuery(qi);
 end;
 
-{
-function CalculateRealLogon(recId: integer; dn: Ansistring; created: Ansistring): TDateTime;
-var
-	qs: Ansistring;
-	rs: TSQLQuery;		// Uses SqlDB
-	c: Ansistring;
-	fqdn: Ansistring;
-	path: Ansistring;
-	f: TextFile;
-	line: Ansistring;
-	mostRecentLastLogon: TDateTime;
-begin
-	WriteLn;
-	WriteLn('Calculating the real logon for ', dn, ' (', recId);
-	WriteLn('The real logon is made equal to the creation date: ', created);
-	
-	// Initialize the most recent last logon date time with:
-	// Set the real last logon date time as created date time. That's the start.
-	// After creation of the account the last logon date time will overwrite the
-	// mostRecentLastLogon with logon date times from the specific AD DC's
-	mostRecentLastLogon := StrToDateTime(created);
-	
-	path := SysUtils.GetTempFileName(); // Path is C:\Users\<username>\AppData\Local\Temp\TMP00000.tmp
-	SysUtils.DeleteFile(path); // Delete any file that might exists.
-	
-	qs := 'SELECT ' + FLD_ADD_FQDN + ',' + FLD_ATV_DN + ' ';
-	qs := qs + 'FROM ' + TBL_ATV + ' ';
-	qs := qs + 'INNER JOIN ' + TBL_ADD + ' ON ' + FLD_ADD_ADM_ID + '=' + FLD_ATV_ADM_ID + ' ';
-	qs := qs + 'WHERE ' + FLD_ATV_DN + '=' + EncloseSingleQuote(dn) + ' ';
-	qs := qs + 'ORDER BY ' + FLD_ADD_FQDN + ';';
-
-	rs := TSQLQuery.Create(nil);
-	rs.Database := gConnection;
-	rs.PacketRecords := -1;
-	rs.SQL.Text := qs;
-	rs.Open;
-	
-	if rs.EOF = true then
-		WriteLn('No records found!')
-	else
-	begin
-		while not rs.EOF do
-		begin
-			fqdn := rs.FieldByName(FLD_ADD_FQDN).AsString;
-			dn := rs.FieldByName(FLD_ATV_DN).AsString;
-			
-			// Obtain the lastLogon value per domain controller for a DN
-			c := 'adfind.exe -h ' + EncloseDoubleQuote(LowerCase(fqdn)) + ' ';
-			c := c + '-b ' + EncloseDoubleQuote(dn) + ' ';
-			c := c + 'lastLogon ';
-			c := c + '-csv -csvnoheader -tdcs -tdcsfmt "%YYYY%-%MM%-%DD% %HH%:%mm%:%ss%" ';
-			c := c + '-nodn ';
-			c := c + '-nocsvq ';
-			c := c + '>>' + path;
-			USupportLibrary.RunCommand(c);
-			
-			rs.Next;
-		end;
-	end;
-	rs.Free;
-	
-	// Open the text file and read the lines from it.
-	Assign(f, path);
-	
-	Reset(f);
-	repeat
-		ReadLn(f, line);
-		WriteLn(line);
-		if (Length(line) > 0) and (line[1] <> '0') then
-			// Only read the date time when
-			// - The length of the line is longer then 0.
-			// - The line does not start with a year 0.
-			mostRecentLastLogon := GetMostRecent(mostRecentLastLogon, StrToDateTime(line));
-	until Eof(f);
-	Close(f);
-	
-	SysUtils.DeleteFile(path);
-	
-	CalculateRealLogon := mostRecentLastLogon;
-end;
-}
 
 function GetRealLastLogon(dn: Ansistring; created: TDateTime): TDateTime;
 var
@@ -682,6 +635,7 @@ begin
 
 	if rs.EOF = true then
 		// There is  no last logon found, returns the created value.
+		// Because you can't logon before the account is created.
 		returnDateTime := created
 	else
 	begin
@@ -690,57 +644,8 @@ begin
 		lastLogin := StrToDateTime(rs.FieldByName(FLD_ALL_LL).AsString);
 		returnDateTime := GetMostRecent(lastLogin, created);
 	end;
-	//WriteLn('GetRealLastLogon(): ', dn, ' > ', DateTimeToStr(returnDateTime));
 	GetRealLastLogon := returnDateTime;
 end;
-
-
-{
-procedure FindRecordsRealLogon();
-var
-	qs: Ansistring;
-	rs: TSQLQuery; // Uses SqlDB
-	mostRecentLastLogon: TDateTime;
-	qu: Ansistring;
-	created: Ansistring;
-	recordId: integer;
-	dn: Ansistring;
-begin
-	qs := 'SELECT ' + FLD_ATV_ID + ',' + FLD_ATV_DN + ',' + FLD_ATV_CREATED + ' ';
-	qs := qs + 'FROM ' + TBL_ATV + ' ';
-	qs := qs + 'WHERE ' +  FLD_ATV_IS_ACTIVE + '=1 ';
-	qs := qs + 'ORDER BY ' + FLD_ATV_RLU + ';';
-	
-	rs := TSQLQuery.Create(nil);
-	rs.Database := gConnection;
-	rs.PacketRecords := -1;
-	rs.SQL.Text := qs;
-	rs.Open;
-
-	if rs.EOF = true then
-		WriteLn('No records found!')
-	else
-	begin
-		while not rs.EOF do
-		begin
-			recordId := rs.FieldByName(FLD_ATV_ID).AsInteger;
-			dn := rs.FieldByName(FLD_ATV_DN).AsString;
-			created := rs.FieldByName(FLD_ATV_CREATED).AsString;
-			
-			mostRecentLastLogon := CalculateRealLogon(recordId, dn, created);
-			WriteLn(' >>Most recent last logon is: ', DateTimeToStr(mostRecentLastLogon));
-			
-			qu := 'UPDATE ' + TBL_ATV + ' ';
-			qu := qu + 'SET ' + FLD_ATV_REAL_LAST_LOGON + '=' + EncloseSingleQuote(DateTimeToStr(mostRecentLastLogon)) + ' ';
-			qu := qu + 'WHERE ' + FLD_ATV_ID + '=' + IntToStr(recordId) + ';';
-			
-			RunQuery(qu);
-			rs.Next;
-		end;
-	end;
-	rs.Free;
-end;
-}
 
 
 procedure LastLogonUpdateActiveAccounts();
@@ -752,6 +657,7 @@ var
 	recordId: integer;
 	dn: Ansistring;
 	realLastLogon: TDateTime;
+	realLastLogonDaysAgo: integer;
 begin
 	WriteLn('LastLogonUpdateActiveAccounts(): Obtaining the real last logon per account and updating ATV table, please wait...');
 	qs := 'SELECT ' + FLD_ATV_ID + ',' + FLD_ATV_DN + ',' + FLD_ATV_CREATED + ' ';
@@ -779,12 +685,16 @@ begin
 			
 			realLastLogon := GetRealLastLogon(dn, created);
 			
+			realLastLogonDaysAgo := DaysBetween(Now(), realLastLogon);
+			
 			// Update the active account record with the most recent logon date time value.
 			qu := 'UPDATE ' + TBL_ATV;
 			qu := qu + ' ';
 			qu := qu + 'SET';
 			qu := qu + ' ';
 			qu := qu + FLD_ATV_REAL_LAST_LOGON + '=' + EncloseSingleQuote(DateTimeToStr(realLastLogon));
+			qu := qu + ',';
+			qu := qu + FLD_ATV_REAL_LAST_LOGON_DAYS_AGO + '=' + IntToStr(realLastLogonDaysAgo);
 			qu := qu + ' ';
 			qu := qu + 'WHERE ' + FLD_ATV_ID + '=' + IntToStr(recordId);
 			qu := qu + ';';
@@ -898,40 +808,37 @@ begin
 	WriteLn('  ' + ParamStr(0) + ' <option>');
 	WriteLn;
 	WriteLn('Options:');
-	WriteLn('	--real-logon		Calculate the real logon timestamp by connecting all DC''s in the domain');
-	WriteLn('	--help				The help information');
+	WriteLn('	--real-logon   Calculate the real logon timestamp by connecting all DC''s in the domain');
+	WriteLn('	--help         The help information');
 	WriteLn;
 end;
 
 
 begin
-	flagRealLogon := false;
-	if ParamCount = 1 then
+	WriteLn('Use option --help to show this programs options');
 	
-	case ParamStr(1) of
-		'--real-logon': flagRealLogon := true;
-		'--help': 
-			begin
-				ProgramUsage();
-				Halt(0);
-			end;
+	if ParamStr(1) = '--help' then 
+	begin
+		ProgramUsage();
+		Halt(0);
 	end;
 
 	updateDateTime := Now();
 	DatabaseOpen();
 	
-	// Update the max password age from each AD domain.
+	// Update the maximum password age from each AD domain.
 	UpdateMaxPasswordAgeForEachDomain();
 	
 	// Get all information from accounts
 	ProcessAllActiveDirectories();
 	ChangeStatusObsoleteRecord(updateDateTime);
 	
-	if flagRealLogon = true then
+	if ParamStr(1) = '--real-logon' then 
 	begin
 		// Collect all last login date times for an account of all domain controllers.
 		LastLogonAllDomains();
-		// Update the active account with the accurate last logon date time.
+		// Update the active account with the accurate last logon date time
+		// and days ago.
 		LastLogonUpdateActiveAccounts();
 	end;
 	

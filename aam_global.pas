@@ -44,8 +44,10 @@ const
 	FLD_ADM_ID = 									'adm_id';
 	FLD_ADM_UPN_SUFF = 								'adm_upn_suffix';
 	FLD_ADM_DOM_NT = 								'adm_domain_nt';
-	FLD_ADM_MAX_PASSSWORD_AGE_SECS = 				'adm_max_password_age_secs';
+	//FLD_ADM_MAX_PASSSWORD_AGE_SECS = 				'adm_max_password_age_secs';
 	FLD_ADM_MAX_PASSSWORD_AGE_DAYS = 				'adm_max_password_age_days';
+	FLD_ADM_TRESHOLD_DISABLE_DAYS = 				'adm_treshold_disable_days';
+	FLD_ADM_TRESHOLD_DELETE_DAYS = 					'adm_treshold_delete_days';
 	FLD_ADM_PRE_ALERT_DAYS = 						'adm_pre_alert_days';
 	FLD_ADM_IS_ACTIVE = 							'adm_is_active';
 	FLD_ADM_OU = 									'adm_org_unit';
@@ -68,7 +70,9 @@ const
 	FLD_ATV_UAC_ACCOUNTDISABLED = 					'atv_uac_accountdisabled';
 	FLD_ATV_UAC_NOT_DELEGATED = 					'atv_uac_not_delegated';
 	FLD_ATV_REAL_LAST_LOGON = 						'atv_real_last_logon';
+	FLD_ATV_REAL_LAST_LOGON_DAYS_AGO = 				'atv_real_last_logon_days_ago';
 	FLD_ATV_PWD_LAST_SET = 							'atv_password_last_set';
+	FLD_ATV_PWD_LAST_SET_DAYS_AGO = 				'atv_password_last_set_days_ago';
 	FLD_ATV_CREATED = 								'atv_created';
 	FLD_ATV_RLU = 									'atv_rlu';
 

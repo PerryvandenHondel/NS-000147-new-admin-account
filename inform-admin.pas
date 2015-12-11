@@ -59,7 +59,7 @@ procedure SendOneMail(mail: Ansistring; subject: Ansistring; path: Ansistring);
 var
 	cmd: Ansistring;
 begin
-	// Remove for real version
+	// Remove for real version, now th email will be send to myself.
 	mail := 'perry.vandenhondel@ns.nl';
 
 	cmd := 'blat.exe ' + path;
@@ -78,6 +78,55 @@ begin
 	Sleep(SLEEP_NEXT_ACTION);
 end;
 
+procedure InformAdminAccountWillBeDisabled();
+var
+	qs: Ansistring;
+	rs: TSQLQuery;		// Uses SqlDB
+begin
+	WriteLn('InformAdminAccountWillBeDisabled()');
+	
+	qs := 'SELECT';
+	qs := qs + #10#13;
+	qs := qs + FLD_ATV_ID;
+	qs := qs + ',';
+	qs := qs + #10#13;
+	qs := qs + FLD_ATV_IS_ACTIVE;
+	qs := qs + ',';
+	qs := qs + #10#13;
+	qs := qs + FLD_ATV_APS_ID;
+	qs := qs + ',';
+	qs := qs + #10#13;
+	qs := qs + FLD_ATV_UPN;
+	qs := qs + ',';
+	qs := qs + #10#13;
+	qs := qs + FLD_ATV_MAIL;
+	qs := qs + ',';
+	qs := qs + #10#13;
+	qs := qs + FLD_ATV_REAL_LAST_LOGON;
+	qs := qs + ',';
+	qs := qs + #10#13;
+	qs := qs + FLD_ATV_REAL_LAST_LOGON_DAYS_AGO;
+	qs := qs + ',';
+	qs := qs + #10#13;
+	qs := qs + FLD_ADM_PRE_ALERT_DAYS;
+	qs := qs + ',';
+	qs := qs + #10#13;
+	qs := qs + 'FROM ' + TBL_ATV + ' ';
+	qs := qs + #10#13;
+	qs := qs + 'INNER JOIN ' + TBL_ADM + ' ON ' + FLD_ADM_ID + '=' + FLD_ATV_ADM_ID + ' ';
+	qs := qs + #10#13;
+	qs := qs + 'HAVING ' + FLD_ATV_REAL_LAST_LOGON_DAYS_AGO + '=' + FLD_ADM_TRESHOLD_DISABLE_DAYS + '-' + FLD_ADM_PRE_ALERT_DAYS + ' ';
+	qs := qs + #10#13;
+	qs := qs + 'AND ' + FLD_ATV_MAIL + ' IS NOT NULL';
+	qs := qs + #10#13;
+	qs := qs + 'AND ' + FLD_ATV_IS_ACTIVE + '=1';
+	qs := qs + #10#13;
+	qs := qs + 'ORDER BY RealLastLogonDaysAgo DESC';
+	qs := qs + ';';
+		
+	WriteLn(qs);
+end;
+
 
 procedure InformAdminPasswordWillExpire();
 var
@@ -89,29 +138,14 @@ var
 	accountId: integer;
 	passwordLastSet: Ansistring;
 	maxPasswordAgeInDays: integer;
-	//passwordLastSetInDay: integer;
 	changePasswordBeforeDate: TDateTime;
 	preAlertDays: integer;
 	path: Ansistring;
 	f: TextFile;
 	subject: Ansistring;
 begin
-	{
-	qs := 'SELECT ' + FLD_ATV_ID + ',' + FLD_ATV_UPN + ',' + FLD_ATV_MAIL + ',' + FLD_ATV_PWD_LAST_SET + ',' + FLD_ADM_MAX_PASSSWORD_AGE_DAYS + ',';
-	qs := qs + 'TIMESTAMPDIFF(day, ' + FLD_ATV_PWD_LAST_SET + ',Now()) AS password_set_ago_in_days ';
-	//qs := qs + 'DATE_ADD(', FLD_ATV_PWD_LAST_SET, ',INTERVAL ' ,  )
-	qs := qs + #10#13;
-	qs := qs + 'FROM ' + TBL_ATV + ' ';
-	qs := qs + #10#13;
-	qs := qs + 'INNER JOIN ' + TBL_ADM + ' ON ' + FLD_ADM_ID + '=' + FLD_ATV_ADM_ID + ' ';
-	qs := qs + #10#13;
-	qs := qs + 'WHERE TIMESTAMPDIFF(day, ' + FLD_ATV_PWD_LAST_SET + ',Now())=' + FLD_ADM_MAX_PASSSWORD_AGE_DAYS + '-' + FLD_ADM_PRE_ALERT_DAYS + ' ';
-	qs := qs + #10#13;
-	qs := qs + 'AND ' + FLD_ATV_MAIL + ' IS NOT NULL ';
-	qs := qs + #10#13;
-	qs := qs + 'ORDER BY ' + FLD_ATV_PWD_LAST_SET + ' DESC;';
-	}
-	
+	WriteLn('InformAdminPasswordWillExpire()');
+
 	qs := 'SELECT ' + FLD_ATV_ID + ',' + FLD_ATV_APS_ID + ',' + FLD_ATV_UPN + ',' + FLD_ATV_MAIL + ',' + FLD_ATV_PWD_LAST_SET + ',' + FLD_ADM_MAX_PASSSWORD_AGE_DAYS + ',' + FLD_ADM_PRE_ALERT_DAYS + ',';
 	qs := qs + 'DATEDIFF(NOW(), ' + FLD_ATV_PWD_LAST_SET + ') AS password_set_ago_in_days ';
 	qs := qs + #10#13;
@@ -148,7 +182,7 @@ begin
 			WriteLn('-----------------------------------------------');
 			
 			path := SysUtils.GetTempFileName();
-			WriteLn('Mail body: ', path);
+			//WriteLn('Mail body: ', path);
 			SysUtils.DeleteFile(path);
 			
 			// Open the text file and read the lines from it.
@@ -203,8 +237,8 @@ end; // of procedure ProgramInit
 procedure ProgramRun();
 begin
 	WriteLn('Running...');
-	InformAdminPasswordWillExpire();
-	
+	//InformAdminPasswordWillExpire();
+	InformAdminAccountWillBeDisabled();
 end; // of procedure ProgramRun
 
 
