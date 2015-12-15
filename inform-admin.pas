@@ -74,7 +74,7 @@ begin
 	WriteLn(cmd);
 	WriteLn;
 	
-	RunCommand(cmd);
+	//RunCommand(cmd);
 	Sleep(SLEEP_NEXT_ACTION);
 end;
 
@@ -137,6 +137,7 @@ var
 	personId: integer;
 	accountId: integer;
 	passwordLastSet: Ansistring;
+	passwordLastSetDaysAgo: integer;
 	maxPasswordAgeInDays: integer;
 	changePasswordBeforeDate: TDateTime;
 	preAlertDays: integer;
@@ -146,14 +147,47 @@ var
 begin
 	WriteLn('InformAdminPasswordWillExpire()');
 
-	qs := 'SELECT ' + FLD_ATV_ID + ',' + FLD_ATV_APS_ID + ',' + FLD_ATV_UPN + ',' + FLD_ATV_MAIL + ',' + FLD_ATV_PWD_LAST_SET + ',' + FLD_ADM_MAX_PASSSWORD_AGE_DAYS + ',' + FLD_ADM_PRE_ALERT_DAYS + ',';
-	qs := qs + 'DATEDIFF(NOW(), ' + FLD_ATV_PWD_LAST_SET + ') AS password_set_ago_in_days ';
+	qs := 'SELECT';
+	qs := qs + #10#13;
+	qs := qs + FLD_ATV_ID;
+	qs := qs + ',';
+	qs := qs + #10#13;
+	qs := qs + FLD_ATV_APS_ID;
+	qs := qs + ',';
+	qs := qs + #10#13;
+	qs := qs + FLD_ATV_UPN;
+	qs := qs + ',';
+	qs := qs + #10#13;
+	qs := qs + FLD_ATV_MAIL;
+	qs := qs + ',';
+	qs := qs + #10#13;
+	qs := qs + FLD_ATV_PWD_LAST_SET;
+	qs := qs + ',';
+	qs := qs + #10#13;
+	qs := qs + FLD_ATV_PWD_LAST_SET_DAYS_AGO;
+	qs := qs + ',';
+	qs := qs + #10#13;
+	qs := qs + FLD_ADM_PRE_ALERT_DAYS;
+	qs := qs + ',';
+	qs := qs + #10#13;
+	qs := qs + FLD_ADM_MAX_PASSSWORD_AGE_DAYS;
+	qs := qs + ',';
+	qs := qs + #10#13;
+	qs := qs + FLD_ADM_TRESHOLD_DISABLE_DAYS;
+	qs := qs + ',';
+	qs := qs + #10#13;
+	qs := qs + '(' + FLD_ADM_MAX_PASSSWORD_AGE_DAYS + '-' + FLD_ADM_PRE_ALERT_DAYS + ') AS PreAlertDays';
 	qs := qs + #10#13;
 	qs := qs + 'FROM ' + TBL_ATV + ' ';
 	qs := qs + #10#13;
-	qs := qs + 'INNER JOIN ' + TBL_ADM + ' ON ' + FLD_ADM_ID + '=' + FLD_ATV_ADM_ID + ' ';
-	qs := qs + 'WHERE DATEDIFF(NOW(), ' + FLD_ATV_PWD_LAST_SET + ')=' + FLD_ADM_MAX_PASSSWORD_AGE_DAYS + '-' + FLD_ADM_PRE_ALERT_DAYS + ' ';
-	qs := qs + 'AND ' + FLD_ATV_MAIL + ' IS NOT NULL;';
+	qs := qs + 'INNER JOIN ' + TBL_ADM + ' ON ' + FLD_ADM_ID + '=' + FLD_ATV_ADM_ID;
+	qs := qs + #10#13;
+	qs := qs + 'HAVING ' + FLD_ATV_PWD_LAST_SET_DAYS_AGO + '>PreAlertDays';
+	qs := qs + #10#13;
+	qs := qs + 'AND ' + FLD_ATV_PWD_LAST_SET_DAYS_AGO + '<' + FLD_ADM_MAX_PASSSWORD_AGE_DAYS;
+	qs := qs + #10#13;
+	qs := qs + 'ORDER BY ' + FLD_ATV_PWD_LAST_SET_DAYS_AGO;
+	qs := qs + ';';
 	
 	WriteLn(qs);
 	
@@ -174,21 +208,25 @@ begin
 			personId := rs.FieldByName(FLD_ATV_APS_ID).AsInteger;
 			accountId := rs.FieldByName(FLD_ATV_ID).AsInteger;
 			passwordLastSet := rs.FieldByName(FLD_ATV_PWD_LAST_SET).AsString;
+			passwordLastSetDaysAgo := rs.FieldByName(FLD_ATV_PWD_LAST_SET_DAYS_AGO).AsInteger;
 			maxPasswordAgeInDays := rs.FieldByName(FLD_ADM_MAX_PASSSWORD_AGE_DAYS).AsInteger;
-			//passwordLastSetInDay := rs.FieldByName('password_set_ago_in_days').AsInteger;
 			preAlertDays := rs.FieldByName(FLD_ADM_PRE_ALERT_DAYS).AsInteger;
 			changePasswordBeforeDate := IncDay(StrToDateTime(passwordLastSet), maxPasswordAgeInDays);
 			
+			
+			
 			WriteLn('-----------------------------------------------');
+			WriteLn('upn=', upn, '        ', passwordLastSetDaysAgo);
 			
 			path := SysUtils.GetTempFileName();
 			//WriteLn('Mail body: ', path);
 			SysUtils.DeleteFile(path);
-			
+			{
 			// Open the text file and read the lines from it.
 			Assign(f, path);
-	
+			}
 			{I+}
+			{
 			ReWrite(f);
 			
 			WriteLn('SEND MAIL TO: ', mail, '>', personId);
@@ -211,7 +249,7 @@ begin
 			WriteLn(f, 'E-mail: nsg.hostingadbeheer@ns.nl');
 			
 			Close(f);
-
+			
 			subject := 'INFORMATION: Account ' + upn + ', the password is about to expire.';
 			
 			SendOneMail(mail, subject, path);
@@ -219,7 +257,7 @@ begin
 			
 			// Delete the body file
 			SysUtils.DeleteFile(path);
-			
+			}
 			rs.Next;
 			WriteLn;
 		end;
@@ -237,8 +275,8 @@ end; // of procedure ProgramInit
 procedure ProgramRun();
 begin
 	WriteLn('Running...');
-	//InformAdminPasswordWillExpire();
-	InformAdminAccountWillBeDisabled();
+	InformAdminPasswordWillExpire();
+	//InformAdminAccountWillBeDisabled();
 end; // of procedure ProgramRun
 
 
