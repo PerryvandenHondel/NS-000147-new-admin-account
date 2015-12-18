@@ -52,12 +52,23 @@ const
 	FLD_ADM_IS_ACTIVE = 							'adm_is_active';
 	FLD_ADM_OU = 									'adm_org_unit';
 	
+	// Hosts
+	TBL_HST	= 										'host_hst';
+	FLD_HST_ID = 									'hst_id';
+	FLD_HST_IS_ACTIVE = 							'hst_is_active';
+	FLD_HST_ADM_ID = 								'hst_adm_id';  		// HOST>DOMAIN_ID
+	FLD_HST_FQDN = 									'hst_fqdn';
+	FLD_HST_HOSTNAME = 								'hst_host_name';
+	FLD_HST_RCD = 									'hst_rcd';			// Record Created
+	FLD_HST_RLU = 									'hst_rlu';			// Record Latest Update
+	
 	// Table Active Account (ATV)
 	TBL_ATV = 										'account_active_atv';
 	FLD_ATV_ID = 									'atv_id';
 	FLD_ATV_IS_ACTIVE = 							'atv_is_active';
 	FLD_ATV_ADM_ID = 								'atv_adm_id';
 	FLD_ATV_APS_ID = 								'atv_person_aps_id'; // APS_ID
+	FLD_ATV_OBJECTSID = 							'atv_objectsid';
 	FLD_ATV_DN = 									'atv_dn';
 	FLD_ATV_SORT = 									'atv_sort';
 	FLD_ATV_UPN = 									'atv_upn';
@@ -70,7 +81,8 @@ const
 	FLD_ATV_UAC_ACCOUNTDISABLED = 					'atv_uac_accountdisabled';
 	FLD_ATV_UAC_NOT_DELEGATED = 					'atv_uac_not_delegated';
 	FLD_ATV_REAL_LAST_LOGON = 						'atv_real_last_logon';
-	FLD_ATV_REAL_LAST_LOGON_DAYS_AGO = 				'atv_real_last_logon_days_ago';
+	FLD_ATV_REAL_LAST_LOGON_DAYS_AGO = 				'atv_real_last_logon_days_ago'; // calculated value
+	FLD_ATV_PWD_EXPIRES_ON = 						'atv_password_expires_on';		// calculated value
 	FLD_ATV_PWD_LAST_SET = 							'atv_password_last_set';
 	FLD_ATV_PWD_LAST_SET_DAYS_AGO = 				'atv_password_last_set_days_ago';
 	FLD_ATV_CREATED = 								'atv_created';
@@ -203,6 +215,9 @@ const
 	FLD_ALL_ID = 				'all_id';
 	FLD_ALL_ADM_ID = 			'all_adm_id';
 	FLD_ALL_HOST = 				'all_host';
+	FLD_ALL_ATV_ID = 			'all_atv_id';
+	FLD_ALL_HST_ID = 			'all_hst_id';
+	FLD_ALL_OBJECTSID = 		'all_objectsid';
 	FLD_ALL_DN = 				'all_dn';
 	FLD_ALL_LL = 				'all_last_logon';
 	FLD_ALL_RCD = 				'all_rcd';

@@ -69,6 +69,7 @@ const
 	
 var
 	updateDateTime: TDateTime;
+	pathPid: Ansistring;
 
 
 function IsUacFlagActive(uncValue: integer; uncFlag: integer): integer;
@@ -79,6 +80,45 @@ begin
 		IsUacFlagActive := 0;
 end;
 
+
+function GetRecordIdBasedOnFieldValue(tableName: Ansistring; fieldReturn: Ansistring; searchField: Ansistring; searchValue: Ansistring): integer;
+//
+//	Search in a table tableName for the Record ID (fieldReturn) of search field (fieldSearch) with value fieldValue.
+//
+//	GetRecordIdBasedOnFieldValue(table, fieldReturn, fieldToSearch, valueToSearch);
+var
+	qs: Ansistring;
+	rs: TSQLQuery; // Uses SqlDB
+	returnValue: integer;
+begin
+	qs := 'SELECT ' + fieldReturn;
+	qs := qs + ' ';
+	qs := qs + 'FROM';
+	qs := qs + ' ';
+	qs := qs + tableName;
+	qs := qs + ' ';
+	qs := qs + 'WHERE';
+	qs := qs + ' ';
+	qs := qs + searchField + '=' + FixStr(searchValue);
+	qs := qs + ';';
+	//WriteLn('GetRecordIdBasedOnFieldValue(): ', qs);
+	
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+
+	if rs.Eof = true then
+		returnValue := 0
+	else
+		returnValue := rs.FieldByName(fieldReturn).AsInteger;
+	
+	rs.Free;	
+	
+	GetRecordIdBasedOnFieldValue := returnValue;
+end;
+	
 	
 function IsDisabled(iUac: LongInt): boolean;
 	{'
@@ -133,12 +173,41 @@ begin
 		returnValue := 0
 	else
 		returnValue := rs.FieldByName(FLD_ADM_ID).AsInteger;
-		
+	
+	rs.Free;
 	GetDomainIdFromRootDse := returnValue;
 end;
 
 
-procedure RecordAddAccount(domainId: integer; dn: string; fname: string; lname: string; upn: string; sam: string; mail: string; created: string; uac: string; pwdLastSet: string);
+function GetPasswordAgeOfDomainInDays(domainId: integer): integer;
+var
+	qs: string;
+	rs: TSQLQuery; // Uses SqlDB
+	returnValue: integer;
+begin
+	returnValue := 0;
+	
+	qs := 'SELECT ' + FLD_ADM_MAX_PASSSWORD_AGE_DAYS + ' ';
+	qs := qs + 'FROM ' + TBL_ADM + ' ';
+	qs := qs + 'WHERE ' + FLD_ADM_ID + '=' + IntToStr(domainId) + ';';
+	
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+
+	if rs.Eof = true then
+		returnValue := 0
+	else
+		returnValue := rs.FieldByName(FLD_ADM_MAX_PASSSWORD_AGE_DAYS).AsInteger;
+
+	rs.Free;
+	GetPasswordAgeOfDomainInDays := returnValue;
+end;
+
+
+procedure RecordAddAccount(domainId: integer; dn: string; fname: string; lname: string; upn: string; sam: string; mail: string; created: string; uac: string; pwdLastSet: string; objectSid: string);
 //
 //	Add a new record to the table when it does not exist yet, key = dn.
 //	
@@ -153,42 +222,35 @@ procedure RecordAddAccount(domainId: integer; dn: string; fname: string; lname: 
 //		uac:		User Account Control value
 //
 var
-	qs: string;
+	recordId: integer;
 	qi: string;
 	qu: string;
-	id: integer;
-	rs: TSQLQuery; // Uses SqlDB
 	passwordLastSetDaysAgo: integer;
+	passwordExpires: TDateTime;
+	maxPasswordAgeInDays: integer;
 begin
 	upn := LowerCase(upn);
 	mail := LowerCase(mail);
 
 	// Calculate the password last set age in days.
 	if Pos('0000-00-00', pwdLastSet) > 0 then
+	begin
 		// pwdLastSet is set to change at next logon, age becomes 0 days old.
-		passwordLastSetDaysAgo := 0
+		passwordLastSetDaysAgo := 0;
+		//passwordExpires := StrToDateTime('0000-00-00 00:00:00');
+	end
 	else
 	begin
 		passwordLastSetDaysAgo := DaysBetween(Now(), StrToDateTime(pwdLastSet));
+		maxPasswordAgeInDays := GetPasswordAgeOfDomainInDays(domainId);
+		passwordExpires := IncDay(StrToDateTime(pwdLastSet), maxPasswordAgeInDays);
+		//WriteLn('Password will expire at ', DateTimeToStr(passwordExpires));
 	end;
-	//WriteLn('RecordAddAccount(): passwordLastSetDaysAgo=', passwordLastSetDaysAgo);
 
-	qs := 'SELECT ' + FLD_ATV_ID + ' ';
-	qs := qs + 'FROM ' + TBL_ATV + ' ';
-	qs := qs + 'WHERE ' + FLD_ATV_DN + '=' + FixStr(dn) + ';';
-	//WriteLn(qs);
-	
-	rs := TSQLQuery.Create(nil);
-	rs.Database := gConnection;
-	rs.PacketRecords := -1;
-	rs.SQL.Text := qs;
-	rs.Open;
-
-	//WriteLn;
-	//WriteLn(dn, ': ', BoolToStr(IsUacFlagActive(StrToInt(uac), ADS_UF_ACCOUNTDISABLE)));
-	
-	if rs.Eof = true then
+	recordId := GetRecordIdBasedOnFieldValue(TBL_ATV, FLD_ATV_ID, FLD_ATV_OBJECTSID, objectSid);
+	if recordId = 0 then
 	begin
+		// Insert a new record
 		qi := 'INSERT INTO ' + TBL_ATV + ' ';
 		qi := qi + 'SET ';
 		qi := qi + FLD_ATV_DN + '=' + FixStr(dn) + ',';
@@ -209,7 +271,12 @@ begin
 		qi := qi + FLD_ATV_MAIL + '=' + FixStr(mail) + ',';
 		qi := qi + FLD_ATV_CREATED + '=' + FixStr(created) + ',';
 		qi := qi + FLD_ATV_PWD_LAST_SET + '=' + FixStr(pwdLastSet) + ',';
+		qi := qi + FLD_ATV_OBJECTSID + '=' + FixStr(objectSid) + ',';
 		qi := qi + FLD_ATV_PWD_LAST_SET_DAYS_AGO + '=' + IntToStr(passwordLastSetDaysAgo) + ',';
+		if passwordLastSetDaysAgo > 0 then
+		begin
+			qi := qi + FLD_ATV_PWD_EXPIRES_ON + '=' + EncloseSingleQuote(DateTimeToStr(passwordExpires)) + ',';
+		end;
 		qi := qi + FLD_ATV_UAC + '=' + uac + ',';
 		qi := qi + FLD_ATV_UAC_ACCOUNTDISABLED + '=' + IntToStr(IsUacFlagActive(StrToInt(uac), ADS_UF_ACCOUNTDISABLE)) + ',';
 		qi := qi + FLD_ATV_UAC_NOT_DELEGATED + '=' + IntToStr(IsUacFlagActive(StrToInt(uac), ADS_UF_NOT_DELEGATED)) + ',';
@@ -219,8 +286,7 @@ begin
 	end
 	else
 	begin
-		//WriteLn('UPDATE!');
-		id := rs.FieldByName(FLD_ATV_ID).AsInteger;
+		// Update existing record.
 		qu := 'UPDATE '+ TBL_ATV + ' ';
 		qu := qu + 'SET ';
 		
@@ -239,12 +305,17 @@ begin
 		qu := qu + FLD_ATV_MAIL + '=' + FixStr(mail) + ',';
 		qu := qu + FLD_ATV_CREATED + '=' + FixStr(created) + ',';
 		qu := qu + FLD_ATV_PWD_LAST_SET + '=' + FixStr(pwdLastSet) + ',';
+		qu := qu + FLD_ATV_OBJECTSID + '=' + FixStr(objectSid) + ',';
 		qu := qu + FLD_ATV_PWD_LAST_SET_DAYS_AGO + '=' + IntToStr(passwordLastSetDaysAgo) + ',';
+		if passwordLastSetDaysAgo > 0 then
+		begin
+			qu := qu + FLD_ATV_PWD_EXPIRES_ON + '=' + EncloseSingleQuote(DateTimeToStr(passwordExpires)) + ',';
+		end;
 		qu := qu + FLD_ATV_UAC + '=' + uac + ',';
 		qu := qu + FLD_ATV_UAC_ACCOUNTDISABLED + '=' + IntToStr(IsUacFlagActive(StrToInt(uac), ADS_UF_ACCOUNTDISABLE)) + ',';
 		qu := qu + FLD_ATV_UAC_NOT_DELEGATED + '=' + IntToStr(IsUacFlagActive(StrToInt(uac), ADS_UF_NOT_DELEGATED)) + ',';
 		qu := qu + FLD_ATV_RLU + '=' + EncloseSingleQuote(DateTimeToStr(updateDateTime)) + ' ';
-		qu := qu + 'WHERE ' + FLD_ATV_ID + '=' + IntToStr(id) + ';';
+		qu := qu + 'WHERE ' + FLD_ATV_ID + '=' + IntToStr(recordId) + ';';
 		//WriteLn(qu);
 		RunQuery(qu);
 	end;
@@ -321,7 +392,23 @@ begin
 	c := c + ' ';
 	c := c + '-f "(&(objectCategory=person)(objectClass=user))"';
 	c := c + ' ';
-	c := c + 'sAMAccountName givenName sn userPrincipalName mail userAccountControl whenCreated pwdLastSet';
+	c := c + 'sAMAccountName';
+	c := c + ' ';
+	c := c + 'givenName';
+	c := c + ' ';
+	c := c + 'sn';
+	c := c + ' ';
+	c := c + 'userPrincipalName';
+	c := c + ' ';
+	c := c + 'mail';
+	c := c + ' ';
+	c := c + 'userAccountControl';
+	c := c + ' ';
+	c := c + 'whenCreated';
+	c := c + ' ';
+	c := c + 'pwdLastSet';
+	c := c + ' ';
+	c := c + 'objectSid';
 	c := c + ' ';
 	c := c + '-csv -nocsvq -csvdelim ;';
 	c := c + ' ';
@@ -355,7 +442,7 @@ begin
 		Inc(i);
 		if IsValidAdminAccount(dn) = true then
 		begin
-			RecordAddAccount(domainId, dn, csv.GetValue('givenName'), csv.GetValue('sn'), csv.GetValue('userPrincipalName'), csv.GetValue('sAMAccountName'), csv.GetValue('mail'), csv.GetValue('whenCreated'), csv.GetValue('userAccountControl'), csv.GetValue('pwdLastSet'));
+			RecordAddAccount(domainId, dn, csv.GetValue('givenName'), csv.GetValue('sn'), csv.GetValue('userPrincipalName'), csv.GetValue('sAMAccountName'), csv.GetValue('mail'), csv.GetValue('whenCreated'), csv.GetValue('userAccountControl'), csv.GetValue('pwdLastSet'), csv.GetValue('objectSid'));
 		end; // of if
     until csv.GetEof();
 	csv.CloseFile();
@@ -367,56 +454,68 @@ begin
 end; // of procedure ProcessSingleActiveDirectory
 
 
-procedure LastLogonAddRecord(domainId: integer; host: Ansistring; dn: Ansistring; lastLogon: TDateTime);
+procedure AddRecordToTableHost(domainId: integer; fqdn: Ansistring);
+var
+	qi: Ansistring;
+	hostId: integer;
+begin
+	hostId := GetRecordIdBasedOnFieldValue(TBL_HST, FLD_HST_ID, FLD_HST_FQDN, fqdn);
+	if hostId = 0 then
+	begin
+		// Add a record because there is no FQDN found with a valid hostId.
+		qi := 'INSERT INTO ' + TBL_HST;
+		qi := qi + ' ';
+		qi := qi + 'SET';
+		qi := qi + ' ';
+		qi := qi + FLD_HST_ADM_ID + '=' + IntToStr(domainId);
+		qi := qi + ',';
+		qi := qi + FLD_HST_FQDN + '=' + FixStr(fqdn);
+		qi := qi + ',';
+		qi := qi + FLD_HST_IS_ACTIVE + '=1';
+		qi := qi + ';';
+		
+		RunQuery(qi);
+	end;
+end;
+
+
+procedure LastLogonAddRecord(domainId: integer; hostId: integer; atvId: integer; lastLogon: TDateTime);
+//procedure LastLogonAddRecord(domainId: integer; host: Ansistring; objectSid: Ansistring; atvId: integer; dn: Ansistring; lastLogon: TDateTime);
 var	
 	qi: Ansistring;
 begin
-{
-	// Skip lines with empty lastLogon values.
-	if Length(lastLogon) = 0 then
-		Exit;
-	
-	// Do not all lines with DN, that's the header
-	if Pos('dn', dn) > 0 then
-		Exit; 
-		
-	// Do not process  the lastLogon with invalid date formats.
-	if Pos('lastLogon', lastLogon) > 0 then
-		Exit;
-	
-	//WriteLn(#9#9, domainId, '  ' , host, '   ', dn, '     ', lastLogon);
-}
 	qi := 'INSERT INTO ' + TBL_ALL;
 	qi := qi + ' ';
 	qi := qi + 'SET';
 	qi := qi + ' ';
 	qi := qi + FLD_ALL_ADM_ID + '=' + IntToStr(domainId);
 	qi := qi + ',';
-	qi := qi + FLD_ALL_HOST + '=' + FixStr(host);
+	qi := qi + FLD_ALL_HST_ID + '=' + IntToStr(hostId);
 	qi := qi + ',';
-	qi := qi + FLD_ALL_DN + '=' + FixStr(dn);
+	qi := qi + FLD_ALL_ATV_ID + '=' + IntToStr(atvId);
 	qi := qi + ',';
 	qi := qi + FLD_ALL_LL + '=' + FixStr(DateTimeToStr(lastLogon));
 	qi := qi + ';';
-	
-	//WriteLn(qi);
 	RunQuery(qi);
 end;
 
 
-procedure LastLogonOneDc(domainId: integer; rootDse: Ansistring; host: Ansistring; ou: Ansistring);
+procedure LastLogonOneDc(domainId: integer; rootDse: Ansistring; fqdn: Ansistring; ou: Ansistring);
 var	
 	c: Ansistring;
 	path: Ansistring;
 	f: TextFile;
 	line: Ansistring;
 	lineSeparated: TStringArray;
-	dn: Ansistring;
+	//dn: Ansistring;
 	dateToCheck: Ansistring;
+	objectSid: Ansistring;
 	convertedDateTime: TDateTime;
+	atvId: integer;
+	hostId: integer;
 begin
-	host := LowerCase(host); // Proper host name, all small caps.
-	WriteLn(#9, '- Domain Controller ', host);
+	fqdn := LowerCase(fqdn); // Proper host name, all small caps.
+	WriteLn(#9, '- Domain Controller ', fqdn);
 	
 	// Get a unique temp path to a file.
 	path := SysUtils.GetTempFileName();
@@ -424,11 +523,13 @@ begin
 	SysUtils.DeleteFile(path);
 	
 	c := 'adfind.exe ';
-	c := c + '-h ' + EncloseDoubleQuote(host);
+	c := c + '-h ' + EncloseDoubleQuote(fqdn);
 	c := c + ' ';
 	c := c + '-b ' + EncloseDoubleQuote(ou + ',' + rootDse);
 	c := c + ' ';
 	c := c + '-f "' + #38 + '(objectClass=user)(objectCategory=person)"';
+	c := c + ' ';
+	c := c + 'objectSid';
 	c := c + ' ';
 	c := c + 'lastLogon';
 	c := c + ' ';
@@ -456,12 +557,21 @@ begin
 			SetLength(lineSeparated, 0);
 			lineSeparated := SplitString(line, #9); // Tab separated
 			
-			dn := lineSeparated[0];
-			dateToCheck := lineSeparated[1]; 
-			
-			if TryStrToDateTime(dateToCheck, convertedDateTime) = true then
-				LastLogonAddRecord(domainId, host, dn, convertedDateTime);
-
+			//dn := lineSeparated[0];
+			objectSid := lineSeparated[1];
+			atvId := GetRecordIdBasedOnFieldValue(TBL_ATV, FLD_ATV_ID, FLD_ATV_OBJECTSID, objectSid);
+			if atvId > 0 then
+			begin
+				dateToCheck := lineSeparated[2]; 
+				if TryStrToDateTime(dateToCheck, convertedDateTime) = true then
+				begin
+					begin
+						hostId := GetRecordIdBasedOnFieldValue(TBL_HST, FLD_HST_ID, FLD_HST_FQDN, fqdn);
+						//WriteLn(#9#9, hostId, #9, objectSid, '=', atvId, #9, DateTimeToStr(convertedDateTime));
+						LastLogonAddRecord(domainId, hostId, atvId, convertedDateTime);
+					end;
+				end;
+			end;
 		until Eof(f);
 		CloseFile(f);
 	except
@@ -498,6 +608,9 @@ begin
 	Reset(f);
 	repeat
 		ReadLn(f, line); // line contains the specific DC.
+		
+		AddRecordToTableHost(domainId, line);
+		
 		LastLogonOneDc(domainId, rootDse, line, ou);
 	until Eof(f);
 	Close(f);
@@ -542,7 +655,7 @@ begin
 				rootDse := rs.FieldByName(FLD_ADM_ROOTDSE).AsString;
 				ou := rs.FieldByName(FLD_ADM_OU).AsString;
 
-				WriteLn('- Domain ', rootDse);
+				Write('- Domain ', rootDse + '                                  ', #13);
 			
 				LastLogonOneDomain(domainId, rootDse, ou);
 
@@ -551,6 +664,7 @@ begin
 		end;
 	end;
 	rs.Free;
+	WriteLn;
 end; // of procedure ProcessAllAds()
 
 
@@ -608,7 +722,7 @@ begin
 end;
 
 
-function GetRealLastLogon(dn: Ansistring; created: TDateTime): TDateTime;
+function GetRealLastLogon(atvId: integer; created: TDateTime): TDateTime;
 var
 	qs: Ansistring;
 	rs: TSQLQuery; // Uses SqlDB
@@ -619,7 +733,7 @@ begin
 	qs := qs + ' ';
 	qs := qs + 'FROM ' + TBL_ALL;
 	qs := qs + ' ';
-	qs := qs + 'WHERE ' + FLD_ALL_DN + '=' + EncloseSingleQuote(dn); 
+	qs := qs + 'WHERE ' + FLD_ALL_ATV_ID + '=' + IntToStr(atvId); 
 	qs := qs + ' '; 
 	qs := qs + 'ORDER BY ' + FLD_ALL_LL + ' DESC';
 	qs := qs + ' '; 
@@ -654,16 +768,25 @@ var
 	qu: Ansistring;
 	rs: TSQLQuery; // Uses SqlDB
 	created: TDateTime;
-	recordId: integer;
-	dn: Ansistring;
+	atvId: integer;
 	realLastLogon: TDateTime;
 	realLastLogonDaysAgo: integer;
 begin
 	WriteLn('LastLogonUpdateActiveAccounts(): Obtaining the real last logon per account and updating ATV table, please wait...');
-	qs := 'SELECT ' + FLD_ATV_ID + ',' + FLD_ATV_DN + ',' + FLD_ATV_CREATED + ' ';
-	qs := qs + 'FROM ' + TBL_ATV + ' ';
-	qs := qs + 'WHERE ' +  FLD_ATV_IS_ACTIVE + '=1 ';
-	qs := qs + 'ORDER BY ' + FLD_ATV_RLU + ';';
+	qs := 'SELECT ' + FLD_ATV_ID;
+	qs := qs + ',';
+	qs := qs + FLD_ATV_CREATED;
+	qs := qs + ' ';
+	qs := qs + 'FROM ' + TBL_ATV;
+	qs := qs + ' ';
+	qs := qs + 'WHERE ' +  FLD_ATV_IS_ACTIVE + '=1';
+	qs := qs + ' ';
+	qs := qs + 'ORDER BY ' + FLD_ATV_RLU;
+	qs := qs + ';';
+	
+	WriteLn;
+	WriteLn(qs);
+	WriteLn;
 	
 	rs := TSQLQuery.Create(nil);
 	rs.Database := gConnection;
@@ -677,15 +800,17 @@ begin
 	begin
 		while not rs.EOF do
 		begin
-			recordId := rs.FieldByName(FLD_ATV_ID).AsInteger;
-			dn := rs.FieldByName(FLD_ATV_DN).AsString;
+			atvId := rs.FieldByName(FLD_ATV_ID).AsInteger;
+			//dn := rs.FieldByName(FLD_ATV_DN).AsString;
 			created := StrToDateTime(rs.FieldByName(FLD_ATV_CREATED).AsString);
 			
 			//WriteLn(#9, recordId, ' ', dn, ' ', DateTimeToStr(created));
 			
-			realLastLogon := GetRealLastLogon(dn, created);
+			realLastLogon := GetRealLastLogon(atvId, created);
 			
 			realLastLogonDaysAgo := DaysBetween(Now(), realLastLogon);
+			
+			Write(#9#9, 'Updating ', atvId, #9,  DateTimeToStr(realLastLogon), '                 ', #13);
 			
 			// Update the active account record with the most recent logon date time value.
 			qu := 'UPDATE ' + TBL_ATV;
@@ -696,11 +821,12 @@ begin
 			qu := qu + ',';
 			qu := qu + FLD_ATV_REAL_LAST_LOGON_DAYS_AGO + '=' + IntToStr(realLastLogonDaysAgo);
 			qu := qu + ' ';
-			qu := qu + 'WHERE ' + FLD_ATV_ID + '=' + IntToStr(recordId);
+			qu := qu + 'WHERE ' + FLD_ATV_ID + '=' + IntToStr(atvId);
 			qu := qu + ';';
 			
 			//WriteLn(qu);
 			RunQuery(qu);
+			
 			rs.Next;
 		end;
 	end;
@@ -815,6 +941,9 @@ end;
 
 
 begin
+	pathPid := GetPathOfPidFile();
+	WriteLn('PID file: ', pathPid);
+	
 	WriteLn('Use option --help to show this programs options');
 	
 	if ParamStr(1) = '--help' then 
@@ -843,4 +972,6 @@ begin
 	end;
 	
 	DatabaseClose();
+	
+	DeleteFile(pathPid);
 end.  // of program NaaUpdateTables

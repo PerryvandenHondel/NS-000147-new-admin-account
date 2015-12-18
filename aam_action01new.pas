@@ -224,6 +224,9 @@ var
 begin
 	GenerateUserName3 := '';
 	
+	// Remove any spaces in the first name.
+	fn := StringReplace(fn, ' ', '');
+	
 	if Length(mn) > 0 then
 	begin
 		// Add a space to the middle name.
