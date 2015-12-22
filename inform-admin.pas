@@ -61,6 +61,8 @@ var
 begin
 	// Remove for real version, now th email will be send to myself.
 	mail := 'perry.vandenhondel@ns.nl';
+	
+	
 
 	cmd := 'blat.exe ' + path;
 	cmd := cmd + ' -to ' + EncloseDoubleQuote(mail);

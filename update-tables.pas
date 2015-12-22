@@ -515,7 +515,7 @@ var
 	hostId: integer;
 begin
 	fqdn := LowerCase(fqdn); // Proper host name, all small caps.
-	WriteLn(#9, '- Domain Controller ', fqdn);
+	Write(#9, '- Domain Controller ', fqdn + '                                           ', #13);
 	
 	// Get a unique temp path to a file.
 	path := SysUtils.GetTempFileName();
@@ -616,6 +616,7 @@ begin
 	Close(f);
 	
 	SysUtils.DeleteFile(path);
+	WriteLn; // Move to next line.
 end;
 
 
@@ -655,16 +656,14 @@ begin
 				rootDse := rs.FieldByName(FLD_ADM_ROOTDSE).AsString;
 				ou := rs.FieldByName(FLD_ADM_OU).AsString;
 
-				Write('- Domain ', rootDse + '                                  ', #13);
+				WriteLn('- Domain ', rootDse);
 			
 				LastLogonOneDomain(domainId, rootDse, ou);
-
 			end;
 			rs.Next;
 		end;
 	end;
 	rs.Free;
-	WriteLn;
 end; // of procedure ProcessAllAds()
 
 
@@ -927,6 +926,49 @@ begin
 	rs.Free;
 end;
 
+
+procedure ExportGroups();
+var
+	qs: Ansistring;
+	rs: TSQLQuery;
+	rootDse: Ansistring;
+	ou: Ansistring;
+	c: Ansistring;
+begin
+	WriteLn;
+	WriteLn('ExportGroups()');
+	
+	qs := 'SELECT ' + FLD_ADM_ROOTDSE + ',' + FLD_ADM_DOM_NT + ',' + FLD_ADM_OU + ' ';
+	qs := qs + 'FROM ' + TBL_ADM + ' ';
+	qs := qs + 'WHERE ' + FLD_ADM_IS_ACTIVE + '=1';
+	qs := qs + ';';
+
+	//WriteLn(qs);
+	
+	rs := TSQLQuery.Create(nil);
+	rs.Database := gConnection;
+	rs.PacketRecords := -1;
+	rs.SQL.Text := qs;
+	rs.Open;
+
+	if rs.EOF = true then
+		WriteLn('ExportGroups() No records found!')
+	else
+	begin
+		while not rs.EOF do
+		begin
+			rootDse := rs.FieldByName(FLD_ADM_ROOTDSE).AsString;
+			ou := rs.FieldByName(FLD_ADM_OU).AsString;
+
+			WriteLn(rootDse, #9, ou);
+			c := ' adfind.exe -b "' + ou + ',' + rootDse + '" -f "(objectCategory=group)" objectSid -csv ';
+			WriteLn(c);
+			rs.Next;
+		end;
+	end;
+	rs.Free;
+end;
+
 	
 procedure ProgramUsage();
 begin
@@ -935,7 +977,8 @@ begin
 	WriteLn;
 	WriteLn('Options:');
 	WriteLn('	--real-logon   Calculate the real logon timestamp by connecting all DC''s in the domain');
-	WriteLn('	--help         The help information');
+	WriteLn('	--groups       Export groups');
+	WriteLn('	--help         This help information');
 	WriteLn;
 end;
 
@@ -970,6 +1013,12 @@ begin
 		// and days ago.
 		LastLogonUpdateActiveAccounts();
 	end;
+	
+	if ParamStr(1) = '--groups' then
+	begin
+		ExportGroups();
+	end;
+	
 	
 	DatabaseClose();
 	
