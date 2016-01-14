@@ -228,6 +228,9 @@ var
 	passwordLastSetDaysAgo: integer;
 	passwordExpires: TDateTime;
 	maxPasswordAgeInDays: integer;
+	isAccountDisabled: boolean;
+	inactiveText: Ansistring;
+	sortName: Ansistring;
 begin
 	upn := LowerCase(upn);
 	mail := LowerCase(mail);
@@ -247,6 +250,15 @@ begin
 		//WriteLn('Password will expire at ', DateTimeToStr(passwordExpires));
 	end;
 
+	// If the account is disabled, add the inactiveText to it.
+	isAccountDisabled := IsDisabled(StrToInt(uac));
+	if isAccountDisabled = true then
+		inactiveText := ' / INACTIVE'
+	else
+		inactiveText := '';
+	
+	
+	
 	recordId := GetRecordIdBasedOnFieldValue(TBL_ATV, FLD_ATV_ID, FLD_ATV_OBJECTSID, objectSid);
 	if recordId = 0 then
 	begin
@@ -256,10 +268,15 @@ begin
 		qi := qi + FLD_ATV_DN + '=' + FixStr(dn) + ',';
 		
 		if Length(fname) = 0 then
-			qi := qi + FLD_ATV_SORT + '=' + FixStr(lname + ' (' + upn + ')') + ',' // When only the last name is used
+		begin
+			// When no first name exists, some Indian dudes have that.
+			sortName := Trim(lname + ' / ' + IntToStr(recordId) + ' / ' + upn + inactiveText);
+			qi := qi + FLD_ATV_SORT + '=' + FixStr(sortName) + ',' // When only the last name is used
+		end
 		else
 		begin
-			qi := qi + FLD_ATV_SORT + '=' + FixStr(lname + ', ' + fname + ' (' + upn + ')') + ',';
+			sortName := Trim(lname + ', ' + fname + ' / ' + IntToStr(recordId) + ' / ' + upn + inactiveText);
+			qi := qi + FLD_ATV_SORT + '=' + FixStr(sortName) + ',';
 			qi := qi + FLD_ATV_FNAME + '=' + FixStr(fname) + ',';
 		end; // of if
 		
@@ -291,10 +308,14 @@ begin
 		qu := qu + 'SET ';
 		
 		if Length(fname) = 0 then
-			qu := qu + FLD_ATV_SORT + '=' + FixStr(lname + ' (' + upn + ')') + ',' // When only the last name is used
+		begin
+			sortName := Trim(lname + ' / ' + IntToStr(recordId) + ' / ' + upn + inactiveText);
+			qu := qu + FLD_ATV_SORT + '=' + FixStr(sortName) + ',' // When only the last name is used
+		end
 		else
 		begin
-			qu := qu + FLD_ATV_SORT + '=' + FixStr(lname + ', ' + fname + ' (' + upn + ')') + ',';
+			sortName := Trim(lname + ', ' + fname + ' / ' + IntToStr(recordId) + ' / ' + upn + inactiveText);
+			qu := qu + FLD_ATV_SORT + '=' + FixStr(sortName) + ',';
 			qu := qu + FLD_ATV_FNAME + '=' + FixStr(fname) + ',';
 		end; // of if
 		
