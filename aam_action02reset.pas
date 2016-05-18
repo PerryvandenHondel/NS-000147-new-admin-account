@@ -356,11 +356,13 @@ begin
 				// Update the table to register the generated password. 
 				//UpdatePassword(recId, initialPassword);
 				UpdateOneFieldString(VIEW_RESET, VIEW_RESET_ID, recId, VIEW_RESET_INITPW, initialPassword);
-				
 			end; // of if
 			
+			// Generate a unique action number, based on a SHA1. Start with a number
+			// to define the action, 01=create account, 02=password reset, etc.
 			actionSha1 := GenerateUniqueActionNumber(curAction);
 			WriteLn('Unique SHA1 for this specific action: ', actionSha1);
+
 			//UpdateActionSha1(recId, actionSha1);
 			UpdateOneFieldString(VIEW_RESET, VIEW_RESET_ID, recId, VIEW_RESET_ACTION_SHA1, actionSha1);
 				
@@ -374,13 +376,11 @@ begin
 			c :=  'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -mustchpwd yes';
 			AddRecordToTableAad(actionSha1, c);
 			
-			if IsAccountLockedout(dn) = true then
-			begin
-				// If the account is locked out, use DSMOD USER <dn> -disabled no to unlock.
-				c :=  'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -disabled no';
-				AddRecordToTableAad(actionSha1, c);
-			end;
-			
+			// 2016-05-18 PVDH modification: Enable account: dsmod user <user's distinguished name (DN)> -disabled no
+			// And unlocks an account when locked.
+			c := 'dsmod.exe user ' + EncloseDoubleQuote(dn) + ' -disabled no';
+			AddRecordToTableAad(actionSha1, c);
+						
 			// Execute all actions in table AAD for password resets
 			//ActionResetProcess(curAction, recId, actionSha1);
 			TableAadProcessActions(actionSha1);

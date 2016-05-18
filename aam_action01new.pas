@@ -225,7 +225,7 @@ begin
 	GenerateUserName3 := '';
 	
 	// Remove any spaces in the first name.
-	fn := StringReplace(fn, ' ', '');
+	fn := StringReplace(fn, ' ', '', [rfReplaceAll, rfIgnoreCase]);
 	
 	if Length(mn) > 0 then
 	begin
@@ -272,6 +272,7 @@ var
 	f: TextFile;
 	cmd: Ansistring;
 	fileAccountInfo: string;
+	samAccountName: Ansistring;
 begin
 	// Build the path of the e-mail contents file.
 	traceCode := IntToStr(PROG_ID) + '-' + IntToStr(curAction) + '-' + IntToStr(recId);
@@ -279,15 +280,21 @@ begin
 	
 	fileAccountInfo := 'accountinfo.txt';
 	
+	samAccountName := LeftStr(upn, Pos('@', upn) - 1);
+	samAccountName := LeftStr(samAccountName, 20);
+	
+	
 	if FileExists(path) = true then
 		DeleteFile(path);
-		
+	
 	Assign(f, path);
 	ReWrite(f);
 	
 	WriteLn(f, 'Hello ', reqFname, ',');
 	WriteLn(f);
-	WriteLn(f, 'New account is created: ', upn);
+	WriteLn(f, 'New account is created');
+	WriteLn(f, '      UPN format:       ', upn);
+	WriteLn(f, '      NetBIOS format:   ', samAccountName);
 	WriteLn(f);
 	WriteLn(f, 'Initial password:       ' + pw);
 	WriteLn(f);

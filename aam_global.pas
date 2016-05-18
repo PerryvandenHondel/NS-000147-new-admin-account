@@ -328,6 +328,7 @@ begin
 		begin
 			recId := rs.FieldByName(FLD_AAD_ID).AsInteger;
 			cmd := rs.FieldByName(FLD_AAD_CMD).AsString;
+			WriteLn(cmd);
 			r := RunCommand(cmd);
 			UpdateAadErrorLevel(recId, r);
 			rs.Next;

@@ -35,7 +35,7 @@ program AdminAccountManagement;
 
 
 {$MODE OBJFPC}			
-{$LONGSTRINGS ON}		// Compile all strings as Ansistrings
+{$LONGSTRINGS ON}		// Compile all strings as Ansistring
 
 
 uses
