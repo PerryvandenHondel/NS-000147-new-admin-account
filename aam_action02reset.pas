@@ -71,7 +71,7 @@ begin
 	
 	WriteLn(f, 'Hello ', fname, ',');
 	WriteLn(f);
-	WriteLn(f, 'The password has been reset for: ', upn);
+	WriteLn(f, 'Account reset/unlocked/enabled is done for: ', upn);
 	WriteLn(f);
 	WriteLn(f, 'Initial password:                ' + initpw);
 	WriteLn(f);
@@ -86,7 +86,7 @@ begin
 	cmd := cmd + ' -to ' + EncloseDoubleQuote(mailto);
 	cmd := cmd + ' -f ' + EncloseDoubleQuote(MAIL_FROM);
 	cmd := cmd + ' -bcc ' + EncloseDoubleQuote(MAIL_BCC);
-	cmd := cmd + ' -subject ' + EncloseDoubleQuote('Password reset done for ' + upn + ' // ' + ref + ' // ADB# ' + traceCode);
+	cmd := cmd + ' -subject ' + EncloseDoubleQuote('Account reset/unlocked/enabled done for ' + upn + ', Reference #' + ref + ' (' + traceCode + ')');
 	cmd := cmd + ' -server vm70as005.rec.nsint';
 	cmd := cmd + ' -port 25';
 	
@@ -180,7 +180,7 @@ begin
 		while not rs.EOF do
 		begin
 			errorLevel := rs.FieldByName(FLD_AAD_EL).AsInteger;
-			WriteLn(errorLevel:12);
+			//WriteLn(errorLevel:12);
 			if errorLevel <> 0 then
 			begin
 				// Not all steps where successful, set 
@@ -271,39 +271,6 @@ begin
 	rs.Free;
 end; // of procedure ProcessActions
 
-
-{
-procedure UpdatePassword(recId: integer; newPassword: string);
-var
-	qu: Ansistring;
-begin
-	qu := 'UPDATE ' + VIEW_RESET;
-	qu := qu + ' SET';
-	qu := qu + ' ' + VIEW_RESET_INITPW + '=' + EncloseSingleQuote(newPassword);
-	qu := qu + ' WHERE ' + VIEW_RESET_ID + '=' + IntToStr(recId);
-	qu := qu + ';';
-	
-	//WriteLn('UpdatePassword(): ', qu);
-	RunQuery(qu);
-end; // of procedure UpdatePassword
-}
-
-
-{
-procedure UpdateActionSha1(recId: integer; newActionSha1: string);
-var
-	qu: Ansistring;
-begin
-	qu := 'UPDATE ' + VIEW_RESET;
-	qu := qu + ' SET';
-	qu := qu + ' ' + VIEW_RESET_ACTION_SHA1 + '=' + EncloseSingleQuote(newActionSha1);
-	qu := qu + ' WHERE ' + VIEW_RESET_ID + '=' + IntToStr(recId);
-	qu := qu + ';';
-	
-	//WriteLn('UpdateActionSha1(): ', qu);
-	RunQuery(qu);
-end; // of procedure UpdateActionSha1
-}
 
 procedure DoActionReset(curAction: integer);
 //
