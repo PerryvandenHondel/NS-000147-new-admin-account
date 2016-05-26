@@ -267,34 +267,35 @@ end; // of procedure TableAnwSetStatus
 procedure ActionNewSendmail(recId: integer; curAction: integer; reqFname: string; reqEmail: string; upn: string; pw: string; ref: string);
 //procedure ActionNewSendmail(recId: integer; curAction: integer; fname: string; upn: string; initpw: string; mailto: string; ref: string);
 var
-	path: string;
+	fileBody: string;
 	traceCode: string; // Unique code for this action PRODID+ACTION+REC (147-2-15)
 	f: TextFile;
-	cmd: Ansistring;
-	fileAccountInfo: string;
+	//cmd: Ansistring;
+	subject: Ansistring;
+	fileAttach: string;
 	samAccountName: Ansistring;
 begin
 	// Build the path of the e-mail contents file.
 	traceCode := IntToStr(PROG_ID) + '-' + IntToStr(curAction) + '-' + IntToStr(recId);
-	path := traceCode + '.body';
 	
-	//fileAccountInfo := 'accountinfo.txt';
-	fileAccountInfo := 'bareadme.txt';
+	fileBody := 'body.txt';
+	fileAttach := 'bareadme.txt';
 	
 	samAccountName := LeftStr(upn, Pos('@', upn) - 1);
 	samAccountName := LeftStr(samAccountName, 20);
 	
-	if FileExists(path) = true then
-		DeleteFile(path);
+	if FileExists(fileBody) = true then
+		DeleteFile(fileBody);
 	
-	Assign(f, path);
+	Assign(f, fileBody);
 	ReWrite(f);
 	
 	WriteLn(f, 'Hello ', reqFname, ',');
 	WriteLn(f);
-	WriteLn(f, 'New account is created');
-	WriteLn(f, '      UPN format:       ', upn);
-	WriteLn(f, '      NetBIOS format:   ', samAccountName);
+	WriteLn(f, 'New administrative account is created');
+	WriteLn(f);
+	WriteLn(f, 'UPN format:       ', upn);
+	WriteLn(f, 'NetBIOS format:   ', samAccountName);
 	WriteLn(f);
 	WriteLn(f, 'Initial password:       ' + pw);
 	WriteLn(f);
@@ -302,11 +303,17 @@ begin
 	WriteLn(f);
 	WriteLn(f, 'Trace code:             ', traceCode);
 	WriteLn(f);
-	WriteLn(f, 'IMPORTANT: SENT ATTACHMENT ' + UpperCase(fileAccountInfo) + ' TO THE USER OF THE ACCOUNT!!');
+	WriteLn(f, 'IMPORTANT: SEND ATTACHMENT ' + UpperCase(fileAttach) + ' TO THE USER OF THIS NEW ACCOUNT!!');
 	WriteLn(f);
 	
 	Close(f);
 	
+	
+	subject := 'New administrative account is created for ' + upn + ' #' + ref + ' #' + traceCode;
+	
+	// Send the fileBody using the mailer procedure.
+	SendMail(reqEmail, MAIL_FROM, fileBody, fileAttach, subject);
+	{
 	cmd := ' blat.exe ' + path;
 	cmd := cmd + ' -to ' + EncloseDoubleQuote(reqEmail);
 	cmd := cmd + ' -f ' + EncloseDoubleQuote(MAIL_FROM);
@@ -318,12 +325,12 @@ begin
 	cmd := cmd + ' -port 25';
 
 	RunCommand(cmd);
-	
+	}
 	// Update the status to 900: Send e-mail
 	TableAnwSetStatus(recId, 900);
 	
 	// Delete the body file of the e-mail.
-	DeleteFile(path);
+	DeleteFile(fileBody);
 end; // of procedure ActionResetSendmail
 
 

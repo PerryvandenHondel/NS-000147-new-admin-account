@@ -54,23 +54,24 @@ end; // of procedure TableArpSetStatus
 
 procedure ActionResetSendmail(recId: integer; curAction: integer; fname: string; upn: string; initpw: string; mailto: string; ref: string);
 var
-	path: string;
-	traceCode: string; // Unique code for this action PRODID+ACTION+REC (147-2-15)
+	//path: string;
+	traceCode: Ansistring; // Unique code for this action PRODID+ACTION+REC (147-2-15)
 	f: TextFile;
-	cmd: Ansistring;
-	fileAccountInfo: string;
+	//cmd: Ansistring;
+	subject: Ansistring;
+	fileAttach: Ansistring;
+	fileBody: Ansistring;
 begin
 	// Build the path of the e-mail contents file.
 	traceCode := IntToStr(PROG_ID) + '-' + IntToStr(curAction) + '-' + IntToStr(recId);
-	path := traceCode + '.body';
+	fileBody := 'body.txt';
 	
-	if FileExists(path) = true then
-		DeleteFile(path);
+	if FileExists(fileBody) = true then
+		DeleteFile(fileBody);
 
-	fileAccountInfo := 'bareadme.txt';	
+	fileAttach := 'bareadme.txt';	
 
-	
-	Assign(f, path);
+	Assign(f, fileBody);
 	ReWrite(f);
 	
 	WriteLn(f, 'Hello ', fname, ',');
@@ -83,10 +84,15 @@ begin
 	WriteLn(f);
 	WriteLn(f, 'Trace code: ', traceCode);
 	WriteLn(f);
-	WriteLn(f, 'IMPORTANT: SENT ATTACHMENT ' + UpperCase(fileAccountInfo) + ' TO THE USER OF THE ACCOUNT!!');
+	WriteLn(f, 'IMPORTANT: SEND ATTACHMENT ' + UpperCase(fileAttach) + ' TO THE USER OF THIS ACCOUNT!!');
 	WriteLn(f);
-		Close(f);
+	Close(f);
 	
+	subject := 'Account reset/unlocked/enabled done for ' + upn + ', Reference #' + ref + ' (' + traceCode + ')';
+	// Send the fileBody using the mailer procedure.
+	SendMail(mailto, MAIL_FROM, fileBody, fileAttach, subject);
+	
+	{
 	cmd := ' blat.exe ' + path;
 	cmd := cmd + ' -to ' + EncloseDoubleQuote(mailto);
 	cmd := cmd + ' -f ' + EncloseDoubleQuote(MAIL_FROM);
@@ -96,16 +102,15 @@ begin
 	cmd := cmd + ' -subject ' + EncloseDoubleQuote('Account reset/unlocked/enabled done for ' + upn + ', Reference #' + ref + ' (' + traceCode + ')');
 	cmd := cmd + ' -server vm70as005.rec.nsint';
 	cmd := cmd + ' -port 25';
+	}
 	
-	WriteLn(cmd);
-	
-	RunCommand(cmd);
+	//RunCommand(cmd);
 	
 	// Update the status to 900: Send e-mail
 	TableArpSetStatus(recId, 900);
 	
 	// Delete the body file.
-	DeleteFile(path);
+	DeleteFile(fileBody);
 end; // of procedure ActionResetSendmail
 
 
@@ -145,7 +150,7 @@ begin
 			mailto := rs.FieldByName(VIEW_RESET_MAIL_TO).AsString;
 			initpw := rs.FieldByName(VIEW_RESET_INITPW).AsString;
 			ref := rs.FieldByName(VIEW_RESET_REFERENCE).AsString;
-			WriteLn('EMAIL CONTENTS: Beste ', fname, ', password reset for ', upn, ' is now set to: ',  initpw, ' (mailto: ', mailto, ')');
+			//WriteLn('EMAIL CONTENTS: Beste ', fname, ', password reset for ', upn, ' is now set to: ',  initpw, ' (mailto: ', mailto, ')');
 			
 			ActionResetSendmail(recId, curAction, fname, upn, initpw, mailto, ref);
 

@@ -243,9 +243,28 @@ procedure TableAadRemovePrevious(actionNumber: integer; recordId: integer);
 procedure UpdateAadErrorLevel(recId: integer; errorLevel: integer);
 procedure UpdateOneFieldString(table: string; keyField: string; keyValue: integer; updateField: string; updateValue: string);
 procedure TableAadProcessActions(uniqueActionNumber: Ansistring);
-
+procedure SendMail(mailTo: Ansistring; mailFrom: Ansistring; fileBody: Ansistring; fileAttach: Ansistring; subject: Ansistring);
 
 implementation
+
+
+procedure SendMail(mailTo: Ansistring; mailFrom: Ansistring; fileBody: Ansistring; fileAttach: Ansistring; subject: Ansistring);
+var
+	cmd: Ansistring;
+begin
+	cmd := ' blat.exe ' + fileBody;
+	cmd := cmd + ' -to ' + EncloseDoubleQuote(mailTo);
+	cmd := cmd + ' -f ' + EncloseDoubleQuote(mailFrom);
+	cmd := cmd + ' -bcc ' + EncloseDoubleQuote(MAIL_BCC);
+	if FileExists(fileAttach) = true then
+		cmd := cmd + ' -attacht ' + EncloseDoubleQuote(fileAttach);
+	cmd := cmd + ' -subject ' + EncloseDoubleQuote(subject);
+	cmd := cmd + ' -server vm70as005.rec.nsint';
+	cmd := cmd + ' -port 25';
+
+	WriteLn('SendMail(): ' + subject + ' to ' + mailTo);
+	RunCommand(cmd);
+end; // of procedure SendMail
 
 
 procedure UpdateOneFieldString(table: string; keyField: string; keyValue: integer; updateField: string; updateValue: string);
