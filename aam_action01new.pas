@@ -278,11 +278,11 @@ begin
 	traceCode := IntToStr(PROG_ID) + '-' + IntToStr(curAction) + '-' + IntToStr(recId);
 	path := traceCode + '.body';
 	
-	fileAccountInfo := 'accountinfo.txt';
+	//fileAccountInfo := 'accountinfo.txt';
+	fileAccountInfo := 'bareadme.txt';
 	
 	samAccountName := LeftStr(upn, Pos('@', upn) - 1);
 	samAccountName := LeftStr(samAccountName, 20);
-	
 	
 	if FileExists(path) = true then
 		DeleteFile(path);
@@ -301,6 +301,8 @@ begin
 	WriteLn(f, 'Requested under:        ', ref);
 	WriteLn(f);
 	WriteLn(f, 'Trace code:             ', traceCode);
+	WriteLn(f);
+	WriteLn(f, 'IMPORTANT: SENT ATTACHMENT ' + UpperCase(fileAccountInfo) + ' TO THE USER OF THE ACCOUNT!!');
 	WriteLn(f);
 	
 	Close(f);

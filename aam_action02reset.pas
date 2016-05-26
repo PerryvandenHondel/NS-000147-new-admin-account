@@ -58,6 +58,7 @@ var
 	traceCode: string; // Unique code for this action PRODID+ACTION+REC (147-2-15)
 	f: TextFile;
 	cmd: Ansistring;
+	fileAccountInfo: string;
 begin
 	// Build the path of the e-mail contents file.
 	traceCode := IntToStr(PROG_ID) + '-' + IntToStr(curAction) + '-' + IntToStr(recId);
@@ -65,7 +66,10 @@ begin
 	
 	if FileExists(path) = true then
 		DeleteFile(path);
-		
+
+	fileAccountInfo := 'bareadme.txt';	
+
+	
 	Assign(f, path);
 	ReWrite(f);
 	
@@ -79,12 +83,15 @@ begin
 	WriteLn(f);
 	WriteLn(f, 'Trace code: ', traceCode);
 	WriteLn(f);
-	
-	Close(f);
+	WriteLn(f, 'IMPORTANT: SENT ATTACHMENT ' + UpperCase(fileAccountInfo) + ' TO THE USER OF THE ACCOUNT!!');
+	WriteLn(f);
+		Close(f);
 	
 	cmd := ' blat.exe ' + path;
 	cmd := cmd + ' -to ' + EncloseDoubleQuote(mailto);
 	cmd := cmd + ' -f ' + EncloseDoubleQuote(MAIL_FROM);
+	if FileExists(fileAccountInfo) = true then
+		cmd := cmd + ' -attacht ' + EncloseDoubleQuote(fileAccountInfo);
 	cmd := cmd + ' -bcc ' + EncloseDoubleQuote(MAIL_BCC);
 	cmd := cmd + ' -subject ' + EncloseDoubleQuote('Account reset/unlocked/enabled done for ' + upn + ', Reference #' + ref + ' (' + traceCode + ')');
 	cmd := cmd + ' -server vm70as005.rec.nsint';
