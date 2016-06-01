@@ -1,4 +1,12 @@
-fpc.exe aam_main.pas -o..\bin\aam.exe
+@echo off
+::
+::	Compile the AAM.EXE file
+::
 
-del ..\bin\*.o
-del ..\bin\*.ppu
+
+fpc.exe aam_main.pas -oaam.exe
+
+::del ..\bin\*.o
+::del ..\bin\*.ppu
+
+echo Complilation done...

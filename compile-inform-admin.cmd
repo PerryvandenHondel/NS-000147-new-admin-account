@@ -1,3 +1,4 @@
-fpc.exe inform-admin.pas -o..\bin\inform-admin.exe
-del ..\bin\*.o
-del ..\bin\*.ppu
+fpc.exe inform-admin.pas -oinform-admin.exe
+
+::del ..\bin\*.o
+::del ..\bin\*.ppu
