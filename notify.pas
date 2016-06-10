@@ -1,3 +1,13 @@
+//
+//	Program to use the database table atv to check for accounts
+//	to be notified.
+//
+//	Inform admins with a administrative account that their account
+//	is about to be disabled or deleted.
+//
+
+
+
 program Notify;
 
 	
@@ -208,8 +218,7 @@ begin
 		end;
 	end;
 	rs.Free;
-	
-end;
+end; // of DoNotifyDelete
 
 
 
@@ -222,7 +231,7 @@ begin
 	WriteLn('   --for-real     Send the mail to the to administrative accounts');
 	WriteLn('   --help         This help information');
 	WriteLn;
-end;
+end; // of ProgramUsage
 
 
 
@@ -242,27 +251,52 @@ begin
 		boolForReal := False;
 	
 	DatabaseOpen();
-end;
+end; // of ProgInit
 
 
 
 procedure ProgRun();
 begin
+	WriteLn('-------------------');
+	WriteLn('UPCOMING DISABLES!!');
+	WriteLn;
+	
 	DoNotifyDisabled(90, 14);
 	DoNotifyDisabled(90, 7);
 	DoNotifyDisabled(90, 1);
+
+	if DayOfWeek(Now()) = 6 then
+	begin
+		WriteLn('Extra for friday, inform those for saterday and sunday upcoming disables!');
+		DoNotifyDisabled(90, 13); // for saterday
+		DoNotifyDisabled(90, 12); // for sunday
+		DoNotifyDisabled(90, 6); // for saterday
+		DoNotifyDisabled(90, 5); // for sunday
+	end;
+
+	WriteLn('------------------');
+	WriteLn('UPCOMING DELETES!!');
+	WriteLn;
+
 	DoNotifyDelete(180, 14);
 	DoNotifyDelete(180, 7);
-	DoNotifyDelete(190, 1);
-end;
-
+	DoNotifyDelete(180, 1);
+	if DayOfWeek(Now()) = 6 then
+	begin
+		WriteLn('Extra for friday, inform those for saterday and sunday upcoming deletes!');
+		DoNotifyDelete(180, 13); // for saterday
+		DoNotifyDelete(180, 12); // for sunday
+		
+		DoNotifyDelete(180, 6); // for saterday
+		DoNotifyDelete(180, 5); // for sunday
+	end;
+end; // of ProgRun
 
 
 procedure ProgDone();
 begin
 	DatabaseClose();
-end;
-	
+end; // of ProgDone
 
 	
 begin
